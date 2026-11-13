@@ -26,6 +26,7 @@ import {
   useState,
 } from "react";
 import { useChartPreferences } from "../../hooks/useChartPreferences.ts";
+import { usePriceAlertsStore } from "../../hooks/usePriceAlerts.ts";
 import { useTradingStore } from "../../services/store.tsx";
 import { TickContext } from "../../terminal/use-terminal.ts";
 import { BandsIndicator } from "../../lib/chart-plugins/bands-indicator/bands-indicator.ts";
@@ -1192,6 +1193,7 @@ export function ChartPanel({
   const legendRestoredRef = useRef(true);
 
   const chartPrefs = useChartPreferences();
+  const addAlert = usePriceAlertsStore((s) => s.addAlert);
   // Theme palette with the user's Chart Settings color overrides applied.
   // Everything downstream (chart options, bid/ask lines, position overlays,
   // volume bars) reads from this merged object.
@@ -1437,9 +1439,12 @@ export function ChartPanel({
         alertEnabled: true,
         createdTf: timeframe,
       });
+      // Also register a persistent price alert (roadmap feature 1) so it
+      // survives the session, unlike the line-cross toast.
+      addAlert({ symbol: selectedSymbol, price: rounded, condition: "cross", once: false });
       toast.info("Alert set", `${selectedSymbol} at ${rounded}`);
     },
-    [onAddDrawing, pipDigits, timeframe, selectedSymbol],
+    [onAddDrawing, pipDigits, timeframe, selectedSymbol, addAlert],
   );
 
   useIndicators(chartRef, candleSeriesRef, chartData, activeIndicators, isDark, chartEpoch);
