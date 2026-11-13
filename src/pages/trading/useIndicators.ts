@@ -149,7 +149,7 @@ export function useIndicators(
           );
           setLine(
             "MACD-line",
-            { color: "#2196f3", lineWidth: 1, priceScaleId: "macd" },
+            { color: "#2962FF", lineWidth: 1, priceScaleId: "macd" },
             data.macd.map((p) => ({ time: p.time as Time, value: p.value })),
           );
           setLine(

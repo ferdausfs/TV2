@@ -277,7 +277,7 @@ function renderText(scope: BitmapCoordinatesRenderingScope, e: ResolvedEntry): v
   const by = at.y - pad;
 
   if (e.d.textBg) {
-    ctx.fillStyle = e.d.textBgColor ?? "#1e2329";
+    ctx.fillStyle = e.d.textBgColor ?? "#1e222d";
     ctx.fillRect(bx, by, boxW, boxH);
   }
   if (e.d.textBorder) {
@@ -519,7 +519,7 @@ function drawAlertBadge(scope: BitmapCoordinatesRenderingScope, x: number, y: nu
   const r = 4 * scope.horizontalPixelRatio;
   ctx.save();
   ctx.fillStyle = "#f0b90b";
-  ctx.strokeStyle = "#1b1f2a";
+  ctx.strokeStyle = "#131722";
   ctx.lineWidth = scope.horizontalPixelRatio;
   ctx.beginPath();
   ctx.arc(x, y, r, 0, Math.PI * 2);

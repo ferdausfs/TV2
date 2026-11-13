@@ -3,67 +3,67 @@
 @tailwind utilities;
 
 @layer base {
-  /* TV.2 dark theme — Binance-grade near-black terminal (per DESIGN.md v2).
-     Canvas #0b0e11, card #1e2329, hairline #2b3139, single accent #FCD535,
-     trading green #0ecb81 / red #f6465d. Chart canvas (CHART_COLORS.dark.
-     background) matches --background so panels and chart read as one surface. */
+  /* TV.2 dark theme — the TradingView charcoal terminal (per DESIGN.TV2.md §2).
+     Canvas #131722, card #1e222d, elevated/border #2a2e39, single interaction
+     blue #2962FF, candles teal #26a69a / red #ef5350, gold #f0b90b reserved for
+     pending orders. Chart canvas (CHART_COLORS.dark.background) matches
+     --background so panels and chart read as one surface. */
   :root {
-    /* #0b0e11 */
-    --background: 210 21% 6%;
-    --foreground: 216 13% 93%; /* #eaecef */
-    --card: 213 16% 14%; /* #1e2329 */
-    --card-foreground: 216 13% 93%;
-    --primary: 48 97% 60%; /* #fcd535 */
-    --primary-foreground: 225 14% 11%; /* #181a20 — black on yellow */
-    --secondary: 214 14% 20%; /* #2b3139 */
-    --secondary-foreground: 216 13% 93%;
-    --muted: 214 14% 20%;
-    --muted-foreground: 215 17% 61%; /* #929aa5 — AA on the near-black canvas */
-    --accent: 48 97% 60%;
-    --accent-foreground: 225 14% 11%;
-    --destructive: 352 91% 62%; /* #f6465d */
-    --destructive-foreground: 225 14% 11%; /* ink on red — AA (4.9:1) */
-    --border: 214 14% 20%; /* #2b3139 — hairlines read as surface steps */
-    --input: 214 14% 20%;
-    --ring: 217 91% 60%; /* #3b82f6 — Binance's blue focus ring */
+    /* #131722 */
+    --background: 224 28% 10%;
+    --foreground: 224 14% 84%; /* #d1d4dc */
+    --card: 224 20% 15%; /* #1e222d */
+    --card-foreground: 224 14% 84%;
+    --primary: 224 100% 58%; /* #2962FF — interaction only */
+    --primary-foreground: 0 0% 100%; /* white on blue = 4.9:1 AA */
+    --secondary: 224 15% 19%; /* #2a2e39 hover surfaces */
+    --secondary-foreground: 224 14% 84%;
+    --muted: 224 15% 19%;
+    --muted-foreground: 227 8% 58%; /* #8a8e9c — AA (5.5:1) on the canvas */
+    --accent: 224 100% 58%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 1 83% 63%; /* #ef5350 */
+    --destructive-foreground: 224 28% 10%; /* ink on red — AA (5.1:1) */
+    --border: 224 15% 19%; /* #2a2e39 — 1px hairlines */
+    --input: 224 15% 19%;
+    --ring: 224 100% 58%; /* #2962FF focus ring */
     --radius: 0.5rem;
-    --ink: 225 14% 11%;
-    --success: 157 87% 43%; /* #0ecb81 */
-    --warning: 46 91% 49%; /* #f0b90b */
-    --buy: 157 87% 43%;
-    --sell: 352 91% 62%;
-    --panel-header: 213 16% 14%;
-    --glow: 48 97% 60%;
+    --ink: 224 28% 10%; /* ink on teal/red fills — AA */
+    --success: 174 63% 40%; /* #26a69a */
+    --warning: 46 91% 49%; /* #f0b90b — pending orders only */
+    --buy: 174 63% 40%;
+    --sell: 1 83% 63%;
+    --panel-header: 224 20% 15%;
   }
 
-  /* Light theme — Binance's transactional mode: white canvas, ink text, the
-     same yellow CTA and trading green/red. Green/red darken for AA on white. */
+  /* Light theme — master spec §5.2 light column: white canvas, TradingView
+     panel tints, same interaction blue. Market-direction TEXT darkens for AA
+     on white; chart candles stay #26a69a/#ef5350 (CHART_COLORS.light). */
   .light {
     --background: 0 0% 100%;
-    --foreground: 225 14% 11%; /* #181a20 */
-    --card: 0 0% 100%;
-    --card-foreground: 225 14% 11%;
-    --primary: 48 97% 60%;
-    --primary-foreground: 225 14% 11%;
-    --secondary: 220 14% 96%; /* #f5f5f5 */
-    --secondary-foreground: 225 14% 11%;
-    --muted: 220 14% 96%;
-    --muted-foreground: 217 11% 46%; /* #707a8a family, AA on white */
-    --accent: 48 97% 60%;
-    --accent-foreground: 225 14% 11%;
+    --foreground: 224 28% 10%; /* #131722 */
+    --card: 228 56% 98%; /* #F8F9FD */
+    --card-foreground: 224 28% 10%;
+    --primary: 224 100% 58%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 23% 95%; /* #EFF2F5 */
+    --secondary-foreground: 224 28% 10%;
+    --muted: 210 23% 95%;
+    --muted-foreground: 222 8% 46%; /* #6c7280 — AA (4.8:1) on white */
+    --accent: 224 100% 58%;
+    --accent-foreground: 0 0% 100%;
     --destructive: 353 64% 53%; /* #d43a4d — AA as text on white */
     --destructive-foreground: 0 0% 100%;
-    --border: 220 13% 91%; /* #eaecef */
-    --input: 220 13% 91%;
-    --ring: 217 91% 60%;
+    --border: 224 22% 90%; /* #E0E3EB */
+    --input: 224 22% 90%;
+    --ring: 224 100% 58%;
     --radius: 0.5rem;
-    --ink: 225 14% 11%;
+    --ink: 0 0% 100%; /* white on darkened fills */
     --success: 157 88% 27%; /* #087f52 — AA as text on white */
     --warning: 46 91% 40%;
     --buy: 157 88% 27%;
     --sell: 353 64% 53%;
-    --panel-header: 220 14% 96%;
-    --glow: 46 91% 49%;
+    --panel-header: 210 23% 95%;
   }
 
   * {
@@ -150,17 +150,6 @@
 }
 ::-webkit-scrollbar-thumb:hover {
   @apply bg-muted-foreground/40;
-}
-
-/* ─── Glow Effects ───────────────────────────────────────── */
-.glow-buy {
-  text-shadow: 0 0 8px hsl(var(--buy) / 0.4);
-}
-.glow-sell {
-  text-shadow: 0 0 8px hsl(var(--sell) / 0.4);
-}
-.glow-accent {
-  text-shadow: 0 0 8px hsl(var(--accent) / 0.4);
 }
 
 /* ─── Stat Cards ─────────────────────────────────────────── */
@@ -291,20 +280,6 @@
 /* ─── Skeleton animation ─────────────────────────────────── */
 .skeleton {
   @apply rounded animate-skeleton-pulse bg-muted;
-}
-
-/* ─── Badge pulse for live data ──────────────────────────── */
-@keyframes pulse-glow {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
-}
-.live-pulse {
-  animation: pulse-glow 2s ease-in-out infinite;
 }
 
 /* ─── Mobile utilities ───────────────────────────────────── */

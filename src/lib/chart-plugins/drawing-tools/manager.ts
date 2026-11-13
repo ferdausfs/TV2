@@ -305,7 +305,7 @@ export class DrawingToolsManager {
     }
     const base = {
       id: crypto.randomUUID(),
-      color: tool === "trendline" ? "#2196F3" : "#f0b90b",
+      color: tool === "trendline" ? "#2962FF" : "#f0b90b",
       createdTf: this.timeframe,
     };
     if (tool === "horizontal") return { ...base, type: "horizontal", price: p1.price };
@@ -315,7 +315,7 @@ export class DrawingToolsManager {
     if (tool === "extended")
       return { ...two, type: "trendline", extendLeft: true, extendRight: true };
     if (tool === "measure")
-      return { ...two, type: "trendline", color: "#929aa5", lineStyle: "dashed" };
+      return { ...two, type: "trendline", color: "#8a8e9c", lineStyle: "dashed" };
     if (tool === "channel") {
       // Offset line defaults parallel and mirrored below so it's visible/draggable.
       return { ...two, type: "channel", time3: p1.time, price3: 2 * p1.price - p2.price };
@@ -641,7 +641,7 @@ export class DrawingToolsManager {
     this.measureResult = {
       id: "measure",
       type: "trendline",
-      color: "#929aa5",
+      color: "#8a8e9c",
       lineStyle: "dashed",
       price: p1.price,
       time: p1.time,
