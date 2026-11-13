@@ -3,62 +3,63 @@
 @tailwind utilities;
 
 @layer base {
-  /* Deep dark trading theme — inspired by E8 Markets aesthetic */
+  /* TV.2 dark theme — TradingView's signature charcoal + #2962FF accent.
+     Chart canvas (CHART_COLORS.dark.background) matches --background so
+     panels and chart read as one seamless surface. */
   :root {
-    /* #0b0e14 — the same hex as the chart canvas (CHART_COLORS.dark.background)
-       and app.css body, so panels and chart read as one seamless surface. */
-    --background: 220 29% 6%;
-    --foreground: 210 20% 88%;
-    --card: 220 18% 7%;
-    --card-foreground: 210 20% 88%;
-    --primary: 168 80% 48%;
-    --primary-foreground: 220 20% 4.5%;
-    --secondary: 220 16% 11%;
-    --secondary-foreground: 210 20% 88%;
-    --muted: 220 14% 15%;
-    --muted-foreground: 215 12% 48%;
-    --accent: 168 80% 48%;
-    --accent-foreground: 220 20% 4.5%;
-    --destructive: 0 72% 56%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 220 14% 14%;
-    --input: 220 16% 11%;
-    --ring: 168 80% 48%;
+    /* #131722 */
+    --background: 224 28% 10%;
+    --foreground: 220 14% 84%;
+    --card: 224 20% 14%;
+    --card-foreground: 220 14% 84%;
+    --primary: 224 100% 58%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 224 15% 18%;
+    --secondary-foreground: 220 14% 84%;
+    --muted: 224 15% 18%;
+    --muted-foreground: 227 6% 50%;
+    --accent: 224 100% 58%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 1 83% 63%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 224 15% 19%;
+    --input: 224 15% 18%;
+    --ring: 224 100% 58%;
     --radius: 0.5rem;
-    --success: 160 84% 44%;
+    --success: 174 60% 40%;
     --warning: 38 92% 50%;
-    --buy: 160 84% 44%;
-    --sell: 0 72% 56%;
-    --panel-header: 220 16% 9%;
-    --glow: 168 80% 48%;
+    --buy: 174 60% 40%;
+    --sell: 1 83% 63%;
+    --panel-header: 224 20% 12%;
+    --glow: 224 100% 58%;
   }
 
   /* Light theme */
   .light {
-    --background: 0 0% 98%;
-    --foreground: 222.2 84% 4.9%;
+    --background: 210 20% 98%;
+    --foreground: 224 20% 15%;
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --primary: 168 80% 38%;
+    --card-foreground: 224 20% 15%;
+    --primary: 224 100% 50%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 222.2 84% 4.9%;
-    --muted: 210 40% 93%;
-    --muted-foreground: 215 16% 47%;
-    --accent: 168 80% 38%;
+    --secondary: 210 20% 95%;
+    --secondary-foreground: 224 20% 15%;
+    --muted: 210 20% 93%;
+    --muted-foreground: 227 6% 47%;
+    --accent: 224 100% 50%;
     --accent-foreground: 0 0% 100%;
-    --destructive: 0 72% 51%;
+    --destructive: 1 83% 57%;
     --destructive-foreground: 0 0% 100%;
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 168 80% 38%;
+    --border: 220 14% 89%;
+    --input: 220 14% 89%;
+    --ring: 224 100% 50%;
     --radius: 0.5rem;
-    --success: 160 84% 35%;
+    --success: 174 60% 35%;
     --warning: 38 92% 45%;
-    --buy: 160 84% 35%;
-    --sell: 0 72% 51%;
-    --panel-header: 210 40% 96%;
-    --glow: 168 80% 38%;
+    --buy: 174 60% 35%;
+    --sell: 1 83% 57%;
+    --panel-header: 210 20% 96%;
+    --glow: 224 100% 50%;
   }
 
   * {

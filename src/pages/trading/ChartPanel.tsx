@@ -846,7 +846,7 @@ function exitMarker(ev: ReplayTradeEvent, time: Time): SeriesMarker<Time> {
   return {
     time,
     position: profit ? "aboveBar" : "belowBar",
-    color: profit ? "#0ecb81" : "#f6465d",
+    color: profit ? "#26a69a" : "#ef5350",
     shape: "circle",
     text,
   };
@@ -2163,13 +2163,13 @@ export function ChartPanel({
             className={cn(
               "px-2 py-1 rounded text-[11px] font-mono font-bold shadow-lg border",
               dragPrice.field === "TP"
-                ? "bg-[#0ecb81]/20 text-[#0ecb81] border-[#0ecb81]/40"
-                : "bg-[#f6465d]/20 text-[#f6465d] border-[#f6465d]/40",
+                ? "bg-[#26a69a]/20 text-[#26a69a] border-[#26a69a]/40"
+                : "bg-[#ef5350]/20 text-[#ef5350] border-[#ef5350]/40",
             )}
           >
             {dragPrice.field} → {dragPrice.price.toFixed(pipDigits)}
             <span
-              className={dragPrice.pnlUsd >= 0 ? "ml-1.5 text-[#0ecb81]" : "ml-1.5 text-[#f6465d]"}
+              className={dragPrice.pnlUsd >= 0 ? "ml-1.5 text-[#26a69a]" : "ml-1.5 text-[#ef5350]"}
             >
               {dragPrice.pnlUsd >= 0 ? "+" : ""}${dragPrice.pnlUsd.toFixed(2)}
             </span>

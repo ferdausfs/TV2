@@ -191,6 +191,16 @@ export function ChartToolbar({
 
   return (
     <div className="flex items-center gap-1 px-2 py-1 border-b border-border bg-card text-xs shrink-0 overflow-x-auto md:overflow-visible flex-nowrap md:flex-wrap no-scrollbar">
+      {/* TV.2 brand mark */}
+      <div
+        className="flex items-center gap-1.5 pr-2 mr-0.5 border-r border-border shrink-0"
+        title="TV.2 — personal trading terminal"
+      >
+        <span className="font-black text-[13px] leading-none tracking-tight text-primary">
+          TV<span className="text-foreground/60">.2</span>
+        </span>
+      </div>
+
       {/* Symbol Selector — TradingView style */}
       <div ref={symbolBoxRef} className="relative shrink-0">
         <button

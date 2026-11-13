@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- TV.2 app icon: candlestick mark + ascending trendline on TradingView charcoal -->
+  <rect x="0" y="0" width="512" height="512" rx="112" fill="#131722"/>
+  <!-- left candle (up) -->
+  <rect x="170" y="120" width="14" height="176" rx="7" fill="#26a69a"/>
+  <rect x="144" y="170" width="66" height="96" rx="10" fill="#26a69a"/>
+  <!-- center candle (up, tall) -->
+  <rect x="261" y="96" width="14" height="214" rx="7" fill="#26a69a"/>
+  <rect x="235" y="136" width="66" height="112" rx="10" fill="#26a69a"/>
+  <!-- right candle (down) -->
+  <rect x="344" y="158" width="14" height="148" rx="7" fill="#ef5350"/>
+  <rect x="318" y="208" width="66" height="88" rx="10" fill="#ef5350"/>
+  <!-- ascending trendline + arrowhead -->
+  <path d="M106 424 L250 386 L373 330" fill="none" stroke="#2962ff" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M404 316 L365 312 L381 348 Z" fill="#2962ff"/>
+</svg>
