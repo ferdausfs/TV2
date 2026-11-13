@@ -10,7 +10,7 @@ export const FIB_COLORS = [
   "#ff9800",
   "#ffc107",
   "#4caf50",
-  "#2196F3",
+  "#2962FF",
   "#9c27b0",
 ];
 
@@ -202,7 +202,7 @@ function resolveFibLevels(d: DrawingLine, series: AnySeries): ResolvedFibLevel[]
       level,
       price,
       y: series.priceToCoordinate(price),
-      color: FIB_COLORS[i] ?? "#2196F3",
+      color: FIB_COLORS[i] ?? "#2962FF",
       label: `${level} (${formatter.format(price)})`,
     };
   });

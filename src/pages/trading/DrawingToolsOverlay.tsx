@@ -521,7 +521,7 @@ function TextSettings({
         label="Background"
         enabled={Boolean(drawing.textBg)}
         color={drawing.textBgColor ?? ""}
-        fallback="#1e2329"
+        fallback="#1e222d"
         onToggle={(textBg) => patch({ textBg })}
         onColor={(textBgColor) => patch({ textBgColor, textBg: true })}
       />
@@ -701,7 +701,7 @@ export function DrawingSettingsDialog({
               onRemove();
               onClose();
             }}
-            className="flex items-center gap-1.5 px-2 py-1 rounded text-xs text-[#f6465d] hover:bg-[#f6465d]/10"
+            className="flex items-center gap-1.5 px-2 py-1 rounded text-xs text-[#ef5350] hover:bg-[#ef5350]/10"
           >
             <Trash2 className="h-3 w-3" />
             Delete
@@ -751,7 +751,7 @@ function MenuItem({
       onClick={onClick}
       className={cn(
         "flex w-full items-center gap-2 px-3 py-1.5 text-xs hover:bg-secondary text-left",
-        danger ? "text-[#f6465d]" : "text-foreground",
+        danger ? "text-[#ef5350]" : "text-foreground",
       )}
     >
       <Icon className="h-3.5 w-3.5" />

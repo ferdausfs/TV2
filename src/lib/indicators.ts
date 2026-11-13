@@ -322,7 +322,7 @@ export const INDICATOR_REGISTRY: IndicatorConfig[] = [
     label: "Simple Moving Average",
     pane: "overlay",
     defaultParams: { period: 20 },
-    color: "#f0b90b",
+    color: "#26c6da",
   },
   {
     type: "EMA",
@@ -343,14 +343,14 @@ export const INDICATOR_REGISTRY: IndicatorConfig[] = [
     label: "MACD",
     pane: "below",
     defaultParams: { fast: 12, slow: 26, signal: 9 },
-    color: "#2196f3",
+    color: "#2962FF",
   },
   {
     type: "BOLL",
     label: "Bollinger Bands",
     pane: "overlay",
     defaultParams: { period: 20, stdDev: 2 },
-    color: "#0ecb81",
+    color: "#26a69a",
   },
   {
     type: "ATR",
@@ -371,6 +371,6 @@ export const INDICATOR_REGISTRY: IndicatorConfig[] = [
     label: "Volume Weighted Avg Price",
     pane: "overlay",
     defaultParams: {},
-    color: "#42a5f5",
+    color: "#2962FF",
   },
 ];
