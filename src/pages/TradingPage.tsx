@@ -1,22 +1,54 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { MobileAccountBar, MobileTradingPanel } from "../components/MobileTradingPanel.tsx";
 import { NewsFeed as MarketNewsFeed } from "../components/TradingPowerFeatures.tsx";
 import { ConnectionIndicator } from "../components/ConnectionIndicator.tsx";
 import { TradingViewTechnicalAnalysis } from "../components/TradingViewWidgets.tsx";
 import type { IndicatorType } from "../lib/indicators.ts";
+import { cn } from "../lib/utils.ts";
 import { safeStorage } from "../lib/safe-storage.ts";
 import type { PlaceOrderInput } from "../services/schemas.ts";
 import { updateChartPreferences } from "../hooks/useChartPreferences.ts";
 import { useTerminal } from "../terminal/use-terminal.ts";
 import { BottomPanel } from "./trading/BottomPanel.tsx";
 import { ChartPanel } from "./trading/ChartPanel.tsx";
+import { ChartPane } from "./trading/ChartPane.tsx";
 import { ChartToolbar } from "./trading/ChartToolbar.tsx";
-import { REPLAY_ENABLED } from "./trading/constants.ts";
+import {
+  type ChartLayout,
+  REPLAY_ENABLED,
+  TIMEFRAMES,
+  type Timeframe,
+} from "./trading/constants.ts";
 import { DOMPanel } from "./trading/DOMPanel.tsx";
 import { MarketClosedBanner } from "./trading/MarketClosedBanner.tsx";
 import { OrderPanel } from "./trading/OrderPanel.tsx";
 import { ReplayScrubber } from "./trading/ReplayScrubber.tsx";
 import { WatchlistPanel } from "./trading/WatchlistPanel.tsx";
+
+/** A secondary pane's configuration. */
+interface PaneConfig {
+  symbol: string;
+  timeframe: Timeframe;
+}
+
+/** Load a persisted pane config, falling back to the given defaults. */
+function loadPaneConfig(key: string, symbol: string, timeframe: Timeframe): PaneConfig {
+  try {
+    const raw = safeStorage.getItem(key);
+    if (raw) {
+      const parsed = JSON.parse(raw) as Partial<PaneConfig>;
+      if (typeof parsed.symbol === "string" && parsed.symbol) {
+        const tf = TIMEFRAMES.includes(parsed.timeframe as Timeframe)
+          ? (parsed.timeframe as Timeframe)
+          : timeframe;
+        return { symbol: parsed.symbol, timeframe: tf };
+      }
+    }
+  } catch {
+    // Corrupt entry → fall through to the defaults below.
+  }
+  return { symbol, timeframe };
+}
 
 /**
  * The default terminal layout.
@@ -168,6 +200,30 @@ export function TradingPage() {
     [activeIndicators, toggleIndicator],
   );
 
+  // ── Multi-chart layout (DESIGN.md §5) ───────────────────────
+  // Pane 0 is the main chart (context-driven, full toolbar). Panes 1–3 are
+  // independent ChartPanes; the layout and every pane's symbol/timeframe
+  // persist across reloads.
+  const [chartLayout, setChartLayoutState] = useState<ChartLayout>(
+    () => (safeStorage.getItem("tv2_chart_layout") as ChartLayout | null) ?? "single",
+  );
+  const setChartLayout = useCallback((l: ChartLayout) => {
+    setChartLayoutState(l);
+    safeStorage.setItem("tv2_chart_layout", l);
+  }, []);
+
+  const [panes, setPanes] = useState<Array<{ symbol: string; timeframe: Timeframe }>>(() => [
+    loadPaneConfig("tv2_pane1", "EURUSD", "1h"),
+    loadPaneConfig("tv2_pane2", "ETHUSD", "4h"),
+    loadPaneConfig("tv2_pane3", "SOLUSD", "15m"),
+  ]);
+  useEffect(() => {
+    panes.forEach((p, i) => safeStorage.setItem(`tv2_pane${i + 1}`, JSON.stringify(p)));
+  }, [panes]);
+  const updatePane = useCallback((idx: number, patch: Partial<{ symbol: string; timeframe: Timeframe }>) => {
+    setPanes((prev) => prev.map((p, i) => (i === idx ? { ...p, ...patch } : p)));
+  }, []);
+
   return (
 
     <div className="flex flex-col h-full overflow-hidden">
@@ -214,6 +270,8 @@ export function TradingPage() {
           onToggleStayInDrawingMode={() =>
             updateChartPreferences({ stayInDrawingMode: !chartPrefs.stayInDrawingMode })
           }
+          chartLayout={chartLayout}
+          onChartLayoutChange={setChartLayout}
         />
         {/* Live-feed status: dot + label at the toolbar's right edge. */}
         <div className="absolute right-2 top-1.5 z-20 flex items-center rounded bg-card/90 px-1.5 py-0.5 border border-border/60 pointer-events-none">
@@ -227,40 +285,94 @@ export function TradingPage() {
       <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
         {/* Chart + Bottom Panel */}
         <div className="flex flex-col flex-1 min-w-0">
-          {/* Chart Area */}
+          {/* Chart Area — single chart or a multi-chart grid (DESIGN.md §5).
+              Pane 0 keeps the full context wiring; panes 1–3 are independent
+              ChartPanes. The 1px grid gap over bg-border draws separators. */}
           <div className="flex-1 min-h-[200px] relative">
-            <ChartPanel
-              candles={replayCandles ?? candles ?? []}
-              selectedSymbol={selectedSymbol}
-              timeframe={timeframe}
-              isDark={isDark}
-              activeIndicators={activeIndicators}
-              drawingTool={drawingTool}
-              drawings={drawings}
-              onAddDrawing={addDrawing}
-              onUpdateDrawing={updateDrawing}
-              onRemoveDrawing={removeDrawing}
-              onDrawingComplete={() => setDrawingTool("none")}
-              onDrawingToolSelect={setDrawingTool}
-              onUndoDrawing={undoDrawing}
-              onRedoDrawing={redoDrawing}
-              magnetMode={chartPrefs.magnetMode}
-              stayInDrawingMode={chartPrefs.stayInDrawingMode}
-              positions={chartPositions}
-              orders={chartOrders}
-              pipDigits={pipDigits}
-              symbolInfo={symbolInfo}
-              onModifyPosition={handleChartModifyPosition}
-              replayTradeEvents={replayTradeEvents}
-              isReplaying={isReplaying}
-              activePlugins={activePlugins}
-              onTogglePlugin={handleTogglePlugin}
-              accountEquity={account?.equity ?? account?.balance ?? 0}
-              accountId={activeAccountId}
-              onQuickOrder={handleQuickOrder}
-              onClearDrawings={clearDrawings}
-              onClearIndicators={handleClearIndicators}
-            />
+            <div
+              className={cn(
+                "w-full h-full",
+                chartLayout !== "single" && "grid gap-px bg-border",
+                chartLayout === "dual" && "grid-rows-2 md:grid-rows-1 md:grid-cols-2",
+                chartLayout === "quad" && "grid-cols-2 grid-rows-2",
+              )}
+            >
+              <div
+                className={cn(
+                  "relative",
+                  chartLayout !== "single" && "min-w-0 min-h-0 bg-background",
+                )}
+              >
+                <ChartPanel
+                  candles={replayCandles ?? candles ?? []}
+                  selectedSymbol={selectedSymbol}
+                  timeframe={timeframe}
+                  isDark={isDark}
+                  activeIndicators={activeIndicators}
+                  drawingTool={drawingTool}
+                  drawings={drawings}
+                  onAddDrawing={addDrawing}
+                  onUpdateDrawing={updateDrawing}
+                  onRemoveDrawing={removeDrawing}
+                  onDrawingComplete={() => setDrawingTool("none")}
+                  onDrawingToolSelect={setDrawingTool}
+                  onUndoDrawing={undoDrawing}
+                  onRedoDrawing={redoDrawing}
+                  magnetMode={chartPrefs.magnetMode}
+                  stayInDrawingMode={chartPrefs.stayInDrawingMode}
+                  positions={chartPositions}
+                  orders={chartOrders}
+                  pipDigits={pipDigits}
+                  symbolInfo={symbolInfo}
+                  onModifyPosition={handleChartModifyPosition}
+                  replayTradeEvents={replayTradeEvents}
+                  isReplaying={isReplaying}
+                  activePlugins={activePlugins}
+                  onTogglePlugin={handleTogglePlugin}
+                  accountEquity={account?.equity ?? account?.balance ?? 0}
+                  accountId={activeAccountId}
+                  onQuickOrder={handleQuickOrder}
+                  onClearDrawings={clearDrawings}
+                  onClearIndicators={handleClearIndicators}
+                />
+              </div>
+              {chartLayout !== "single" && (
+                <div className="relative min-w-0 min-h-0 bg-background">
+                  <ChartPane
+                    symbol={panes[0]!.symbol}
+                    timeframe={panes[0]!.timeframe}
+                    symbols={symbols}
+                    isDark={isDark}
+                    onSymbolChange={(s) => updatePane(0, { symbol: s })}
+                    onTimeframeChange={(tf) => updatePane(0, { timeframe: tf })}
+                  />
+                </div>
+              )}
+              {chartLayout === "quad" && (
+                <>
+                  <div className="relative min-w-0 min-h-0 bg-background">
+                    <ChartPane
+                      symbol={panes[1]!.symbol}
+                      timeframe={panes[1]!.timeframe}
+                      symbols={symbols}
+                      isDark={isDark}
+                      onSymbolChange={(s) => updatePane(1, { symbol: s })}
+                      onTimeframeChange={(tf) => updatePane(1, { timeframe: tf })}
+                    />
+                  </div>
+                  <div className="relative min-w-0 min-h-0 bg-background">
+                    <ChartPane
+                      symbol={panes[2]!.symbol}
+                      timeframe={panes[2]!.timeframe}
+                      symbols={symbols}
+                      isDark={isDark}
+                      onSymbolChange={(s) => updatePane(2, { symbol: s })}
+                      onTimeframeChange={(tf) => updatePane(2, { timeframe: tf })}
+                    />
+                  </div>
+                </>
+              )}
+            </div>
           </div>
 
           {/* Replay timeline scrubber — disabled until the feature is QA'd */}

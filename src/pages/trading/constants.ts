@@ -141,6 +141,9 @@ export type DrawingType = Exclude<
 
 export type DrawingLineStyle = "solid" | "dashed" | "dotted";
 
+/** Multi-chart grid mode (DESIGN.md §5). */
+export type ChartLayout = "single" | "dual" | "quad";
+
 /** Magnet snapping mode: off, weak (snap within a few px), or strong (always). */
 export type MagnetMode = "none" | "weak" | "strong";
 
@@ -212,8 +215,8 @@ export interface DrawingLine {
 export const DRAWING_COLORS = [
   "#2196F3",
   "#f0b90b",
-  "#26a69a",
-  "#ef5350",
+  "#0ecb81",
+  "#f6465d",
   "#9c27b0",
   "#ff9800",
   "#787b86",

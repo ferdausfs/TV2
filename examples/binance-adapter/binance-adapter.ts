@@ -31,13 +31,21 @@ const REST_BASE = "https://data-api.binance.vision/api/v3";
 const WS_BASE = "wss://data-stream.binance.vision/stream";
 
 /** Display name → Binance pair. USD here means USDT on Binance. */
-const SYMBOL_MAP: Record<string, { pair: string; label: string; tickSize: number }> = {
-  BTCUSD: { pair: "BTCUSDT", label: "Bitcoin", tickSize: 0.01 },
-  ETHUSD: { pair: "ETHUSDT", label: "Ethereum", tickSize: 0.01 },
-  SOLUSD: { pair: "SOLUSDT", label: "Solana", tickSize: 0.01 },
-  BNBUSD: { pair: "BNBUSDT", label: "BNB", tickSize: 0.01 },
-  XRPUSD: { pair: "XRPUSDT", label: "XRP", tickSize: 0.0001 },
-  ADAUSD: { pair: "ADAUSDT", label: "Cardano", tickSize: 0.0001 },
+const SYMBOL_MAP: Record<
+  string,
+  { pair: string; label: string; tickSize: number; category: "CRYPTO" | "FOREX" }
+> = {
+  BTCUSD: { pair: "BTCUSDT", label: "Bitcoin", tickSize: 0.01, category: "CRYPTO" },
+  ETHUSD: { pair: "ETHUSDT", label: "Ethereum", tickSize: 0.01, category: "CRYPTO" },
+  SOLUSD: { pair: "SOLUSDT", label: "Solana", tickSize: 0.01, category: "CRYPTO" },
+  BNBUSD: { pair: "BNBUSDT", label: "BNB", tickSize: 0.01, category: "CRYPTO" },
+  XRPUSD: { pair: "XRPUSDT", label: "XRP", tickSize: 0.0001, category: "CRYPTO" },
+  ADAUSD: { pair: "ADAUSDT", label: "Cardano", tickSize: 0.0001, category: "CRYPTO" },
+  // Fiat majors via Binance stablecoin pairs — live real-time quotes that
+  // track spot forex within a few basis points of the stablecoin peg.
+  EURUSD: { pair: "EURUSDT", label: "Euro", tickSize: 0.0001, category: "FOREX" },
+  GBPUSD: { pair: "GBPUSDT", label: "British Pound", tickSize: 0.0001, category: "FOREX" },
+  AUDUSD: { pair: "AUDUSDT", label: "Australian Dollar", tickSize: 0.0001, category: "FOREX" },
 };
 
 const PAIR_TO_SYMBOL = new Map(
@@ -106,12 +114,17 @@ export function buildStreamUrl(symbols: readonly string[]): string {
   return `${WS_BASE}?streams=${streams}`;
 }
 
-function symbolSpec(name: string, tickSize: number, label: string): Symbol {
+function symbolSpec(
+  name: string,
+  tickSize: number,
+  label: string,
+  category: "CRYPTO" | "FOREX",
+): Symbol {
   return {
     id: name,
     name,
     displayName: label,
-    category: "CRYPTO",
+    category,
     contractSize: 1,
     tickSize,
     tickValue: tickSize,
@@ -227,7 +240,7 @@ export function createBinanceMarketData(options: BinanceOptions = {}): MarketDat
       Promise.resolve(
         names.map((name) => {
           const spec = SYMBOL_MAP[name]!;
-          return symbolSpec(name, spec.tickSize, spec.label);
+          return symbolSpec(name, spec.tickSize, spec.label, spec.category);
         }),
       ),
 

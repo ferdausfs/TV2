@@ -24,6 +24,26 @@ function crypto(name: string, displayName: string, tickSize: number): Symbol {
   };
 }
 
+function forex(name: string, displayName: string): Symbol {
+  return {
+    id: name,
+    name,
+    displayName,
+    category: "FOREX",
+    contractSize: 1,
+    tickSize: 0.0001,
+    tickValue: 0.0001,
+    marginPercent: 1,
+    maxLeverage: 100,
+    commission: 0,
+    swapLong: 0,
+    swapShort: 0,
+    tradingHoursStart: null,
+    tradingHoursEnd: null,
+    isActive: true,
+  };
+}
+
 export const DEMO_SYMBOLS: Symbol[] = [
   crypto("BTCUSD", "Bitcoin", 0.01),
   crypto("ETHUSD", "Ethereum", 0.01),
@@ -31,6 +51,12 @@ export const DEMO_SYMBOLS: Symbol[] = [
   crypto("BNBUSD", "BNB", 0.01),
   crypto("XRPUSD", "XRP", 0.0001),
   crypto("ADAUSD", "Cardano", 0.0001),
+  // Majors quoted on Binance as stablecoin pairs (EURUSDT ≈ EUR/USD) — the
+  // binance adapter streams them live; the paper engine marks them the same
+  // way it marks crypto.
+  forex("EURUSD", "Euro"),
+  forex("GBPUSD", "British Pound"),
+  forex("AUDUSD", "Australian Dollar"),
 ];
 
 export const DEMO_SYMBOL_NAMES = DEMO_SYMBOLS.map((s) => s.name);

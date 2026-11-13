@@ -10,11 +10,13 @@ import {
   ChevronDown,
   Circle,
   Clock,
+  Columns2,
   Crosshair,
   Equal,
   Info,
   Layers,
   Layers3,
+  LayoutGrid,
   type LucideIcon,
   Magnet,
   Maximize2,
@@ -46,6 +48,7 @@ import { isDarkTheme, subscribeTheme, toggleTheme } from "../../lib/theme.ts";
 import {
   type DrawingLine,
   type DrawingTool,
+  type ChartLayout,
   type MagnetMode,
   REPLAY_ENABLED,
   TIMEFRAMES,
@@ -108,6 +111,9 @@ export interface ChartToolbarProps {
   onCycleMagnet?: () => void;
   stayInDrawingMode?: boolean;
   onToggleStayInDrawingMode?: () => void;
+  /** Multi-chart layout mode — mounts the switcher when the setter is given. */
+  chartLayout?: ChartLayout;
+  onChartLayoutChange?: (l: ChartLayout) => void;
 }
 
 export function ChartToolbar({
@@ -140,6 +146,8 @@ export function ChartToolbar({
   onCycleMagnet,
   stayInDrawingMode = false,
   onToggleStayInDrawingMode,
+  chartLayout = "single",
+  onChartLayoutChange,
 }: ChartToolbarProps) {
   const [showSymbolSearch, setShowSymbolSearch] = useState(false);
   const [symbolFilter, setSymbolFilter] = useState("");
@@ -200,6 +208,39 @@ export function ChartToolbar({
           TV<span className="text-foreground/60">.2</span>
         </span>
       </div>
+
+      {/* Multi-chart layout switcher (single / dual / quad) */}
+      {onChartLayoutChange && (
+        <div
+          role="group"
+          aria-label="Chart layout"
+          className="flex items-center gap-0.5 border border-border rounded-md p-0.5 shrink-0"
+        >
+          {(
+            [
+              { mode: "single", title: "1 chart", Icon: Square },
+              { mode: "dual", title: "2 charts", Icon: Columns2 },
+              { mode: "quad", title: "4 charts", Icon: LayoutGrid },
+            ] as const
+          ).map(({ mode, title, Icon }) => (
+            <button
+              key={mode}
+              title={title}
+              aria-label={title}
+              aria-pressed={chartLayout === mode}
+              onClick={() => onChartLayoutChange(mode)}
+              className={cn(
+                "p-1 rounded transition-colors",
+                chartLayout === mode
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:bg-secondary hover:text-foreground",
+              )}
+            >
+              <Icon className="h-3.5 w-3.5" />
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Symbol Selector — TradingView style */}
       <div ref={symbolBoxRef} className="relative shrink-0">
