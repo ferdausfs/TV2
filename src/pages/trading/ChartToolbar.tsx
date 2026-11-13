@@ -6,6 +6,7 @@ import {
   ArrowUpDown,
   ArrowUpRight,
   BarChart3,
+  BellRing,
   CalendarDays,
   ChevronDown,
   Circle,
@@ -83,7 +84,7 @@ export interface ChartToolbarProps {
   drawings: DrawingLine[];
   onClearDrawings: () => void;
   rightPanel: string;
-  onRightPanel: (p: "order" | "dom" | "watchlist" | "news" | "tv-analysis") => void;
+  onRightPanel: (p: "order" | "dom" | "watchlist" | "alerts" | "news" | "tv-analysis") => void;
   showRightPanel: boolean;
   onToggleRightPanel: () => void;
   tick?: { bid: number; ask: number; timestamp: number };
@@ -497,6 +498,12 @@ export function ChartToolbar({
           tooltip="Watchlist"
           active={showRightPanel && rightPanel === "watchlist"}
           onClick={() => onRightPanel("watchlist")}
+        />
+        <ToolButton
+          icon={BellRing}
+          tooltip="Price Alerts"
+          active={showRightPanel && rightPanel === "alerts"}
+          onClick={() => onRightPanel("alerts")}
         />
         {/* The news panel is sample data; a live broker must not show it. */}
         {!isHyperliquidMode() && (

@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { AlarmClock, ChevronDown } from "lucide-react";
 import { useInstrumentLabels } from "../hooks/useInstrumentLabels.ts";
 import { TickContext } from "../terminal/use-terminal.ts";
+import { PriceAlertsPanelLive } from "./PriceAlertsPanel.tsx";
 
 interface MobilePosition {
   id: string;
@@ -396,23 +397,14 @@ export function MobileTradingPanel({
         </div>
       )}
 
-      {/* ALERTS TAB */}
-      {activeTab === "alerts" && (
-        <div className="p-3 space-y-3">
-          <div className="text-center py-8">
-            <p className="text-muted-foreground text-sm">Price alerts coming soon</p>
-            <p className="text-xs text-muted-foreground/60 mt-1">
-              Set alerts for price levels and get push notifications
-            </p>
-          </div>
-        </div>
-      )}
+      {/* ALERTS TAB — real price alerts (roadmap feature 1): add form + list */}
+      {activeTab === "alerts" && <PriceAlertsPanelLive symbol={symbol} />}
     </div>
   );
 }
 
 /**
- * Mobile header — TradingView-app style (reference: DESIGN.md §4).
+ * Mobile header — TradingView-app style (reference: DESIGN.TV2.md §5 mobile).
  * One-click toggle · account pill (tap to expand BAL/EQUITY/MARGIN/P&L) ·
  * alerts shortcut. Replaces the old 4-cell stats strip that crowded the top.
  */

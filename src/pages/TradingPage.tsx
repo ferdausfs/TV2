@@ -13,6 +13,7 @@ import { cn } from "../lib/utils.ts";
 import { safeStorage } from "../lib/safe-storage.ts";
 import type { PlaceOrderInput } from "../services/schemas.ts";
 import { updateChartPreferences } from "../hooks/useChartPreferences.ts";
+import { usePriceAlertEngine } from "../hooks/usePriceAlerts.ts";
 import { useTerminal } from "../terminal/use-terminal.ts";
 import { BottomPanel } from "./trading/BottomPanel.tsx";
 import { ChartPanel } from "./trading/ChartPanel.tsx";
@@ -27,6 +28,7 @@ import {
 import { DOMPanel } from "./trading/DOMPanel.tsx";
 import { MarketClosedBanner } from "./trading/MarketClosedBanner.tsx";
 import { OrderPanel } from "./trading/OrderPanel.tsx";
+import { PriceAlertsPanelLive } from "../components/PriceAlertsPanel.tsx";
 import { ReplayScrubber } from "./trading/ReplayScrubber.tsx";
 import { WatchlistPanel } from "./trading/WatchlistPanel.tsx";
 
@@ -125,13 +127,17 @@ export function TradingPage() {
     deleteJournal,
   } = useTerminal();
 
+  // Price-alerts engine: evaluates alerts per tick via a store subscription —
+  // mount once here, no React re-renders (roadmap feature 1).
+  usePriceAlertEngine();
+
   // ── Layout state ──
   const [showIndicatorMenu, setShowIndicatorMenu] = useState(false);
   const [bottomTab, setBottomTab] = useState<
     "positions" | "orders" | "history" | "journal" | "calendar" | "news"
   >("positions");
   const [rightPanel, setRightPanel] = useState<
-    "order" | "dom" | "watchlist" | "news" | "tv-analysis"
+    "order" | "dom" | "watchlist" | "alerts" | "news" | "tv-analysis"
   >("order");
   const [showRightPanel, setShowRightPanel] = useState(true);
   const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
@@ -458,6 +464,7 @@ export function TradingPage() {
               />
             )}
             {rightPanel === "dom" && <DOMPanel symbol={selectedSymbol} />}
+            {rightPanel === "alerts" && <PriceAlertsPanelLive symbol={selectedSymbol} />}
             {rightPanel === "watchlist" && (
               <WatchlistPanel
                 symbols={symbols}

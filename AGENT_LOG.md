@@ -6,6 +6,41 @@
 
 ---
 
+## 2026-11-13 — Session 2 · Feature 1: Price alerts v1 (real, persistent)
+
+- **Agent/tool:** OpenCode (GLM) · branch `auto/price-alerts-v1` → PR → merge
+- **Plan (reviewed files first):** replace the mobile "coming soon" stub with a real
+  alert engine. Pure evaluator `lib/price-alerts.ts` (cross/above/below ×
+  once/every-time × expiry 1h/4h/1d/1w, 30s refire cooldown, persistence helpers).
+  Engine hook `hooks/usePriceAlerts.ts`: one zustand subscription on the trading
+  store's tick map (same pattern as the chart render pump — zero React re-renders),
+  fires toast + WebAudio beep + browser Notification. Shared panel
+  `components/PriceAlertsPanel.tsx` (add form prefilled with live bid + active/
+  triggered lists) mounted in the mobile Alerts tab (bottom sheet) and a new desktop
+  right-rail "Price Alerts" tab (toolbar bell). ChartContextMenu "Add alert at price"
+  now also registers a persistent every-time alert. Unit tests for the evaluator
+  (conditions, once/refire, expiry, cooldown, persistence round-trip + corrupt data).
+  Regression gate: render-pump/live/replay tests untouched.
+- **Recorded assumptions:** v1 is client-side (safeStorage → localStorage, 100-alert
+  cap); server-side delivery is a later roadmap item. Expiry presets none/1h/4h/1d/1w.
+  "above/below" trigger only on a *crossing* tick (already-at-level does not fire).
+- **What changed:** new `lib/price-alerts.ts` (pure evaluator + persistence), new
+  `hooks/usePriceAlerts.ts` (store + tick-subscription engine, zero React renders/tick),
+  new `components/PriceAlertsPanel.tsx` (+ `PriceAlertsPanelLive` wrapper) shared by the
+  mobile Alerts tab and a new desktop right-rail tab (toolbar bell). ChartContextMenu
+  "Add alert at price" registers a persistent every-time alert too. Mobile "coming soon"
+  stub removed. 14 unit tests added.
+- **Touched files:** lib/price-alerts.ts (new), hooks/usePriceAlerts.ts (new),
+  components/PriceAlertsPanel.tsx (new), components/MobileTradingPanel.tsx,
+  pages/TradingPage.tsx, pages/trading/ChartPanel.tsx, pages/trading/ChartToolbar.tsx,
+  __tests__/price-alerts.test.ts (new), AGENT_LOG.md
+- **Commit:** `<fill>`
+- **Results:** typecheck ✅ · lint --max-warnings=0 ✅ · tests **762 passed | 1 skipped**
+  (748 baseline + 14 new) ✅ · `VITE_ADAPTER=binance` build "✓ built" ✅ · check:size within
+  budget ✅
+- **Pending/notes:** drawing-cross + indicator-cross alert types → later; server-side
+  persistent alerts + offline delivery → VPS roadmap item.
+
 ## 2026-11-13 — Session 2 · Feature 0: Theme token migration (DESIGN.TV2.md)
 
 - **Agent/tool:** OpenCode (GLM) · branch `auto/theme-tv-palette` → PR → merge
@@ -34,7 +69,8 @@
   delta-tooltip-pane.ts, tooltip-element.ts, manager.ts, renderers.ts, resolve.ts,
   ChartPanel.tsx, DrawingToolsOverlay.tsx, NewsOverlay.tsx, useChallengeLevels.ts,
   DESIGN.md, DESIGN.TV2.md (new), AGENT_LOG.md
-- **Commit:** `<branch>`
+- **Commit:** branch `ccf97c6` → squash-merged `1eaa6cd` (PR #11, CI+E2E green)
+- **Commit:** branch `ccf97c6` → squash-merged `1eaa6cd` (PR #11, CI+E2E green)
 - **Results:** typecheck ✅ · lint --max-warnings=0 ✅ · tests **748 passed | 1 skipped** ✅ ·
   `VITE_ADAPTER=binance` build "✓ built" ✅ · check:size 72% raw / 69% gzip — within budget ✅ ·
   finish gate: old-hex grep in src = **0** ✅
