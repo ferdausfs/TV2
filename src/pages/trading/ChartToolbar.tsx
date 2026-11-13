@@ -456,7 +456,8 @@ export function ChartToolbar({
         </div>
       }
 
-      {/* Drawing Tools — pencil icon with dropdown */}
+      {/* Drawing Tools — pencil icon with dropdown (desktop; the rail covers
+          mobile) */}
       {
         <div className="hidden md:flex items-center gap-0.5">
           <DrawingToolsDropdown

@@ -2144,7 +2144,14 @@ export function ChartPanel({
   ]);
 
   return (
-    <div className="relative w-full h-full">
+    <div
+      className={cn(
+        "chart-host relative w-full h-full",
+        // Mobile CSS hides the rail unless a drawing tool is armed — matches
+        // the TradingView-app pattern where the rail appears contextually.
+        drawingTool !== "none" && "drawing-active",
+      )}
+    >
       {/* OHLCV Legend Overlay */}
       <ChartLegendHeader
         selectedSymbol={selectedSymbol}

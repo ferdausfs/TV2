@@ -8,8 +8,9 @@
  * so it matches the terminal in dark AND light mode (audit #14: it
  * previously hard-coded a foreign slate/violet palette).
  */
-import { useState, useRef, useCallback, useContext } from "react";
+import { useState, useRef, useCallback, useContext, useEffect } from "react";
 import { cn } from "@/lib/utils";
+import { AlarmClock, ChevronDown } from "lucide-react";
 import { useInstrumentLabels } from "../hooks/useInstrumentLabels.ts";
 import { TickContext } from "../terminal/use-terminal.ts";
 
@@ -51,6 +52,7 @@ interface MobileTradingPanelProps {
 }
 
 type Tab = "order" | "positions" | "alerts";
+export type MobileTab = Tab;
 
 const LOT_PRESETS = [0.01, 0.05, 0.1, 0.25, 0.5, 1.0];
 const TABS: Tab[] = ["order", "positions", "alerts"];
@@ -72,14 +74,15 @@ export function MobileTradingPanel({
   onCloseAllPositions,
   closingPositionId = null,
   closingAll = false,
-}: MobileTradingPanelProps) {
+  initialTab = "order",
+}: MobileTradingPanelProps & { initialTab?: Tab }) {
   // Live quotes come from the shared feed unless the host passes them.
   const feed = useContext(TickContext);
   const bid = bidProp ?? feed?.tick?.bid ?? 0;
   const ask = askProp ?? feed?.tick?.ask ?? 0;
   const { formatQty } = useInstrumentLabels();
   const spread = spreadProp ?? ask - bid;
-  const [activeTab, setActiveTab] = useState<Tab>("order");
+  const [activeTab, setActiveTab] = useState<Tab>(initialTab);
   const [orderType, setOrderType] = useState<"MARKET" | "LIMIT" | "STOP">("MARKET");
   const [quantity, setQuantity] = useState(0.1);
   const [limitPrice, setLimitPrice] = useState<string>("");
@@ -409,52 +412,213 @@ export function MobileTradingPanel({
 }
 
 /**
- * Mobile-optimized account summary strip shown at top of trading page.
+ * Mobile header — TradingView-app style (reference: DESIGN.md §4).
+ * One-click toggle · account pill (tap to expand BAL/EQUITY/MARGIN/P&L) ·
+ * alerts shortcut. Replaces the old 4-cell stats strip that crowded the top.
  */
 export function MobileAccountBar({
   balance,
   equity,
   margin,
   pnl,
+  oneClick = false,
+  onToggleOneClick,
+  onOpenAlerts,
 }: {
   balance: number;
   equity: number;
   margin: number;
   pnl: number;
+  oneClick?: boolean;
+  onToggleOneClick?: () => void;
+  onOpenAlerts?: () => void;
 }) {
+  const [expanded, setExpanded] = useState(false);
+  const fmtUsd = (v: number) =>
+    `$${v.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
   return (
-    <div className="md:hidden flex items-center gap-2 px-2 py-1 bg-card/80 border-b border-border overflow-x-auto no-scrollbar">
-      <div className="shrink-0">
-        <div className="text-[9px] text-muted-foreground uppercase">Bal</div>
-        <div className="text-[11px] font-mono font-bold text-foreground">
-          ${balance.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-        </div>
-      </div>
-      <div className="w-px h-5 bg-border shrink-0" />
-      <div className="shrink-0">
-        <div className="text-[9px] text-muted-foreground uppercase">Equity</div>
-        <div className="text-[11px] font-mono font-bold text-foreground">
-          ${equity.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-        </div>
-      </div>
-      <div className="w-px h-5 bg-border shrink-0" />
-      <div className="shrink-0">
-        <div className="text-[9px] text-muted-foreground uppercase">Margin</div>
-        <div className="text-[11px] font-mono font-bold text-foreground/80">
-          ${margin.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-        </div>
-      </div>
-      <div className="w-px h-5 bg-border shrink-0" />
-      <div className="shrink-0">
-        <div className="text-[9px] text-muted-foreground uppercase">P&L</div>
-        <div
-          className={cn(
-            "text-[11px] font-mono font-bold",
-            pnl >= 0 ? "text-buy" : "text-sell",
-          )}
+    <div className="md:hidden bg-background border-b border-border">
+      <div className="flex items-center gap-2 px-2 h-11">
+        {/* One-click execution toggle */}
+        <button
+          type="button"
+          role="switch"
+          aria-checked={oneClick}
+          aria-label="One-click trading"
+          onClick={onToggleOneClick}
+          className="flex items-center gap-1.5 shrink-0 active:opacity-80"
         >
-          {pnl >= 0 ? "+" : ""}${pnl.toFixed(2)}
+          <span
+            className={cn(
+              "relative inline-flex h-5 w-9 items-center rounded-full transition-colors",
+              oneClick ? "bg-buy" : "bg-secondary border border-border",
+            )}
+          >
+            <span
+              className={cn(
+                "inline-block h-3.5 w-3.5 rounded-full shadow transition-transform",
+                oneClick ? "translate-x-[19px] bg-ink" : "translate-x-[3px] bg-muted-foreground",
+              )}
+            />
+          </span>
+          <span className="text-[11px] text-muted-foreground">One-click</span>
+        </button>
+
+        {/* Account pill — expands to the full stats strip */}
+        <button
+          type="button"
+          onClick={() => setExpanded((v) => !v)}
+          aria-expanded={expanded}
+          className="flex-1 flex items-center justify-center gap-1.5 h-8 mx-1 px-2 rounded-full border border-border bg-card min-w-0"
+        >
+          <span className="px-1.5 py-0.5 rounded-full bg-buy/15 text-buy text-[10px] font-bold shrink-0">
+            Demo
+          </span>
+          <span className="font-mono font-bold text-[13px] tabular-nums truncate">
+            {fmtUsd(equity)}
+          </span>
+          <span
+            className={cn(
+              "text-[10px] font-mono font-semibold shrink-0",
+              pnl >= 0 ? "text-buy" : "text-sell",
+            )}
+          >
+            {pnl >= 0 ? "+" : ""}
+            {fmtUsd(pnl)}
+          </span>
+          <ChevronDown
+            className={cn(
+              "h-3.5 w-3.5 text-muted-foreground shrink-0 transition-transform",
+              expanded && "rotate-180",
+            )}
+          />
+        </button>
+
+        {/* Alerts shortcut */}
+        <button
+          type="button"
+          onClick={onOpenAlerts}
+          aria-label="Price alerts"
+          className="p-1.5 rounded-md hover:bg-secondary active:bg-secondary/70 shrink-0"
+        >
+          <AlarmClock className="h-5 w-5 text-foreground" />
+        </button>
+      </div>
+
+      {expanded && (
+        <div className="flex items-center gap-4 px-3 py-1.5 border-t border-border/60 overflow-x-auto no-scrollbar">
+          {(
+            [
+              { label: "Bal", value: fmtUsd(balance), tone: "" },
+              { label: "Equity", value: fmtUsd(equity), tone: "" },
+              { label: "Margin", value: fmtUsd(margin), tone: "text-foreground/80" },
+              {
+                label: "P&L",
+                value: `${pnl >= 0 ? "+" : ""}${fmtUsd(pnl)}`,
+                tone: pnl >= 0 ? "text-buy" : "text-sell",
+              },
+            ] as const
+          ).map((s) => (
+            <div key={s.label} className="shrink-0">
+              <div className="text-[9px] text-muted-foreground uppercase tracking-wider">
+                {s.label}
+              </div>
+              <div
+                className={cn(
+                  "text-[11px] font-mono font-bold tabular-nums",
+                  s.tone || "text-foreground",
+                )}
+              >
+                {s.value}
+              </div>
+            </div>
+          ))}
         </div>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Persistent Sell/Buy action bar pinned above the bottom panel — the
+ * TradingView-app pattern (reference screenshots): two big side buttons with
+ * live bid/ask, a spread notch between them, and a momentum pressure bar
+ * computed from the last ~30 tick directions.
+ */
+export function MobileActionBar({
+  pipDigits = 5,
+  onSell,
+  onBuy,
+}: {
+  /** Decimals for price display (getPipDigits of the active symbol). */
+  pipDigits?: number;
+  onSell: () => void;
+  onBuy: () => void;
+}) {
+  const feed = useContext(TickContext);
+  const bid = feed?.tick?.bid ?? 0;
+  const ask = feed?.tick?.ask ?? 0;
+  const spread = bid > 0 && ask > 0 ? ask - bid : 0;
+
+  // Tick momentum: +1 for an up-tick, -1 for a down-tick, last 30 kept.
+  // Tracked in an effect (lint: no ref access during render); the bar already
+  // re-renders per quote via TickContext, so this adds no extra renders.
+  const [dirs, setDirs] = useState<number[]>([]);
+  const lastMidRef = useRef<number | null>(null);
+  const mid = bid > 0 && ask > 0 ? (bid + ask) / 2 : 0;
+  useEffect(() => {
+    if (mid <= 0) return;
+    const prev = lastMidRef.current;
+    if (prev != null && mid !== prev) {
+      setDirs((old) => {
+        const next = [...old, mid > prev ? 1 : -1];
+        return next.length > 30 ? next.slice(-30) : next;
+      });
+    }
+    lastMidRef.current = mid;
+  }, [mid]);
+  const sum = dirs.reduce((a, b) => a + b, 0);
+  // 50% neutral ± up to 35% skew, so the bar never fully saturates.
+  const buyPct = dirs.length
+    ? Math.min(85, Math.max(15, Math.round(50 + (35 * sum) / dirs.length)))
+    : 50;
+
+  return (
+    <div className="md:hidden bg-background border-t border-border px-2 pt-1.5 pb-1">
+      <div className="relative grid grid-cols-2 gap-2">
+        <button
+          type="button"
+          onClick={onSell}
+          className="rounded-xl bg-sell text-ink py-2 font-bold leading-tight active:scale-[0.98] transition-transform"
+        >
+          <div className="text-sm">Sell</div>
+          <div className="text-xs font-mono tabular-nums opacity-90">
+            {bid > 0 ? bid.toFixed(pipDigits) : "--"}
+          </div>
+        </button>
+        <button
+          type="button"
+          onClick={onBuy}
+          className="rounded-xl bg-buy text-ink py-2 font-bold leading-tight active:scale-[0.98] transition-transform"
+        >
+          <div className="text-sm">Buy</div>
+          <div className="text-xs font-mono tabular-nums opacity-90">
+            {ask > 0 ? ask.toFixed(pipDigits) : "--"}
+          </div>
+        </button>
+        {spread > 0 && (
+          <span className="absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2 rounded-full bg-card border border-border px-1.5 py-0.5 text-[10px] font-mono tabular-nums text-muted-foreground">
+            {spread.toFixed(pipDigits)}
+          </span>
+        )}
+      </div>
+      <div className="mt-1 flex h-1 overflow-hidden rounded-full bg-secondary">
+        <div className="bg-sell/70" style={{ width: `${100 - buyPct}%` }} />
+        <div className="bg-buy/70 flex-1" />
+      </div>
+      <div className="mt-0.5 flex justify-between text-[10px] font-mono text-muted-foreground">
+        <span>{100 - buyPct}% sell</span>
+        <span>{buyPct}% buy</span>
       </div>
     </div>
   );

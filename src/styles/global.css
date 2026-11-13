@@ -81,7 +81,8 @@
   }
 
   /* Secondary panes are view/annotate surfaces — on phones their drawing
-     rails eat chart width and double up, so they stay desktop-only. */
+     rails eat chart width and double up, so they stay desktop-only. The main
+     chart keeps its rail (the only tool picker reachable on touch). */
   @media (max-width: 767px) {
     .pane-host .drawing-tool-rail {
       display: none;

@@ -1,5 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { MobileAccountBar, MobileTradingPanel } from "../components/MobileTradingPanel.tsx";
+import {
+  MobileAccountBar,
+  MobileActionBar,
+  MobileTradingPanel,
+  type MobileTab,
+} from "../components/MobileTradingPanel.tsx";
 import { NewsFeed as MarketNewsFeed } from "../components/TradingPowerFeatures.tsx";
 import { ConnectionIndicator } from "../components/ConnectionIndicator.tsx";
 import { TradingViewTechnicalAnalysis } from "../components/TradingViewWidgets.tsx";
@@ -130,6 +135,7 @@ export function TradingPage() {
   >("order");
   const [showRightPanel, setShowRightPanel] = useState(true);
   const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
+  const [mobileTab, setMobileTab] = useState<MobileTab>("order");
 
   // ── Vertical resize: chart vs bottom panel ──
   const [bottomPanelHeight, setBottomPanelHeight] = useState(() => {
@@ -234,6 +240,12 @@ export function TradingPage() {
           equity={account?.equity ?? account?.balance ?? 0}
           margin={account?.margin ?? 0}
           pnl={positionPnl}
+          oneClick={oneClick}
+          onToggleOneClick={toggleOneClick}
+          onOpenAlerts={() => {
+            setMobileTab("alerts");
+            setMobilePanelOpen(true);
+          }}
         />
       </div>
 
@@ -391,6 +403,21 @@ export function TradingPage() {
             <div className="w-8 h-0.5 rounded-full bg-border group-hover:bg-primary/50 transition-colors" />
           </div>
 
+          {/* Persistent Sell/Buy action bar — TradingView-app pattern, mobile only */}
+          <div className="md:hidden">
+            <MobileActionBar
+              pipDigits={pipDigits}
+              onSell={() => {
+                setMobileTab("order");
+                setMobilePanelOpen(true);
+              }}
+              onBuy={() => {
+                setMobileTab("order");
+                setMobilePanelOpen(true);
+              }}
+            />
+          </div>
+
           {/* Bottom Panel (Positions / Orders / Journal / Calendar / News) */}
           <BottomPanel
             tab={bottomTab}
@@ -463,14 +490,6 @@ export function TradingPage() {
 
       {/* ── Mobile Trading Panel (small screens only) ──── */}
       <div className="md:hidden">
-        {!mobilePanelOpen && (
-          <button
-            onClick={() => setMobilePanelOpen(true)}
-            className="fixed bottom-20 right-4 z-40 bg-primary text-primary-foreground rounded-full w-14 h-14 flex items-center justify-center shadow-lg active:scale-95 transition-transform"
-          >
-            <span className="text-2xl font-bold">$</span>
-          </button>
-        )}
         {mobilePanelOpen && (
           <>
             {/* Scrim (#25): the chart used to stay tappable behind the sheet. */}
@@ -486,6 +505,8 @@ export function TradingPage() {
                 />
               </div>
             <MobileTradingPanel
+              key={mobileTab}
+              initialTab={mobileTab}
               symbol={selectedSymbol}
               positions={positions || []}
               onPlaceOrder={(order) => {
