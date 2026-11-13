@@ -198,7 +198,7 @@ export function ChartToolbar({
     : "--";
 
   return (
-    <div className="flex items-center gap-1 px-2 py-1 border-b border-border bg-card text-xs shrink-0 overflow-x-auto md:overflow-visible flex-nowrap md:flex-wrap no-scrollbar">
+    <div className="chart-toolbar flex items-center gap-1 px-2 py-1 border-b border-border bg-card text-xs shrink-0 overflow-x-auto md:overflow-visible flex-nowrap md:flex-wrap no-scrollbar">
       {/* TV.2 brand mark */}
       <div
         className="flex items-center gap-1.5 pr-2 mr-0.5 border-r border-border shrink-0"

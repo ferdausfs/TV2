@@ -344,3 +344,15 @@
     }
   }
 }
+
+/* ─── Chart-first density (mobile) ─────────────────────────
+   The terminal chrome — chart toolbar and bottom-panel tab strip — must not
+   eat the chart's vertical space: its buttons keep their own compact sizing
+   instead of the touch floor above, which is for primary actions. Unlayered
+   so it wins over the element rules above. */
+@media (max-width: 767px) {
+  .chart-toolbar button,
+  .bottom-tabs button {
+    min-height: 0;
+  }
+}

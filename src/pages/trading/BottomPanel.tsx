@@ -88,6 +88,19 @@ export function BottomPanel({
   const accounts = useTradingStore((s) => s.accounts as AccountOption[]);
   const activeAccount = accounts.find((account) => account.id === accountId);
 
+  // Chart-first mobile: the panel sits collapsed (tab strip only) by default;
+  // tapping the active tab toggles a sheet-like content area, tapping another
+  // tab switches and opens. Desktop keeps the always-open layout (the open /
+  // collapsed classes are all max-md: scoped, so this state is inert there).
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const handleTabClick = (key: typeof tab) => {
+    if (key === tab) setMobileOpen((v) => !v);
+    else {
+      onTabChange(key);
+      setMobileOpen(true);
+    }
+  };
+
   const handleCancel = (orderId: string) => {
     if (!accountId || isDemo) {
       if (isDemo) toast.warning("Demo Mode", "Trading actions are disabled in demo mode");
@@ -212,15 +225,19 @@ export function BottomPanel({
 
   return (
     <div
-      className="border-t border-border flex flex-col shrink-0 bg-card max-h-[150px] md:max-h-none"
+      className={cn(
+        "border-t border-border flex flex-col shrink-0 bg-card md:max-h-none",
+        mobileOpen ? "max-md:max-h-[55vh]" : "max-md:max-h-9",
+      )}
       style={{ height }}
     >
       {/* Tab bar */}
-      <div className="flex items-center gap-0.5 px-2 py-1 border-b border-border bg-secondary text-xs overflow-x-auto no-scrollbar">
+      <div className="bottom-tabs flex items-center gap-0.5 px-2 py-1 border-b border-border bg-secondary text-xs overflow-x-auto no-scrollbar">
         {visibleTabs.map((t) => (
           <button
             key={t.key}
-            onClick={() => onTabChange(t.key)}
+            onClick={() => handleTabClick(t.key)}
+            aria-expanded={t.key === tab ? mobileOpen : undefined}
             className={cn(
               "flex items-center gap-1 px-2.5 py-1 rounded shrink-0 whitespace-nowrap",
               tab === t.key
@@ -265,8 +282,13 @@ export function BottomPanel({
           )}
       </div>
 
-      {/* Content */}
-      <div className="flex-1 overflow-auto">
+      {/* Content — collapsed to the tab strip on phones until tapped open */}
+      <div
+        className={cn(
+          "flex-1 overflow-auto",
+          !mobileOpen && "max-md:hidden",
+        )}
+      >
         {tab === "positions" && (
           <PositionsTable
             positions={openPositions}

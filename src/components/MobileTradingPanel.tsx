@@ -438,7 +438,7 @@ export function MobileAccountBar({
     `$${v.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
   return (
     <div className="md:hidden bg-background border-b border-border">
-      <div className="flex items-center gap-2 px-2 h-11">
+      <div className="flex items-center gap-2 px-2 h-9">
         {/* One-click execution toggle */}
         <button
           type="button"
@@ -450,14 +450,14 @@ export function MobileAccountBar({
         >
           <span
             className={cn(
-              "relative inline-flex h-5 w-9 items-center rounded-full transition-colors",
+              "relative inline-flex h-4 w-7 items-center rounded-full transition-colors",
               oneClick ? "bg-buy" : "bg-secondary border border-border",
             )}
           >
             <span
               className={cn(
-                "inline-block h-3.5 w-3.5 rounded-full shadow transition-transform",
-                oneClick ? "translate-x-[19px] bg-ink" : "translate-x-[3px] bg-muted-foreground",
+                "inline-block h-3 w-3 rounded-full shadow transition-transform",
+                oneClick ? "translate-x-[13px] bg-ink" : "translate-x-[2px] bg-muted-foreground",
               )}
             />
           </span>
@@ -469,7 +469,7 @@ export function MobileAccountBar({
           type="button"
           onClick={() => setExpanded((v) => !v)}
           aria-expanded={expanded}
-          className="flex-1 flex items-center justify-center gap-1.5 h-8 mx-1 px-2 rounded-full border border-border bg-card min-w-0"
+          className="flex-1 flex items-center justify-center gap-1.5 h-7 mx-1 px-2 rounded-full border border-border bg-card min-w-0"
         >
           <span className="px-1.5 py-0.5 rounded-full bg-buy/15 text-buy text-[10px] font-bold shrink-0">
             Demo
@@ -499,9 +499,9 @@ export function MobileAccountBar({
           type="button"
           onClick={onOpenAlerts}
           aria-label="Price alerts"
-          className="p-1.5 rounded-md hover:bg-secondary active:bg-secondary/70 shrink-0"
+          className="p-1 rounded-md hover:bg-secondary active:bg-secondary/70 shrink-0"
         >
-          <AlarmClock className="h-5 w-5 text-foreground" />
+          <AlarmClock className="h-[18px] w-[18px] text-foreground" />
         </button>
       </div>
 
@@ -584,25 +584,25 @@ export function MobileActionBar({
     : 50;
 
   return (
-    <div className="md:hidden bg-background border-t border-border px-2 pt-1.5 pb-1">
+    <div className="md:hidden bg-background border-t border-border px-2 pt-1 pb-0.5">
       <div className="relative grid grid-cols-2 gap-2">
         <button
           type="button"
           onClick={onSell}
-          className="rounded-xl bg-sell text-ink py-2 font-bold leading-tight active:scale-[0.98] transition-transform"
+          className="rounded-lg bg-sell text-ink py-1 font-bold leading-tight active:scale-[0.98] transition-transform"
         >
-          <div className="text-sm">Sell</div>
-          <div className="text-xs font-mono tabular-nums opacity-90">
+          <div className="text-xs">Sell</div>
+          <div className="text-[11px] font-mono tabular-nums opacity-90">
             {bid > 0 ? bid.toFixed(pipDigits) : "--"}
           </div>
         </button>
         <button
           type="button"
           onClick={onBuy}
-          className="rounded-xl bg-buy text-ink py-2 font-bold leading-tight active:scale-[0.98] transition-transform"
+          className="rounded-lg bg-buy text-ink py-1 font-bold leading-tight active:scale-[0.98] transition-transform"
         >
-          <div className="text-sm">Buy</div>
-          <div className="text-xs font-mono tabular-nums opacity-90">
+          <div className="text-xs">Buy</div>
+          <div className="text-[11px] font-mono tabular-nums opacity-90">
             {ask > 0 ? ask.toFixed(pipDigits) : "--"}
           </div>
         </button>
@@ -612,11 +612,11 @@ export function MobileActionBar({
           </span>
         )}
       </div>
-      <div className="mt-1 flex h-1 overflow-hidden rounded-full bg-secondary">
+      <div className="mt-0.5 flex h-[3px] overflow-hidden rounded-full bg-secondary">
         <div className="bg-sell/70" style={{ width: `${100 - buyPct}%` }} />
         <div className="bg-buy/70 flex-1" />
       </div>
-      <div className="mt-0.5 flex justify-between text-[10px] font-mono text-muted-foreground">
+      <div className="flex justify-between text-[9px] font-mono text-muted-foreground">
         <span>{100 - buyPct}% sell</span>
         <span>{buyPct}% buy</span>
       </div>
