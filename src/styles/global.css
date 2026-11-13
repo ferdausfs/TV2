@@ -71,6 +71,21 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    /* Terminal feel: no tap flash, no pull-to-refresh fighting the chart. */
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html,
+  body {
+    overscroll-behavior: none;
+  }
+
+  /* Secondary panes are view/annotate surfaces — on phones their drawing
+     rails eat chart width and double up, so they stay desktop-only. */
+  @media (max-width: 767px) {
+    .pane-host .drawing-tool-rail {
+      display: none;
+    }
   }
 
   html,

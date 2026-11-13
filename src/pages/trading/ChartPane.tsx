@@ -78,7 +78,7 @@ export function ChartPane({
         </select>
       </div>
 
-      <div className="flex-1 min-h-0 relative">
+      <div className="pane-host flex-1 min-h-0 relative">
         <ChartPanel
           candles={candles}
           selectedSymbol={symbol}

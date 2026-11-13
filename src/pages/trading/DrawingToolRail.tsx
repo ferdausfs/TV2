@@ -129,7 +129,7 @@ function RailGroup({
   const activeMeta = group.tools.find((t) => t.tool === activeTool);
   const Icon = activeMeta?.icon ?? group.icon;
   return (
-    <div className="relative">
+    <div className="drawing-tool-rail relative">
       <RailButton icon={Icon} title={group.label} active={Boolean(activeMeta)} onClick={onToggle} />
       {open && (
         <div className="absolute left-full top-0 ml-1 z-30 min-w-[180px] rounded-md bg-card border border-border shadow-xl py-1">

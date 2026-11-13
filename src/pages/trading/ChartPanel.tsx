@@ -1494,6 +1494,10 @@ export function ChartPanel({
     const minMove = getMinMove(pipDigits);
 
     const chart = createChart(containerRef.current, {
+      // Track the container's box ourselves (mobile URL-bar show/hide, layout
+      // switches, pane grids) — the manual ResizeObserver below stays as a
+      // belt-and-braces fallback.
+      autoSize: true,
       layout: {
         background: { type: ColorType.Solid, color: colors.background },
         textColor: colors.text,

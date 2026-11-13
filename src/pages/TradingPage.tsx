@@ -300,7 +300,9 @@ export function TradingPage() {
               <div
                 className={cn(
                   "relative",
-                  chartLayout !== "single" && "min-w-0 min-h-0 bg-background",
+                  // Single mode: definite height chain (flex-1 → h-full) so the
+                  // chart never mounts at 0px and waits for a tap to resize.
+                  chartLayout === "single" ? "w-full h-full" : "min-w-0 min-h-0 bg-background",
                 )}
               >
                 <ChartPanel
