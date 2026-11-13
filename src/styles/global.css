@@ -3,63 +3,67 @@
 @tailwind utilities;
 
 @layer base {
-  /* TV.2 dark theme — TradingView's signature charcoal + #2962FF accent.
-     Chart canvas (CHART_COLORS.dark.background) matches --background so
-     panels and chart read as one seamless surface. */
+  /* TV.2 dark theme — Binance-grade near-black terminal (per DESIGN.md v2).
+     Canvas #0b0e11, card #1e2329, hairline #2b3139, single accent #FCD535,
+     trading green #0ecb81 / red #f6465d. Chart canvas (CHART_COLORS.dark.
+     background) matches --background so panels and chart read as one surface. */
   :root {
-    /* #131722 */
-    --background: 224 28% 10%;
-    --foreground: 220 14% 84%;
-    --card: 224 20% 14%;
-    --card-foreground: 220 14% 84%;
-    --primary: 224 100% 58%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 224 15% 18%;
-    --secondary-foreground: 220 14% 84%;
-    --muted: 224 15% 18%;
-    --muted-foreground: 227 6% 50%;
-    --accent: 224 100% 58%;
-    --accent-foreground: 0 0% 100%;
-    --destructive: 1 83% 63%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 224 15% 19%;
-    --input: 224 15% 18%;
-    --ring: 224 100% 58%;
+    /* #0b0e11 */
+    --background: 210 21% 6%;
+    --foreground: 216 13% 93%; /* #eaecef */
+    --card: 213 16% 14%; /* #1e2329 */
+    --card-foreground: 216 13% 93%;
+    --primary: 48 97% 60%; /* #fcd535 */
+    --primary-foreground: 225 14% 11%; /* #181a20 — black on yellow */
+    --secondary: 214 14% 20%; /* #2b3139 */
+    --secondary-foreground: 216 13% 93%;
+    --muted: 214 14% 20%;
+    --muted-foreground: 215 17% 61%; /* #929aa5 — AA on the near-black canvas */
+    --accent: 48 97% 60%;
+    --accent-foreground: 225 14% 11%;
+    --destructive: 352 91% 62%; /* #f6465d */
+    --destructive-foreground: 225 14% 11%; /* ink on red — AA (4.9:1) */
+    --border: 214 14% 20%; /* #2b3139 — hairlines read as surface steps */
+    --input: 214 14% 20%;
+    --ring: 217 91% 60%; /* #3b82f6 — Binance's blue focus ring */
     --radius: 0.5rem;
-    --success: 174 60% 40%;
-    --warning: 38 92% 50%;
-    --buy: 174 60% 40%;
-    --sell: 1 83% 63%;
-    --panel-header: 224 20% 12%;
-    --glow: 224 100% 58%;
+    --ink: 225 14% 11%;
+    --success: 157 87% 43%; /* #0ecb81 */
+    --warning: 46 91% 49%; /* #f0b90b */
+    --buy: 157 87% 43%;
+    --sell: 352 91% 62%;
+    --panel-header: 213 16% 14%;
+    --glow: 48 97% 60%;
   }
 
-  /* Light theme */
+  /* Light theme — Binance's transactional mode: white canvas, ink text, the
+     same yellow CTA and trading green/red. Green/red darken for AA on white. */
   .light {
-    --background: 210 20% 98%;
-    --foreground: 224 20% 15%;
+    --background: 0 0% 100%;
+    --foreground: 225 14% 11%; /* #181a20 */
     --card: 0 0% 100%;
-    --card-foreground: 224 20% 15%;
-    --primary: 224 100% 50%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 210 20% 95%;
-    --secondary-foreground: 224 20% 15%;
-    --muted: 210 20% 93%;
-    --muted-foreground: 227 6% 47%;
-    --accent: 224 100% 50%;
-    --accent-foreground: 0 0% 100%;
-    --destructive: 1 83% 57%;
+    --card-foreground: 225 14% 11%;
+    --primary: 48 97% 60%;
+    --primary-foreground: 225 14% 11%;
+    --secondary: 220 14% 96%; /* #f5f5f5 */
+    --secondary-foreground: 225 14% 11%;
+    --muted: 220 14% 96%;
+    --muted-foreground: 217 11% 46%; /* #707a8a family, AA on white */
+    --accent: 48 97% 60%;
+    --accent-foreground: 225 14% 11%;
+    --destructive: 353 64% 53%; /* #d43a4d — AA as text on white */
     --destructive-foreground: 0 0% 100%;
-    --border: 220 14% 89%;
-    --input: 220 14% 89%;
-    --ring: 224 100% 50%;
+    --border: 220 13% 91%; /* #eaecef */
+    --input: 220 13% 91%;
+    --ring: 217 91% 60%;
     --radius: 0.5rem;
-    --success: 174 60% 35%;
-    --warning: 38 92% 45%;
-    --buy: 174 60% 35%;
-    --sell: 1 83% 57%;
-    --panel-header: 210 20% 96%;
-    --glow: 224 100% 50%;
+    --ink: 225 14% 11%;
+    --success: 157 88% 27%; /* #087f52 — AA as text on white */
+    --warning: 46 91% 40%;
+    --buy: 157 88% 27%;
+    --sell: 353 64% 53%;
+    --panel-header: 220 14% 96%;
+    --glow: 46 91% 49%;
   }
 
   * {
@@ -195,10 +199,10 @@
   @apply opacity-90;
 }
 .btn-buy {
-  @apply bg-buy border-buy text-white;
+  @apply bg-buy border-buy text-ink;
 }
 .btn-sell {
-  @apply bg-sell border-sell text-white;
+  @apply bg-sell border-sell text-ink;
 }
 .btn-sm {
   @apply px-2 py-0.5 text-xs;

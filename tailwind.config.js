@@ -38,6 +38,7 @@ export default {
         warning: "hsl(var(--warning))",
         buy: "hsl(var(--buy))",
         sell: "hsl(var(--sell))",
+        ink: "hsl(var(--ink))",
       },
       borderRadius: {
         lg: "var(--radius)",

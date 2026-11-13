@@ -74,7 +74,7 @@ export class TooltipElement {
       "box-shadow": "0px 2px 4px rgba(0, 0, 0, 0.2)",
       "line-height": "16px",
       "pointer-events": "none",
-      color: "#131722",
+      color: "#0b0e11",
     });
 
     const titleElement = document.createElement("div");
@@ -97,14 +97,14 @@ export class TooltipElement {
 
     const dateElement = document.createElement("div");
     applyStyle(dateElement, {
-      color: "#787B86",
+      color: "#929aa5",
     });
     setElementText(dateElement, "");
     element.appendChild(dateElement);
 
     const timeElement = document.createElement("div");
     applyStyle(timeElement, {
-      color: "#787B86",
+      color: "#929aa5",
     });
     setElementText(timeElement, "");
     element.appendChild(timeElement);

@@ -67,7 +67,7 @@ body,
 }
 
 body {
-  /* Matches the terminal's --background (hsl(224 28% 10%) = #131722) and the
+  /* Matches the terminal's --background (hsl(210 21% 6%) = #0b0e11) and the
      chart canvas so there is no flash or seam around the chart. */
-  background: #131722;
+  background: #0b0e11;
 }

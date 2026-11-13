@@ -350,7 +350,7 @@ export const INDICATOR_REGISTRY: IndicatorConfig[] = [
     label: "Bollinger Bands",
     pane: "overlay",
     defaultParams: { period: 20, stdDev: 2 },
-    color: "#26a69a",
+    color: "#0ecb81",
   },
   {
     type: "ATR",

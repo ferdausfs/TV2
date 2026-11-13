@@ -315,7 +315,7 @@ export class DrawingToolsManager {
     if (tool === "extended")
       return { ...two, type: "trendline", extendLeft: true, extendRight: true };
     if (tool === "measure")
-      return { ...two, type: "trendline", color: "#b2b5be", lineStyle: "dashed" };
+      return { ...two, type: "trendline", color: "#929aa5", lineStyle: "dashed" };
     if (tool === "channel") {
       // Offset line defaults parallel and mirrored below so it's visible/draggable.
       return { ...two, type: "channel", time3: p1.time, price3: 2 * p1.price - p2.price };
@@ -641,7 +641,7 @@ export class DrawingToolsManager {
     this.measureResult = {
       id: "measure",
       type: "trendline",
-      color: "#b2b5be",
+      color: "#929aa5",
       lineStyle: "dashed",
       price: p1.price,
       time: p1.time,

@@ -269,14 +269,14 @@ export function MobileTradingPanel({
           <div className="grid grid-cols-2 gap-2">
             <button
               onClick={() => handleOrder("SELL")}
-              className="py-4 rounded-xl bg-sell hover:bg-sell/90 active:bg-sell/80 active:scale-[0.98] text-white font-bold transition-all"
+              className="py-4 rounded-xl bg-sell hover:bg-sell/90 active:bg-sell/80 active:scale-[0.98] text-ink font-bold transition-all"
             >
               <div className="text-lg">SELL</div>
               <div className="text-xs font-mono opacity-80">{fmtPrice(bid)}</div>
             </button>
             <button
               onClick={() => handleOrder("BUY")}
-              className="py-4 rounded-xl bg-buy hover:bg-buy/90 active:bg-buy/80 active:scale-[0.98] text-white font-bold transition-all"
+              className="py-4 rounded-xl bg-buy hover:bg-buy/90 active:bg-buy/80 active:scale-[0.98] text-ink font-bold transition-all"
             >
               <div className="text-lg">BUY</div>
               <div className="text-xs font-mono opacity-80">{fmtPrice(ask)}</div>
@@ -362,7 +362,7 @@ export function MobileTradingPanel({
                             "px-3 py-1.5 rounded-lg text-xs font-medium transition active:scale-95",
                             closingPositionId === pos.id
                               ? "bg-secondary/50 text-muted-foreground cursor-not-allowed"
-                              : "bg-secondary hover:bg-sell/40 active:bg-sell/60 text-foreground/80 hover:text-white",
+                              : "bg-secondary hover:bg-sell/40 active:bg-sell/60 text-foreground/80 hover:text-sell",
                           )}
                         >
                           {closingPositionId === pos.id ? "Closing…" : "Close"}

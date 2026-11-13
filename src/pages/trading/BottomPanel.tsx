@@ -480,7 +480,7 @@ function EconomicCalendar() {
             className={cn(
               "px-2 py-0.5 rounded text-[10px] font-medium",
               useTvCalendar
-                ? "bg-[#2962ff] text-white"
+                ? "bg-primary text-primary-foreground"
                 : "text-muted-foreground hover:bg-secondary",
             )}
           >
