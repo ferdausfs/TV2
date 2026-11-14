@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { MobileDrawSheet } from "../components/MobileShell.tsx";
+import { MobileChartBar } from "../components/MobileChartBar.tsx";
+import { MobileTradingPanel } from "../components/MobileTradingPanel.tsx";
 import { NewsFeed as MarketNewsFeed } from "../components/TradingPowerFeatures.tsx";
 import { ConnectionIndicator } from "../components/ConnectionIndicator.tsx";
 import { TradingViewTechnicalAnalysis } from "../components/TradingViewWidgets.tsx";
@@ -8,6 +10,7 @@ import { cn } from "../lib/utils.ts";
 import { safeStorage } from "../lib/safe-storage.ts";
 import { ScreenerPanel } from "./trading/ScreenerPanel.tsx";
 import { useTickFeed } from "../terminal/use-terminal.ts";
+import type { PlaceOrderInput } from "../services/schemas.ts";
 import { updateChartPreferences, getChartPreferencesFromStorage } from "../hooks/useChartPreferences.ts";
 import { makeInstance } from "../lib/indicator-instances.ts";
 import { usePriceAlertEngine } from "../hooks/usePriceAlerts.ts";
@@ -117,6 +120,7 @@ export function TradingPage() {
     toggleSoundMute,
     onOrderSuccess,
     requestOrderConfirmation: setConfirmOrder,
+    submitOrderDirect,
     quickOrder: handleQuickOrder,
     modifyPositionLevels: handleChartModifyPosition,
     editPosition: setModifyingPosition,
@@ -168,6 +172,8 @@ export function TradingPage() {
     return () => window.removeEventListener("keydown", onKey);
   }, [handleTimeframeChange]);
   const [showRightPanel, setShowRightPanel] = useState(true);
+  // Mobile order-entry sheet — opened from the Trade CTA in the action bar.
+  const [mobileTradeOpen, setMobileTradeOpen] = useState(false);
 
   // ── Vertical resize: chart vs bottom panel ──
   const [bottomPanelHeight, setBottomPanelHeight] = useState(() => {
@@ -454,6 +460,24 @@ export function TradingPage() {
             onUpdateJournal={updateJournal}
             onDeleteJournal={deleteJournal}
           />
+
+          {/* ── Mobile chart action bar (feature 22) ────────── */}
+          <MobileChartBar
+            symbol={selectedSymbol}
+            symbols={symbols}
+            onSymbolChange={setSelectedSymbol}
+            timeframe={timeframe}
+            onTimeframeChange={handleTimeframeChange}
+            chartType={chartPrefs.chartType}
+            onChartTypeChange={(t) => updateChartPreferences({ chartType: t })}
+            activeIndicators={activeIndicators}
+            onToggleIndicator={toggleIndicator}
+            onOpenTrade={() => setMobileTradeOpen(true)}
+            chartLayout={chartLayout}
+            onChartLayoutChange={setChartLayout}
+            hasDrawings={drawings.length > 0}
+            onClearDrawings={clearDrawings}
+          />
         </div>
 
         {/* Right Panel */}
@@ -529,6 +553,55 @@ export function TradingPage() {
         />
         {/* Bottom nav removed (user request: chart-only mobile) */}
       </div>
+
+      {/* ── Mobile order-entry sheet (opened from the Trade CTA) ── */}
+      {mobileTradeOpen && (
+        <>
+          <div
+            className="fixed inset-0 z-40 bg-black/50 md:hidden"
+            onClick={() => setMobileTradeOpen(false)}
+          />
+          <div className="fixed inset-x-0 bottom-0 z-50 flex max-h-[70vh] flex-col overflow-y-auto rounded-t-2xl border-t border-border bg-card shadow-2xl safe-area-bottom animate-slide-up md:hidden">
+            <div className="flex justify-center py-1">
+              <button
+                onClick={() => setMobileTradeOpen(false)}
+                aria-label="Close order ticket"
+                className="h-1.5 w-10 rounded-full bg-muted-foreground/30"
+              />
+            </div>
+            <MobileTradingPanel
+              initialTab="order"
+              symbol={selectedSymbol}
+              positions={positions || []}
+              accountBalance={account?.balance}
+              onPlaceOrder={(order) => {
+                if (oneClick) {
+                  void submitOrderDirect({
+                    ...order,
+                    accountId: activeAccountId!,
+                  } as PlaceOrderInput)
+                    .then(onOrderSuccess)
+                    .catch(() => {
+                      // Already reported by submitOrderDirect.
+                    });
+                  setMobileTradeOpen(false);
+                  return;
+                }
+                setConfirmOrder({
+                  ...(order as PlaceOrderInput),
+                  accountId: activeAccountId!,
+                  _submit: () =>
+                    submitOrderDirect({
+                      ...order,
+                      accountId: activeAccountId!,
+                    } as PlaceOrderInput),
+                });
+                setMobileTradeOpen(false);
+              }}
+            />
+          </div>
+        </>
+      )}
 
     </div>
   );

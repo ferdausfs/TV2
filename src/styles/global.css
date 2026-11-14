@@ -35,6 +35,10 @@
     --buy: 174 63% 40%;
     --sell: 1 83% 63%;
     --panel-header: 0 0% 13%;
+    /* Trade CTA — the white pill in the reference mobile action bar.
+       Inverted surface (white on black); text is pure black for 19:1 AA. */
+    --cta: 0 0% 100%;
+    --cta-foreground: 0 0% 0%;
   }
 
   /* Light mode — TradingView's light default: white platform, panel tint
@@ -65,6 +69,10 @@
     --buy: 157 88% 27%;
     --sell: 353 64% 53%;
     --panel-header: 210 23% 95%;
+    /* Trade CTA — inverted surface inverts with the theme (black pill on
+       white platform), text stays white for AA. */
+    --cta: 0 0% 10%;
+    --cta-foreground: 0 0% 100%;
   }
 
   * {

@@ -44,6 +44,7 @@ Light (TradingView light default) / dark (the reference, black):
 | down / destructive / sell | `#d43a4d` | `#ef5350` | Market direction, loss, short, danger |
 | warning / order-line | `#f0b90b`-family | `#f0b90b` | Pending orders, working lines |
 | watermark | `rgba(0,0,0,0.03)` | `rgba(255,255,255,0.04)` | Chart watermark |
+| cta / cta-foreground | `#131722` / `#ffffff` | `#ffffff` / `#000000` | Inverted-surface Trade CTA (the mobile action bar's pill) |
 
 **Color discipline (the rules that keep TV.2 looking intentional):**
 - Blue means "you can act on this". Never use it for market state.
@@ -95,6 +96,10 @@ Light (TradingView light default) / dark (the reference, black):
   bottom panel across. Panels resize by drag with min-heights.
 - **Mobile**: one column; pickers become full-screen modals; trading panel is
   a bottom sheet (70vh max) with a drag handle; FAB opens it.
+- **Mobile action bar** (feature 22): a TradingView-style bottom row under the
+  chart — symbol + timeframe (left), the inverted-surface **Trade** CTA
+  (centre), chart type · indicators · overflow (right). Every control opens a
+  bottom sheet; the bar itself never floats over the chart.
 
 ## 6. Depth & Elevation
 
