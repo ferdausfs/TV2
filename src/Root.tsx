@@ -4,6 +4,7 @@ import { OpenChartsProvider } from "./adapter/provider.tsx";
 import type { OpenChartsAdapter } from "./adapter/types.ts";
 import { chooseAdapter } from "./adapterChoice.ts";
 import { Terminal } from "./terminal/Terminal.tsx";
+import { PwaUpdateChip } from "./lib/pwa-update.tsx";
 
 /**
  * The hosted app's root.
@@ -57,6 +58,7 @@ function BinanceOrDemo() {
       <OpenChartsProvider adapter={adapter}>
         <Terminal />
       </OpenChartsProvider>
+      <PwaUpdateChip />
     </>
   );
 }

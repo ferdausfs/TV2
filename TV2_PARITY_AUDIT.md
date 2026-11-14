@@ -121,7 +121,7 @@ REST; React context (`use-terminal`) for terminal wiring; chart state lives **ou
 | States & feedback (§5.7) | **Partial** | buttons/states good; no skeleton shimmer; empty states exist |
 | Keyboard (§5.8) | **Partial** | drawing shortcuts Alt+T/H/F/R/M + undo/redo/nudge/clone (manager.ts:33-39); missing Alt+A, `/`, F, Space, Esc-cancel-tool mapping |
 | Focus traps in dialogs | **Partial** | only HL TermsDialog + onboarding Modal trap focus |
-| PWA (§5 / §4 platform) | **Partial** | manifest + icons ok; **zero service worker** — no offline shell, no update prompt |
+| PWA (§5 / §4 platform) | **Mostly** | manifest + icons + hand-rolled service worker (`public/sw.js`): offline shell, versioned asset cache, update chip (`pwa-update.tsx`); no workbox (CSP + surface) |
 | Performance (§5.9) | **Good** | imperative pump (no React per tick), lazy binance chunk, bundle budget check (raw 1250KB/gzip 380KB) green |
 
 ---
@@ -167,7 +167,7 @@ REST; React context (`use-terminal`) for terminal wiring; chart state lives **ou
 | 9 | Compare/overlay symbol + real sub-panes (resizable) | L | ChartPanel.tsx, ChartPane.tsx |
 | 10 | Screenshot + fullscreen + JSON export/import | S | ChartPanel.tsx, ChartContextMenu.tsx |
 | 11 | Mobile §5.4 completion: bottom nav, floating action row, draw bottom-sheet, long-press crosshair — **done**; mobile watchlist (Lists tab) deferred | L | TradingPage.tsx, new components |
-| 12 | PWA service worker (vite-plugin-pwa): offline shell + update prompt | S-M | vite.config, index.html, new sw |
+| 12 | PWA service worker: offline shell + update prompt — **done** (hand-rolled sw, no vite-plugin-pwa) | S-M | vite.config, index.html, new sw |
 | 13 | Screener (client, virtualized) | M | new |
 | 14 | Keyboard shortcuts + focus traps pass | S | various |
 | 15 | Advanced indicators batch 2 (Supertrend, Ichimoku, PSAR, Pivot Points, Volume Profile in a Worker) | L | lib/indicators.ts + worker |
