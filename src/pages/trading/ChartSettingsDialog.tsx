@@ -12,6 +12,7 @@ import { isHyperliquidMode } from "../../hyperliquid/ui/mode.ts";
 import { useState, useEffect, type ReactNode } from "react";
 import { type ChartPreferences, updateChartPreferences } from "../../hooks/useChartPreferences.ts";
 import { useDragOffset } from "../../hooks/useDragOffset.ts";
+import { useDialogFocusTrap } from "../../hooks/useDialogFocusTrap.ts";
 import { cn } from "../../lib/utils.ts";
 import { CHART_COLORS, type ChartColors } from "./constants.ts";
 
@@ -529,7 +530,9 @@ export function ChartSettingsDialog(props: ChartSettingsDialogProps) {
   const { open, onClose } = props;
   const [tab, setTab] = useState<TabId>("appearance");
   const drag = useDragOffset();
-  // Escape closes the dialog (audit #24: it previously only had X/backdrop).
+  // Focus trap (feature 14): Tab wraps inside the dialog; focus restores to
+  // the trigger on close. Escape closes (audit #24).
+  const trapRef = useDialogFocusTrap<HTMLDivElement>(open);
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
@@ -554,7 +557,9 @@ export function ChartSettingsDialog(props: ChartSettingsDialogProps) {
       onClick={close}
     >
       <div
-        className="flex h-[440px] max-h-[90vh] w-[560px] max-w-[94vw] flex-col overflow-hidden rounded-lg border border-border bg-card shadow-2xl"
+        ref={trapRef}
+        tabIndex={-1}
+        className="flex h-[440px] max-h-[90vh] w-[560px] max-w-[94vw] flex-col overflow-hidden rounded-lg border border-border bg-card shadow-2xl outline-none"
         style={drag.style}
         onClick={(e) => e.stopPropagation()}
       >

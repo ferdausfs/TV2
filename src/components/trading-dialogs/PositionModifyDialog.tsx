@@ -3,6 +3,7 @@ import { api } from "../../services/api";
 import { toast } from "../../services/toast";
 import { cn, formatCurrency, formatNumber } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { useDialogFocusTrap } from "../../hooks/useDialogFocusTrap.ts";
 import { useInstrumentLabels } from "../../hooks/useInstrumentLabels.ts";
 import {
   X,
@@ -46,6 +47,7 @@ export function PositionModifyDialog({
   isFeedConnected = true,
 }: PositionModifyDialogProps) {
   const { formatQty, unitLabel, isFutures, instrumentType } = useInstrumentLabels();
+  const trapRef = useDialogFocusTrap<HTMLDivElement>(position != null);
   // Mounted with `key={position.id}` by the parent, so switching positions
   // gives a fresh instance and these initialisers run against the new one.
   // (Previously an effect copied the position into state after mount, which is
@@ -175,7 +177,11 @@ export function PositionModifyDialog({
     <>
       <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm" onClick={onClose} />
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div className="w-full max-w-md bg-card border border-border rounded-xl shadow-2xl shadow-black/40 overflow-hidden">
+        <div
+          ref={trapRef}
+          tabIndex={-1}
+          className="w-full max-w-md bg-card border border-border rounded-xl shadow-2xl shadow-black/40 overflow-hidden outline-none"
+        >
           {/* Header */}
           <div className="flex items-center justify-between px-5 py-3 border-b border-border/60 bg-secondary/50">
             <div className="flex items-center gap-3">

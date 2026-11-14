@@ -56,6 +56,37 @@
   `VITE_ADAPTER=binance` build "✓ built" ✅ · check:size within budget ✅ · dist/sw.js
   emitted ✅
 
+## 2026-11-14 — Session 2 · Feature 14: Keyboard shortcuts pass + dialog focus traps
+
+- **Agent/tool:** OpenCode (GLM) · branch `auto/shortcuts-focus` → PR → merge
+- **Plan (reviewed first):** (1) **`hooks/useDialogFocusTrap.ts`** — generic trap:
+  on open, focus the dialog container (tabIndex -1); Tab/Shift+Tab wraps within it;
+  Escape stays with each dialog's own handler; focus restores to the previously
+  focused element on close. Applied to `ChartSettingsDialog` and the three
+  `trading-dialogs` modals (OrderConfirm / OrderModify / PositionModify) — the
+  audit's a11y gap #6. (2) **Timeframe shortcuts** — a global keydown handler in
+  TradingPage: digits 1–9,0 map to the TIMEFRAMES array order (1=1m … 9=4h, 0=1d);
+  ignored while typing in an input/textarea/select or with ctrl/meta/alt; mirrors
+  the existing Alt+T/H/F/R/M drawing shortcuts.
+- **Recorded assumptions:** digit shortcuts are positional over the fixed
+  TIMEFRAMES list (TradingView-like "number = timeframe" convention); the trap is
+  container-level (no dependency); 1w/1M are reachable via the toolbar, not digits.
+- **What changed:** new `hooks/useDialogFocusTrap.ts` — on open: focus moves to the
+  dialog container (tabIndex -1), Tab/Shift+Tab wrap within visible focusables
+  (capture-phase keydown), on close: focus restores to the trigger. Applied to
+  ChartSettingsDialog + OrderConfirm/OrderModify/PositionModify dialogs (hook called
+  unconditionally at the top; ref attached to the card). TradingPage: global digit
+  shortcuts — 1..9,0 → TIMEFRAMES[0..9] (1m…4h,1d), skipped for input/textarea/
+  select/contentEditable targets and modifier combos. Drawing Alt+T/H/F/R/M
+  shortcuts already existed in the drawing manager (unchanged).
+- **Touched files:** hooks/useDialogFocusTrap.ts (new),
+  pages/trading/ChartSettingsDialog.tsx,
+  components/trading-dialogs/{OrderConfirm,OrderModify,PositionModify}Dialog.tsx,
+  pages/TradingPage.tsx, AGENT_LOG.md
+- **Commit:** branch `auto/shortcuts-focus` → PR `<fill>`
+- **Results:** typecheck ✅ · lint --max-warnings=0 ✅ · tests **780 passed | 1 skipped** ✅ ·
+  `VITE_ADAPTER=binance` build "✓ built" ✅ · check:size within budget ✅
+
 ## 2026-11-14 — Session 2 · Feature 13: Market screener (client-computed, virtualized)
 
 - **Agent/tool:** OpenCode (GLM) · branch `auto/screener` → PR → merge

@@ -135,7 +135,7 @@ REST; React context (`use-terminal`) for terminal wiring; chart state lives **ou
 | 3 | Medium | ChartPanel.tsx:2152 + global.css:86-90 | `drawing-active` class applied but has **no CSS rule** (grep: 1 hit) — the "rail appears only while a tool is armed" intent is dead code; mobile main-chart rail is always visible |
 | 4 | Medium | ChartPanel.tsx:1468-1488 | Countdown hidden on 1d/1w — TV shows it on every timeframe |
 | 5 | Medium | DESIGN.md vs DESIGN.TV2.md | Two conflicting design contracts in repo (Binance palette vs TV palette). Docs must be reconciled when the theme migrates |
-| 6 | Medium | ChartSettingsDialog / trading-dialogs | No focus trap (a11y §5.8) |
+| 6 | Medium | ChartSettingsDialog / trading-dialogs | No focus trap (a11y §5.8) — **fixed** (useDialogFocusTrap, feature 14) |
 | 7 | Low | TradingPage dual/quad | Secondary panes lack indicators/replay — inconsistent parity with main pane |
 | 8 | Low | BottomPanel calendar/news | TradingView-embed tabs shown in Hyperliquid mode are filtered, good — but in demo/binance they're mock data (MOCK_EVENTS/MOCK_NEWS) without a "sample data" tag |
 
@@ -169,7 +169,7 @@ REST; React context (`use-terminal`) for terminal wiring; chart state lives **ou
 | 11 | Mobile §5.4 completion: bottom nav, floating action row, draw bottom-sheet, long-press crosshair — **done**; mobile watchlist (Lists tab) deferred | L | TradingPage.tsx, new components |
 | 12 | PWA service worker: offline shell + update prompt — **done** (hand-rolled sw, no vite-plugin-pwa) | S-M | vite.config, index.html, new sw |
 | 13 | Screener (client, virtualized) — **done** (desktop rail; mobile deferred) | M | new |
-| 14 | Keyboard shortcuts + focus traps pass | S | various |
+| 14 | Keyboard shortcuts + focus traps pass — **done** (digit TF shortcuts + focus traps) | S | various |
 | 15 | Advanced indicators batch 2 (Supertrend, Ichimoku, PSAR, Pivot Points, Volume Profile in a Worker) | L | lib/indicators.ts + worker |
 | 16 | Drawing TV-extras batch (pitchfork, fib channel/time-zones, brush, callout, note, anchored VWAP, favorites toolbar) | L | drawing-tools |
 | 17 | Capacitor Android APK | L | new (last) |
