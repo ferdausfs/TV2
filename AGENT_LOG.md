@@ -4,7 +4,7 @@
 
 ## 2026-11-14 — Session 3 · Feature 22: TradingView-style mobile action bar (bottom)
 
-- **Agent/tool:** OpenCode (GLM) · branch `auto/mobile-action-bar` → PR `<fill>`
+- **Agent/tool:** OpenCode (GLM) · branch `auto/mobile-action-bar` → PR #35 → squash-merged `5bed33a`
 - **Request:** user sent a TradingView mobile screenshot and said "রখন চার্টের নিচে জেমন জেমন
   আছে তেমন তেমন করে ওগুলা add করে" — add the reference's bottom bar under the chart.
 - **Reference layout:** left = symbol + timeframe (bold); centre = white pill **Trade** CTA with a
@@ -25,11 +25,15 @@
   under it), so the price scale stays clear.
 - **Touched files:** src/components/MobileChartBar.tsx (new), src/pages/TradingPage.tsx,
   src/styles/global.css, tailwind.config.js, DESIGN.TV2.md, AGENT_LOG.md
-- **Commit:** `<fill>`
+- **Commit:** `a7d8292` (branch) → squash-merged into main as PR #35 → `5bed33a`
 - **Results:** typecheck ✅ · lint --max-warnings=0 ✅ · tests **792 passed | 1 skipped** ✅ ·
   `VITE_ADAPTER=binance` build "✓ built" ✅ · check:size within budget ✅ · Playwright on Pixel 7:
   all six sheets open, Trade sheet shows ORDER/POSITIONS/ALERTS + BUY/SELL, zero console/page
-  errors; desktop (1440×900) — bar `display:none`, chart toolbar still visible ✅
+  errors; desktop (1440×900) — bar `display:none`, chart toolbar still visible ✅ · PR #35 CI+E2E
+  গ্রিন ✅ · Deploy live ✅ (`assets/index-C6UXHSX2.js` এ "Chart actions" আছে) ·
+  main-এর প্রথম CI রানে `adapter.test.tsx`-এর একটি **teardown race** (`window is not defined`,
+  environment torn down-এর পরে) ধরা পড়েছিল — সেই ফাইল আমার কোড import করে না, আগের কমিটেও
+  একই লোকাল রানে ঘটে না; **re-run গ্রিন** ✅ (pre-existing flake, আমার পরিবর্তনে সম্পর্কিত নয়)
 
 ## 2026-11-14 — Session 3 · Feature 21: chart-only mobile (top bar + bottom nav + News removed)
 
