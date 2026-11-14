@@ -3,6 +3,7 @@ import { api } from "../../services/api";
 import { toast } from "../../services/toast";
 import { cn, formatNumber } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { useDialogFocusTrap } from "../../hooks/useDialogFocusTrap.ts";
 import { X, SlidersHorizontal } from "lucide-react";
 import { useInstrumentLabels } from "../../hooks/useInstrumentLabels.ts";
 
@@ -31,6 +32,7 @@ interface OrderModifyDialogProps {
  */
 export function OrderModifyDialog({ order, onClose, onSaved, tick }: OrderModifyDialogProps) {
   const { unitLabelCap, isFutures } = useInstrumentLabels();
+  const trapRef = useDialogFocusTrap<HTMLDivElement>(order != null);
   const [price, setPrice] = useState(() =>
     order?.price != null
       ? String(order.price)
@@ -95,7 +97,11 @@ export function OrderModifyDialog({ order, onClose, onSaved, tick }: OrderModify
     <>
       <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm" onClick={onClose} />
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div className="w-full max-w-sm bg-card border border-border rounded-xl shadow-2xl overflow-hidden">
+        <div
+          ref={trapRef}
+          tabIndex={-1}
+          className="w-full max-w-sm bg-card border border-border rounded-xl shadow-2xl overflow-hidden outline-none"
+        >
           <div
             className={cn(
               "px-5 py-3 border-b flex items-center justify-between",

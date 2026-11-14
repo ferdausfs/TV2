@@ -1,6 +1,7 @@
 import { cn, formatCurrency, formatNumber } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { TrendingUp, TrendingDown } from "lucide-react";
+import { useDialogFocusTrap } from "../../hooks/useDialogFocusTrap.ts";
 import { useInstrumentLabels } from "../../hooks/useInstrumentLabels.ts";
 
 interface OrderConfirmDialogProps {
@@ -47,6 +48,7 @@ export function OrderConfirmDialog({
   loading,
 }: OrderConfirmDialogProps) {
   const { formatQty } = useInstrumentLabels();
+  const trapRef = useDialogFocusTrap<HTMLDivElement>(isOpen);
   if (!isOpen || !order) return null;
 
   const executionPrice =
@@ -86,7 +88,11 @@ export function OrderConfirmDialog({
     <>
       <div className="fixed inset-0 z-[70] bg-black/50 backdrop-blur-sm" onClick={onCancel} />
       <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
-        <div className="w-full max-w-sm bg-card border border-border rounded-xl shadow-2xl overflow-hidden">
+        <div
+          ref={trapRef}
+          tabIndex={-1}
+          className="w-full max-w-sm bg-card border border-border rounded-xl shadow-2xl overflow-hidden outline-none"
+        >
           <div
             className={cn(
               "px-5 py-3 border-b",

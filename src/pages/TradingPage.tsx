@@ -155,6 +155,31 @@ export function TradingPage() {
   >("order");
   // The screener reads every symbol's latest quote from the shared feed.
   const { ticks: screenerTicks } = useTickFeed();
+
+  // ── Timeframe digit shortcuts (feature 14) ─────────────────────
+  // Digits 1–9,0 map to the fixed TIMEFRAMES order (1=1m … 9=4h, 0=1d),
+  // TradingView-style. Ignored while typing in any field or with modifiers.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      if (!/^[0-9]$/.test(e.key)) return;
+      const target = e.target as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.tagName === "SELECT" ||
+          target.isContentEditable)
+      ) {
+        return;
+      }
+      const idx = e.key === "0" ? 9 : Number(e.key) - 1;
+      const tf = TIMEFRAMES[idx];
+      if (tf) handleTimeframeChange(tf);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [handleTimeframeChange]);
   const [showRightPanel, setShowRightPanel] = useState(true);
   const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
   const [mobileTab, setMobileTab] = useState<MobileTab>("order");
