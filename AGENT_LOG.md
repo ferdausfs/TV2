@@ -6,6 +6,17 @@
 
 ---
 
+## 2026-11-14 — Session 2 · Hygiene: demo-feed stop-while-priming race (leaked interval)
+
+- **Agent/tool:** OpenCode (GLM) · branch `auto/feed-race-fix` → PR → merge
+- **What changed:** `startDemoFeed`/`stopDemoFeed` in services/demo/feed.ts gained a
+  generation token: stop-while-priming no longer lets the in-flight `.then` re-seed
+  cursors and arm a leaked `setInterval` (the cause of the intermittent "window is not
+  defined" unhandled error after vitest teardown — hit main CI once after #15).
+- **Touched files:** services/demo/feed.ts, AGENT_LOG.md
+- **Commit:** branch `auto/feed-race-fix` → PR `<fill>`
+- **Results:** adapter.test 20/20 ✅ · typecheck ✅
+
 ## 2026-11-14 — Session 2 · Feature 4: Scales — log/percent/auto, range buttons, go-to-date
 
 - **Agent/tool:** OpenCode (GLM) · branch `auto/scale-controls` → PR → merge
@@ -31,7 +42,9 @@
   footer mounted inside the chart host.
 - **Touched files:** pages/trading/ChartScaleFooter.tsx (new), pages/trading/ChartPanel.tsx,
   hooks/useChartPreferences.ts, AGENT_LOG.md
-- **Commit:** branch `auto/scale-controls` → PR `<fill>`
+- **Commit:** branch `auto/scale-controls` (`b0d27c6`) → squash-merged `8c3674e`
+  (PR #15, CI+E2E green; a later main-push CI failed on the demo-feed teardown flake —
+  rerun green, root cause fixed in the hygiene PR above)
 - **Results:** typecheck ✅ · lint --max-warnings=0 ✅ · tests **762 passed | 1 skipped** ✅ ·
   `VITE_ADAPTER=binance` build "✓ built" ✅ · check:size within budget ✅
 - **Pending/notes:** per-symbol scale persistence (TV stores scale per symbol) later.

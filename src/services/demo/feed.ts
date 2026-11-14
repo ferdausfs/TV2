@@ -73,12 +73,20 @@ function advance(cursor: SymbolCursor): void {
 
 let starting = false;
 
+// Bumped by stopDemoFeed so an in-flight priming `.then` can detect it was
+// stopped while loading. Without this, stop-while-priming raced: the callback
+// still ran, re-seeded cursors and left a leaked setInterval ticking after the
+// caller (and, in tests, after vitest teardown — "window is not defined").
+let feedGeneration = 0;
+
 export function startDemoFeed(): void {
   if (timer || starting) return;
   starting = true;
+  const gen = ++feedGeneration;
   // The 1m series are loaded on demand, so wait for them before ticking.
   void primeTickPrices(DEMO_SYMBOLS.map((s) => s.name))
     .then(() => {
+      if (gen !== feedGeneration) return; // stopped while loading
       starting = false;
       if (timer) return; // stopped again while loading
       cursors = buildCursors();
@@ -92,11 +100,13 @@ export function startDemoFeed(): void {
       }, TICK_MS);
     })
     .catch(() => {
+      if (gen !== feedGeneration) return;
       starting = false;
     });
 }
 
 export function stopDemoFeed(): void {
+  feedGeneration++;
   if (timer) clearInterval(timer);
   timer = null;
   starting = false;
