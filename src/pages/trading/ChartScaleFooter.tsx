@@ -91,7 +91,7 @@ export function ChartScaleFooter({ chartRef, seriesRef, mode, auto }: Props) {
   };
 
   return (
-    <div className="absolute bottom-1 right-1 z-20 max-w-[calc(100%-8px)]">
+    <div className="absolute bottom-1 right-1 z-20 hidden md:block max-w-[calc(100%-8px)]">
       {pickerOpen && (
         <div className="absolute bottom-9 right-0 z-30 flex items-center gap-1.5 rounded-lg border border-border bg-card p-2 shadow-lg">
           <input

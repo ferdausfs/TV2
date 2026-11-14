@@ -1,15 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   MobileAccountBar,
-  MobileActionBar,
   MobileTradingPanel,
   type MobileTab,
 } from "../components/MobileTradingPanel.tsx";
-import {
-  MobileBottomNav,
-  MobileChartActions,
-  MobileDrawSheet,
-} from "../components/MobileShell.tsx";
+import { MobileChartActions, MobileDrawSheet } from "../components/MobileShell.tsx";
 import { NewsFeed as MarketNewsFeed } from "../components/TradingPowerFeatures.tsx";
 import { ConnectionIndicator } from "../components/ConnectionIndicator.tsx";
 import { TradingViewTechnicalAnalysis } from "../components/TradingViewWidgets.tsx";
@@ -474,20 +469,7 @@ export function TradingPage() {
             <div className="w-8 h-0.5 rounded-full bg-border group-hover:bg-primary/50 transition-colors" />
           </div>
 
-          {/* Persistent Sell/Buy action bar — TradingView-app pattern, mobile only */}
-          <div className="md:hidden">
-            <MobileActionBar
-              pipDigits={pipDigits}
-              onSell={() => {
-                setMobileTab("order");
-                setMobilePanelOpen(true);
-              }}
-              onBuy={() => {
-                setMobileTab("order");
-                setMobilePanelOpen(true);
-              }}
-            />
-          </div>
+          {/* Mobile Sell/Buy bar removed (user request: chart-only mobile) */}
 
           {/* Bottom Panel (Positions / Orders / Journal / Calendar / News) */}
           <BottomPanel
@@ -631,15 +613,7 @@ export function TradingPage() {
           onClear={clearDrawings}
           onDone={() => setDrawingTool("none")}
         />
-        <MobileBottomNav
-          active={mobileTab}
-          sheetOpen={mobilePanelOpen}
-          onChart={() => setMobilePanelOpen(false)}
-          onOpenTab={(tab) => {
-            setMobileTab(tab);
-            setMobilePanelOpen(true);
-          }}
-        />
+        {/* Bottom nav removed (user request: chart-only mobile) */}
       </div>
 
     </div>
