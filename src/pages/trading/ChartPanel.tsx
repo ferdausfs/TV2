@@ -44,6 +44,13 @@ import { SessionHighlighting } from "../../lib/chart-plugins/session-highlightin
 import { TooltipPrimitive } from "../../lib/chart-plugins/tooltip/tooltip.ts";
 import type { IndicatorType } from "../../lib/indicators.ts";
 import { cn } from "../../lib/utils.ts";
+import {
+  enterFullscreen,
+  exitFullscreen,
+  exportChartConfig,
+  importChartConfig,
+  screenshotChart,
+} from "../../lib/chart-export.ts";
 import { api } from "../../services/api.ts";
 import { queryKeys, useCandles } from "../../services/queries.ts";
 import type { Candle, Order, Position, Symbol } from "../../services/schemas.ts";
@@ -1663,6 +1670,38 @@ export function ChartPanel({
     return ((last - base) / base) * 100;
   }, [compareSymbol, compareQuery.data]);
 
+  // ── Export suite (feature 10) ──
+  const handleScreenshot = useCallback(() => {
+    const chart = chartRef.current;
+    if (!chart) return;
+    screenshotChart(chart, selectedSymbol, timeframe);
+  }, [selectedSymbol, timeframe]);
+
+  const containerRefFullscreen = containerRef;
+  const handleToggleFullscreen = useCallback(() => {
+    const el = containerRefFullscreen.current;
+    if (!el) return;
+    if (document.fullscreenElement) exitFullscreen();
+    else enterFullscreen(el);
+  }, [containerRefFullscreen]);
+
+  const handleExportJson = useCallback(() => {
+    void exportChartConfig(selectedSymbol, drawings);
+  }, [selectedSymbol, drawings]);
+
+  const importInputRef = useRef<HTMLInputElement>(null);
+  const handleImportJson = useCallback(() => {
+    importInputRef.current?.click();
+  }, []);
+  const handleImportFile = useCallback(
+    async (file: File) => {
+      await importChartConfig(file, selectedSymbol, (list) => {
+        for (const d of list) onAddDrawing(d);
+      });
+    },
+    [selectedSymbol, onAddDrawing],
+  );
+
   // ── Replay trade event markers ─────────────────────────────
   useEffect(() => {
     const series = candleSeriesRef.current;
@@ -2659,9 +2698,21 @@ export function ChartPanel({
         onReorder={handleReorderDrawing}
       />
 
+      {/* Hidden import input for the JSON config (feature 10) */}
+      <input
+        ref={importInputRef}
+        type="file"
+        accept="application/json,.json"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) void handleImportFile(file);
+          e.target.value = "";
+        }}
+      />
+
       {/* Compare symbol picker (feature 9) */}
-      {comparePickerOpen && (
-        <div
+      {comparePickerOpen && (        <div
           className="fixed inset-0 z-[70] flex items-center justify-center bg-black/40 p-4"
           role="dialog"
           aria-label="Compare symbol"
@@ -2744,6 +2795,10 @@ export function ChartPanel({
           onCompare={() => setComparePickerOpen(true)}
           onRemoveCompare={() => setCompareSymbol(null)}
           compareSymbol={compareSymbol}
+          onScreenshot={handleScreenshot}
+          onToggleFullscreen={handleToggleFullscreen}
+          onExportJson={handleExportJson}
+          onImportJson={handleImportJson}
           onOpenSettings={() => setShowChartSettings(true)}
         />
       )}

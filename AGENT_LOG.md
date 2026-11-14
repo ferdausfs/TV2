@@ -18,6 +18,41 @@
   (PR #16, CI + E2E green)
 - **Results:** adapter.test 20/20 ✅ · typecheck ✅
 
+## 2026-11-14 — Session 2 · Feature 10: Screenshot PNG, fullscreen, JSON export/import
+
+- **Agent/tool:** OpenCode (GLM) · branch `auto/export-suite` → PR → merge
+- **Plan (reviewed first):** three small chart utilities, all from the chart context
+  menu (+ toolbar fullscreen toggle): (1) **Screenshot PNG** — lightweight-charts
+  `chart.takeScreenshot()` returns a canvas; composite the legend/status overlays by
+  drawing the chart canvas then stamping the symbol/TF text (2× DPR already handled
+  by the chart); download via canvas.toBlob + object URL, filename
+  `TV2_<SYM>_<TF>_<date>.png`; (2) **Fullscreen** — the chart host div gets
+  requestFullscreen with a webkit fallback; ChartPanel tracks
+  `document.fullscreenElement` in state for the exit path; (3) **JSON export/import**
+  — export the current chart config (chart prefs snapshot via TEMPLATE_PREF_KEYS +
+  indicator instances + drawings for the symbol) to a `.json` download; import reads
+  a file, validates shape, applies prefs via updateChartPreferences + replaces
+  instances + drawings for the current symbol (toast summary). All client-side, no
+  adapter change.
+- **Recorded assumptions:** screenshot captures the chart canvas area only (overlays
+  stamped as plain text, not pixel-perfect); JSON import replaces the current
+  symbol's drawings (not all symbols); fullscreen is viewport-level (host div), not
+  the whole page.
+- **What changed:** new `lib/chart-export.ts` — screenshotChart (takeScreenshot canvas
+  + legend text stamp + toBlob download, DPR-aware font sizing), enterFullscreen/
+  exitFullscreen (webkit fallback), exportChartConfig (TEMPLATE_PREF_KEYS snapshot +
+  indicator instances + drawings → JSON download) and importChartConfig (shape
+  validation, prefs applied via updateChartPreferences, instances sanitized, drawings
+  cleared-and-pushed through the existing API). Chart context menu: Screenshot (PNG) /
+  Toggle fullscreen / Export config / Import config (Camera, Maximize, FileJson,
+  FolderOpen icons). ChartPanel wires the handlers + a hidden file input; import
+  re-adds drawings via onAddDrawing.
+- **Touched files:** lib/chart-export.ts (new), pages/trading/ChartPanel.tsx,
+  pages/trading/ChartContextMenu.tsx, AGENT_LOG.md
+- **Commit:** branch `auto/export-suite` → PR `<fill>`
+- **Results:** typecheck ✅ · lint --max-warnings=0 ✅ · tests **780 passed | 1 skipped** ✅ ·
+  `VITE_ADAPTER=binance` build "✓ built" ✅ · check:size within budget ✅
+
 ## 2026-11-14 — Session 2 · Feature 9: Compare symbol overlay (percentage scale)
 
 - **Agent/tool:** OpenCode (GLM) · branch `auto/compare-overlay` → PR → merge
@@ -46,7 +81,8 @@
   `symbols` prop threaded from TradingPage. useCandles gained an `enabled` flag.
 - **Touched files:** pages/trading/ChartPanel.tsx, pages/trading/ChartContextMenu.tsx,
   services/queries.ts, pages/TradingPage.tsx, AGENT_LOG.md
-- **Commit:** branch `auto/compare-overlay` → PR `<fill>`
+- **Commit:** branch `auto/compare-overlay` (`c9ca7bc`) → squash-merged `547cadb`
+  (PR #21, CI + E2E green)
 - **Results:** typecheck ✅ · lint --max-warnings=0 ✅ · tests **780 passed | 1 skipped** ✅ ·
   `VITE_ADAPTER=binance` build "✓ built" ✅ · check:size within budget ✅
 - **Pending/notes:** real resizable sub-panes need a pane API — revisit on
