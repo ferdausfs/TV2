@@ -17,6 +17,17 @@ export interface ResolvedFibLevel {
   label: string;
 }
 
+/** A fib-channel level line resolved to pixel space (sloped, like the base). */
+export interface ResolvedChannelLevel {
+  level: number;
+  x1: number | null;
+  y1: number | null;
+  x2: number | null;
+  y2: number | null;
+  color: string;
+  label: string;
+}
+
 /** A drawing with its anchor points resolved to pane pixel coordinates. */
 export interface ResolvedEntry {
   d: DrawingLine;
@@ -38,6 +49,10 @@ export interface ResolvedEntry {
   /** Third anchor (parallel channel offset line). */
   x3?: number | null;
   y3?: number | null;
+  /** Fib channel: level lines resolved to sloped pixel segments. */
+  channelLevels?: ResolvedChannelLevel[];
+  /** Brush: freehand points resolved to pixel space. */
+  pts?: Array<{ x: number; y: number }>;
   state: EntryState;
 }
 

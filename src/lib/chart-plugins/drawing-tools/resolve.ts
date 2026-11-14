@@ -1,6 +1,6 @@
 import type { IChartApi, ISeriesApi, Logical, SeriesOptionsMap, Time } from "lightweight-charts";
 import type { DrawingLine } from "../../../pages/trading/constants";
-import type { EntryState, ResolvedEntry, ResolvedFibLevel } from "./types";
+import type { EntryState, ResolvedChannelLevel, ResolvedEntry, ResolvedFibLevel } from "./types";
 
 export const FIB_LEVELS = [0, 0.236, 0.382, 0.5, 0.618, 0.786, 1] as const;
 export const FIB_EXT_LEVELS = [0, 0.618, 1, 1.618, 2.618] as const;
@@ -133,6 +133,20 @@ export function resolveEntry(d: DrawingLine, ctx: ResolveCtx, state: EntryState)
   if (d.type === "fibonacci" || d.type === "fibextension") {
     entry.fibLevels = resolveFibLevels(d, ctx.series);
   }
+  if (d.type === "fibchannel") {
+    entry.x3 = d.time3 != null ? timeToX(ctx, d.time3) : null;
+    entry.y3 = d.price3 != null ? ctx.series.priceToCoordinate(d.price3) : null;
+    entry.channelLevels = resolveChannelLevels(entry);
+  }
+  if (d.type === "brush") {
+    const raw = (d.points ?? []).map((p) => {
+      const x = timeToX(ctx, p.time);
+      const y = Number.isFinite(p.price) ? ctx.series.priceToCoordinate(p.price) : null;
+      return x !== null && y !== null ? { x, y } : null;
+    });
+    entry.pts = [];
+    for (const r of raw) if (r) entry.pts.push({ x: r.x, y: r.y });
+  }
   if (d.type === "trendline") {
     entry.seg = trendlineSegment(entry, ctx.chart.timeScale().width());
     if (state === "selected" || state === "preview") entry.stats = trendlineStats(d, ctx);
@@ -206,4 +220,22 @@ function resolveFibLevels(d: DrawingLine, series: AnySeries): ResolvedFibLevel[]
       label: `${level} (${formatter.format(price)})`,
     };
   });
+}
+
+// Fib channel: level m sits at price offset (p3−p1)·m from the p1→p2 base —
+// i.e. the base line translated along the channel direction. Unlike the
+// retracement the lines keep the base's slope.
+function resolveChannelLevels(e: ResolvedEntry): ResolvedChannelLevel[] {
+  if (e.x1 === null || e.y1 === null || e.x2 === null || e.y2 === null || e.y3 == null)
+    return [];
+  const dy = e.y3 - e.y1;
+  return FIB_LEVELS.map((level, i) => ({
+    level,
+    x1: e.x1,
+    y1: e.y1! + dy * level,
+    x2: e.x2,
+    y2: e.y2! + dy * level,
+    color: FIB_COLORS[i] ?? "#2962FF",
+    label: String(level),
+  }));
 }

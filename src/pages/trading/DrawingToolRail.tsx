@@ -5,6 +5,7 @@ import {
   Circle,
   Equal,
   EyeOff,
+  GitFork,
   GripVertical,
   Layers,
   Layers3,
@@ -17,13 +18,18 @@ import {
   Ruler,
   Spline,
   Square,
+  Star,
+  StickyNote,
   TrendingUp,
   Triangle,
   Type,
+  MessageSquareText,
+  PencilLine,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useDragOffset } from "../../hooks/useDragOffset.ts";
 import { cn } from "../../lib/utils.ts";
+import { safeStorage } from "../../lib/safe-storage.ts";
 import type { DrawingTool } from "./constants.ts";
 
 interface ToolMeta {
@@ -61,6 +67,7 @@ const GROUPS: ToolGroup[] = [
     tools: [
       { tool: "fibonacci", icon: Layers, label: "Fib Retracement" },
       { tool: "fibextension", icon: Layers3, label: "Fib Extension" },
+      { tool: "fibchannel", icon: GitFork, label: "Fib Channel" },
     ],
   },
   {
@@ -85,7 +92,43 @@ const GROUPS: ToolGroup[] = [
     ],
   },
   { id: "text", icon: Type, label: "Text", tools: [{ tool: "text", icon: Type, label: "Text" }] },
+  {
+    id: "extras",
+    icon: PencilLine,
+    label: "Annotations",
+    tools: [
+      { tool: "brush", icon: PencilLine, label: "Brush" },
+      { tool: "callout", icon: MessageSquareText, label: "Callout" },
+      { tool: "note", icon: StickyNote, label: "Note" },
+    ],
+  },
 ];
+
+// ── Favorites toolbar (feature 16) ───────────────────────────────────────────
+// Starred tools persist (`drawing_favorites`) and render as a compact first
+// group so the most-used tools are one click instead of a flyout.
+
+const FAVORITES_KEY = "drawing_favorites";
+
+function readFavorites(): DrawingTool[] {
+  try {
+    const raw = safeStorage.getItem(FAVORITES_KEY);
+    if (!raw) return [];
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((t): t is DrawingTool => typeof t === "string" && t !== "none");
+  } catch {
+    return [];
+  }
+}
+
+function writeFavorites(list: DrawingTool[]): void {
+  safeStorage.setItem(FAVORITES_KEY, JSON.stringify(list));
+}
+
+const ALL_TOOL_META: Map<DrawingTool, ToolMeta> = new Map(
+  GROUPS.flatMap((g) => g.tools).map((t) => [t.tool, t]),
+);
 
 function RailButton({
   icon: Icon,
@@ -119,12 +162,16 @@ function RailGroup({
   open,
   onToggle,
   onSelect,
+  onToggleFavorite,
+  isFavorite,
 }: {
   group: ToolGroup;
   activeTool: DrawingTool;
   open: boolean;
   onToggle: () => void;
   onSelect: (t: DrawingTool) => void;
+  onToggleFavorite: (t: DrawingTool) => void;
+  isFavorite: (t: DrawingTool) => boolean;
 }) {
   const activeMeta = group.tools.find((t) => t.tool === activeTool);
   const Icon = activeMeta?.icon ?? group.icon;
@@ -144,7 +191,28 @@ function RailGroup({
               )}
             >
               <t.icon className="h-3.5 w-3.5 shrink-0" />
-              {t.label}
+              <span className="flex-1">{t.label}</span>
+              <span
+                role="button"
+                tabIndex={0}
+                title={isFavorite(t.tool) ? "Unstar" : "Star for quick access"}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleFavorite(t.tool);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.stopPropagation();
+                    onToggleFavorite(t.tool);
+                  }
+                }}
+                className={cn(
+                  "p-0.5 rounded hover:bg-secondary-foreground/10",
+                  isFavorite(t.tool) ? "text-[#f0b90b]" : "text-muted-foreground/40",
+                )}
+              >
+                <Star className={cn("h-3 w-3", isFavorite(t.tool) && "fill-current")} />
+              </span>
             </button>
           ))}
         </div>
@@ -178,6 +246,20 @@ export function DrawingToolRail({
     onDrawingTool(drawingTool === t ? "none" : t);
     setOpenGroup(null);
   };
+
+  // Favorites: persisted star list, rendered as a compact first group.
+  const [favorites, setFavorites] = useState<DrawingTool[]>(readFavorites);
+  const toggleFavorite = (t: DrawingTool) => {
+    setFavorites((prev) => {
+      const next = prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t];
+      writeFavorites(next);
+      return next;
+    });
+  };
+  const favMeta = favorites
+    .map((t) => ALL_TOOL_META.get(t))
+    .filter((t): t is ToolMeta => t !== undefined);
+  const isFavorite = (t: DrawingTool) => favorites.includes(t);
 
   const hide = () => {
     setOpenGroup(null);
@@ -221,6 +303,28 @@ export function DrawingToolRail({
           setOpenGroup(null);
         }}
       />
+      {favMeta.length > 0 && (
+        <div className="flex flex-col items-center gap-0.5 pb-0.5 mb-0.5 border-b border-border/50">
+          {favMeta.map((t) => (
+            <div key={t.tool} className="relative">
+              <RailButton
+                icon={t.icon}
+                title={t.label}
+                active={drawingTool === t.tool}
+                onClick={() => select(t.tool)}
+              />
+              <button
+                type="button"
+                title={`Unstar ${t.label}`}
+                onClick={() => toggleFavorite(t.tool)}
+                className="absolute -right-0.5 -top-0.5 rounded-full text-[#f0b90b]"
+              >
+                <Star className="h-2.5 w-2.5 fill-current" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
       {GROUPS.map((g) => (
         <RailGroup
           key={g.id}
@@ -229,6 +333,8 @@ export function DrawingToolRail({
           open={openGroup === g.id}
           onToggle={() => setOpenGroup((o) => (o === g.id ? null : g.id))}
           onSelect={select}
+          onToggleFavorite={toggleFavorite}
+          isFavorite={isFavorite}
         />
       ))}
       <div className="my-0.5 w-full border-t border-border/50" />
