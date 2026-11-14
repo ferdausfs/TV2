@@ -2,6 +2,35 @@
 
 > Continuity file. Entries are **prepended** (newest first) and never deleted.
 
+## 2026-11-14 — Session 3 · Feature 22: TradingView-style mobile action bar (bottom)
+
+- **Agent/tool:** OpenCode (GLM) · branch `auto/mobile-action-bar` → PR `<fill>`
+- **Request:** user sent a TradingView mobile screenshot and said "রখন চার্টের নিচে জেমন জেমন
+  আছে তেমন তেমন করে ওগুলা add করে" — add the reference's bottom bar under the chart.
+- **Reference layout:** left = symbol + timeframe (bold); centre = white pill **Trade** CTA with a
+  swap-arrows icon; right = chart-type icon, ⊞ indicators, ⋮ overflow.
+- **What changed:**
+  1. **new** `src/components/MobileChartBar.tsx` — the bar + six bottom sheets (symbols search,
+     timeframe grid, chart type, indicator registry, overflow menu, price alerts). Every control
+     opens a sheet (DESIGN §5: mobile pickers are sheets, never dropdowns).
+  2. `src/pages/TradingPage.tsx` — mounts the bar under the chart (`md:hidden`); restores the
+     mobile order-entry sheet behind the Trade CTA (scrim + 70vh bottom sheet + `MobileTradingPanel`
+     with the ORDER/POSITIONS/ALERTS tabs); `submitOrderDirect` + `PlaceOrderInput` re-imported.
+  3. `src/styles/global.css` + `tailwind.config.js` — new inverted-surface tokens `--cta` /
+     `--cta-foreground` (dark: white pill / black text = 19:1 AA; light: black pill / white text).
+  4. `DESIGN.TV2.md` — §2 palette row for the CTA tokens, §5 mobile action-bar rule.
+- **Recorded assumptions:** the overflow (⋮) sheet carries theme toggle, chart layout
+  (1/2/4 charts), price alerts and clear-drawings — drawing tools already live on the chart's
+  left rail, so they are not duplicated. The bar never floats over the chart (it is a flex row
+  under it), so the price scale stays clear.
+- **Touched files:** src/components/MobileChartBar.tsx (new), src/pages/TradingPage.tsx,
+  src/styles/global.css, tailwind.config.js, DESIGN.TV2.md, AGENT_LOG.md
+- **Commit:** `<fill>`
+- **Results:** typecheck ✅ · lint --max-warnings=0 ✅ · tests **792 passed | 1 skipped** ✅ ·
+  `VITE_ADAPTER=binance` build "✓ built" ✅ · check:size within budget ✅ · Playwright on Pixel 7:
+  all six sheets open, Trade sheet shows ORDER/POSITIONS/ALERTS + BUY/SELL, zero console/page
+  errors; desktop (1440×900) — bar `display:none`, chart toolbar still visible ✅
+
 ## 2026-11-14 — Session 3 · Feature 21: chart-only mobile (top bar + bottom nav + News removed)
 
 - **Agent/tool:** OpenCode (GLM) · branch `auto/chart-only-mobile` → PR #34 → squash-merged `889f6a6`

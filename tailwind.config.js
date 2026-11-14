@@ -39,6 +39,9 @@ export default {
         buy: "hsl(var(--buy))",
         sell: "hsl(var(--sell))",
         ink: "hsl(var(--ink))",
+        // Trade CTA — inverted surface (white pill on black, black on white).
+        cta: "hsl(var(--cta))",
+        "cta-foreground": "hsl(var(--cta-foreground))",
       },
       borderRadius: {
         lg: "var(--radius)",
