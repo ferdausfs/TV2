@@ -97,7 +97,7 @@ REST; React context (`use-terminal`) for terminal wiring; chart state lives **ou
 | Symbol search chips/recents | **Partial** | text filter + desktop dropdown + mobile fullscreen modal (ChartToolbar.tsx:255-353); watchlist has category chips + favorites; search dialog itself lacks chips/recents |
 | Watchlist: multi-lists, flags, drag, sparkline, change% | **Partial→Mostly** | generic panel now has change%, sparklines, favorite drag-reorder, custom lists (WatchlistPanel.tsx); HlWatchlist keeps its own richer UI |
 | **Alerts: price cross / indicator cross / once-per / expiry / Notification API / list UI** | **Missing** | only drawing-line cross (line-alerts.ts, session-only, toast+beep); mobile Alerts tab is a "coming soon" **stub** (MobileTradingPanel.tsx:403) |
-| Screener | **Missing** | — |
+| Screener | **Partial** | client-computed virtualized screener panel (ScreenerPanel.tsx): live mid, change%, spread, day-range position, sortable + filter; volume column N/A on tick feeds; mobile integration deferred |
 
 ### Replay & trading (spec §4)
 
@@ -168,7 +168,7 @@ REST; React context (`use-terminal`) for terminal wiring; chart state lives **ou
 | 10 | Screenshot + fullscreen + JSON export/import | S | ChartPanel.tsx, ChartContextMenu.tsx |
 | 11 | Mobile §5.4 completion: bottom nav, floating action row, draw bottom-sheet, long-press crosshair — **done**; mobile watchlist (Lists tab) deferred | L | TradingPage.tsx, new components |
 | 12 | PWA service worker: offline shell + update prompt — **done** (hand-rolled sw, no vite-plugin-pwa) | S-M | vite.config, index.html, new sw |
-| 13 | Screener (client, virtualized) | M | new |
+| 13 | Screener (client, virtualized) — **done** (desktop rail; mobile deferred) | M | new |
 | 14 | Keyboard shortcuts + focus traps pass | S | various |
 | 15 | Advanced indicators batch 2 (Supertrend, Ichimoku, PSAR, Pivot Points, Volume Profile in a Worker) | L | lib/indicators.ts + worker |
 | 16 | Drawing TV-extras batch (pitchfork, fib channel/time-zones, brush, callout, note, anchored VWAP, favorites toolbar) | L | drawing-tools |
