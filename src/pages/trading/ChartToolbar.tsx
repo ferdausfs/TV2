@@ -18,6 +18,7 @@ import {
   Layers,
   Layers3,
   LayoutGrid,
+  ListFilter,
   type LucideIcon,
   Magnet,
   Maximize2,
@@ -93,7 +94,9 @@ export interface ChartToolbarProps {
   drawings: DrawingLine[];
   onClearDrawings: () => void;
   rightPanel: string;
-  onRightPanel: (p: "order" | "dom" | "watchlist" | "alerts" | "news" | "tv-analysis") => void;
+  onRightPanel: (
+    p: "order" | "dom" | "watchlist" | "alerts" | "news" | "tv-analysis" | "screener",
+  ) => void;
   showRightPanel: boolean;
   onToggleRightPanel: () => void;
   tick?: { bid: number; ask: number; timestamp: number };
@@ -530,6 +533,12 @@ export function ChartToolbar({
           tooltip="Watchlist"
           active={showRightPanel && rightPanel === "watchlist"}
           onClick={() => onRightPanel("watchlist")}
+        />
+        <ToolButton
+          icon={ListFilter}
+          tooltip="Screener"
+          active={showRightPanel && rightPanel === "screener"}
+          onClick={() => onRightPanel("screener")}
         />
         <ToolButton
           icon={BellRing}

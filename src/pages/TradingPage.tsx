@@ -16,6 +16,8 @@ import { TradingViewTechnicalAnalysis } from "../components/TradingViewWidgets.t
 import type { IndicatorType } from "../lib/indicators.ts";
 import { cn } from "../lib/utils.ts";
 import { safeStorage } from "../lib/safe-storage.ts";
+import { ScreenerPanel } from "./trading/ScreenerPanel.tsx";
+import { useTickFeed } from "../terminal/use-terminal.ts";
 import type { PlaceOrderInput } from "../services/schemas.ts";
 import { updateChartPreferences, getChartPreferencesFromStorage } from "../hooks/useChartPreferences.ts";
 import { makeInstance } from "../lib/indicator-instances.ts";
@@ -149,8 +151,10 @@ export function TradingPage() {
     "positions" | "orders" | "history" | "journal" | "calendar" | "news"
   >("positions");
   const [rightPanel, setRightPanel] = useState<
-    "order" | "dom" | "watchlist" | "alerts" | "news" | "tv-analysis"
+    "order" | "dom" | "watchlist" | "alerts" | "news" | "tv-analysis" | "screener"
   >("order");
+  // The screener reads every symbol's latest quote from the shared feed.
+  const { ticks: screenerTicks } = useTickFeed();
   const [showRightPanel, setShowRightPanel] = useState(true);
   const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
   const [mobileTab, setMobileTab] = useState<MobileTab>("order");
@@ -500,6 +504,14 @@ export function TradingPage() {
               />
             )}
             {rightPanel === "dom" && <DOMPanel symbol={selectedSymbol} />}
+            {rightPanel === "screener" && (
+              <ScreenerPanel
+                symbols={symbols}
+                ticks={screenerTicks}
+                selectedSymbol={selectedSymbol}
+                onSelect={setSelectedSymbol}
+              />
+            )}
             {rightPanel === "alerts" && <PriceAlertsPanelLive symbol={selectedSymbol} />}
             {rightPanel === "watchlist" && (
               <WatchlistPanel

@@ -56,6 +56,42 @@
   `VITE_ADAPTER=binance` build "✓ built" ✅ · check:size within budget ✅ · dist/sw.js
   emitted ✅
 
+## 2026-11-14 — Session 2 · Feature 13: Market screener (client-computed, virtualized)
+
+- **Agent/tool:** OpenCode (GLM) · branch `auto/screener` → PR → merge
+- **Plan (reviewed first):** a "Screener" right-panel tab (toolbar group + the
+  rightPanel union) rendering ALL active symbols with client-computed columns from
+  the live tick stream + the symbols meta: price (mid), change% (session ref — same
+  first-mid rule as the watchlist), bid/ask spread (abs + bps), day range position
+  (0–100% between session low/high tracked in a rolling ref), and volume — skipped:
+  no per-symbol volume on the tick stream (column omitted, logged). **Virtualized**:
+  windowed rendering (~14 visible rows + overscan 6, absolute scroll offset via
+  onScroll) — no dependency, satisfies the audit's "must virtualize" note. Sortable
+  headers (name/price/change%/spread), symbol filter input, row click = select
+  symbol. 1Hz recompute via a shared interval (no per-tick renders). Mobile: the
+  panel is desktop-rail only for now (mobile bottom-sheet integration = follow-up,
+  logged).
+- **Recorded assumptions:** screener rows compute from the live tick stream only
+  (no extra REST sweep per symbol — the demo/binance feeds quote every symbol);
+  session low/high accumulate from the same 1Hz sampler (not server stats);
+  virtualization = fixed row height (44px) windowing, adequate for ≤ a few
+  hundred symbols.
+- **What changed:** new `pages/trading/ScreenerPanel.tsx` — full-symbol table with
+  live mid, session change% (first-mid reference), spread in bps, and a 0–100 day-range
+  position; `useSessionStats` 1Hz sampler accumulates per-symbol ref/low/high and
+  publishes immutable snapshots (no per-tick renders). **Virtualized** body: fixed
+  44px rows, scroll-offset windowing with overscan 6, ResizeObserver-measured
+  viewport — no new dependency. Sortable headers (Symbol/Price/Chg%/Spread), filter
+  input (name/category), footer count, row click selects the symbol. Toolbar gains a
+  Screener ToolButton (ListFilter); `rightPanel` union + TradingPage rail branch added
+  (desktop rail; mobile integration deferred). Volume column intentionally omitted —
+  the tick stream carries no per-symbol volume (logged).
+- **Touched files:** pages/trading/ScreenerPanel.tsx (new),
+  pages/trading/ChartToolbar.tsx, pages/TradingPage.tsx, AGENT_LOG.md
+- **Commit:** branch `auto/screener` → PR `<fill>`
+- **Results:** typecheck ✅ · lint --max-warnings=0 ✅ · tests **780 passed | 1 skipped** ✅ ·
+  `VITE_ADAPTER=binance` build "✓ built" ✅ · check:size within budget ✅
+
 ## 2026-11-14 — Session 2 · Feature 10: Screenshot PNG, fullscreen, JSON export/import
 
 - **Agent/tool:** OpenCode (GLM) · branch `auto/export-suite` → PR → merge
