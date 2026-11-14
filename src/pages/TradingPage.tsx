@@ -1,10 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  MobileAccountBar,
-  MobileTradingPanel,
-  type MobileTab,
-} from "../components/MobileTradingPanel.tsx";
-import { MobileChartActions, MobileDrawSheet } from "../components/MobileShell.tsx";
+import { MobileDrawSheet } from "../components/MobileShell.tsx";
 import { NewsFeed as MarketNewsFeed } from "../components/TradingPowerFeatures.tsx";
 import { ConnectionIndicator } from "../components/ConnectionIndicator.tsx";
 import { TradingViewTechnicalAnalysis } from "../components/TradingViewWidgets.tsx";
@@ -13,7 +8,6 @@ import { cn } from "../lib/utils.ts";
 import { safeStorage } from "../lib/safe-storage.ts";
 import { ScreenerPanel } from "./trading/ScreenerPanel.tsx";
 import { useTickFeed } from "../terminal/use-terminal.ts";
-import type { PlaceOrderInput } from "../services/schemas.ts";
 import { updateChartPreferences, getChartPreferencesFromStorage } from "../hooks/useChartPreferences.ts";
 import { makeInstance } from "../lib/indicator-instances.ts";
 import { usePriceAlertEngine } from "../hooks/usePriceAlerts.ts";
@@ -114,7 +108,6 @@ export function TradingPage() {
     account,
     positions,
     orders,
-    positionPnl,
     chartPositions,
     chartOrders,
     isFeedConnected,
@@ -124,7 +117,6 @@ export function TradingPage() {
     toggleSoundMute,
     onOrderSuccess,
     requestOrderConfirmation: setConfirmOrder,
-    submitOrderDirect,
     quickOrder: handleQuickOrder,
     modifyPositionLevels: handleChartModifyPosition,
     editPosition: setModifyingPosition,
@@ -176,8 +168,6 @@ export function TradingPage() {
     return () => window.removeEventListener("keydown", onKey);
   }, [handleTimeframeChange]);
   const [showRightPanel, setShowRightPanel] = useState(true);
-  const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
-  const [mobileTab, setMobileTab] = useState<MobileTab>("order");
 
   // ── Vertical resize: chart vs bottom panel ──
   const [bottomPanelHeight, setBottomPanelHeight] = useState(() => {
@@ -279,24 +269,10 @@ export function TradingPage() {
   return (
 
     <div className="flex flex-col h-full overflow-hidden">
-      {/* ── Mobile Account Bar (small screens only) ────── */}
-      <div className="md:hidden">
-        <MobileAccountBar
-          balance={account?.balance ?? 0}
-          equity={account?.equity ?? account?.balance ?? 0}
-          margin={account?.margin ?? 0}
-          pnl={positionPnl}
-          oneClick={oneClick}
-          onToggleOneClick={toggleOneClick}
-          onOpenAlerts={() => {
-            setMobileTab("alerts");
-            setMobilePanelOpen(true);
-          }}
-        />
-      </div>
+      {/* Mobile account bar removed (chart-only mobile) */}
 
-      {/* ── Top Toolbar ──────────────────────────────────── */}
-      <div className="relative shrink-0">
+      {/* ── Top Toolbar (desktop; hidden on phones — chart-only mobile) ── */}
+      <div className="relative shrink-0 hidden md:block">
         <ChartToolbar
           selectedSymbol={selectedSymbol}
           symbols={symbols}
@@ -402,19 +378,7 @@ export function TradingPage() {
                   onClearDrawings={clearDrawings}
                   onClearIndicators={handleClearIndicators}
                 />
-                {/* Mobile §5.4: floating chart actions (hidden while drawing) */}
-                <MobileChartActions
-                  drawingToolArmed={drawingTool !== "none"}
-                  onIndicators={() => {
-                    setMobileTab("order");
-                    setMobilePanelOpen(true);
-                  }}
-                  onDraw={() => setDrawingTool("horizontal")}
-                  onAlert={() => {
-                    setMobileTab("alerts");
-                    setMobilePanelOpen(true);
-                  }}
-                />
+                {/* Mobile floating actions removed (chart-only mobile) */}
               </div>
               {chartLayout !== "single" && (
                 <div className="relative min-w-0 min-h-0 bg-background">
@@ -550,56 +514,6 @@ export function TradingPage() {
         )}
       </div>
 
-      {/* ── Mobile Trading Panel (small screens only) ──── */}
-      <div className="md:hidden">
-        {mobilePanelOpen && (
-          <>
-            {/* Scrim (#25): the chart used to stay tappable behind the sheet. */}
-            <div
-              className="fixed inset-0 z-40 bg-black/50 md:hidden"
-              onClick={() => setMobilePanelOpen(false)}
-            />
-            <div className="fixed inset-x-0 bottom-0 z-50 max-h-[70vh] overflow-y-auto bg-card border-t border-border rounded-t-2xl shadow-2xl safe-area-bottom animate-slide-up md:hidden">
-              <div className="flex justify-center py-1">
-                <button
-                  onClick={() => setMobilePanelOpen(false)}
-                  className="w-10 h-1.5 rounded-full bg-muted-foreground/30"
-                />
-              </div>
-            <MobileTradingPanel
-              key={mobileTab}
-              initialTab={mobileTab}
-              symbol={selectedSymbol}
-              positions={positions || []}
-              onPlaceOrder={(order) => {
-                if (oneClick) {
-                  void submitOrderDirect({
-                    ...order,
-                    accountId: activeAccountId!,
-                  } as PlaceOrderInput)
-                    .then(onOrderSuccess)
-                    .catch(() => {
-                      // Already reported by submitOrderDirect.
-                    });
-                  setMobilePanelOpen(false);
-                  return;
-                }
-                setConfirmOrder({
-                  ...(order as PlaceOrderInput),
-                  accountId: activeAccountId!,
-                  _submit: () =>
-                    submitOrderDirect({
-                      ...order,
-                      accountId: activeAccountId!,
-                    } as PlaceOrderInput),
-                });
-                setMobilePanelOpen(false);
-              }}
-            />
-            </div>
-          </>
-        )}
-      </div>
 
       {/* ── Mobile §5.4 shell (feature 11) ─────────────── */}
       <div className="md:hidden">

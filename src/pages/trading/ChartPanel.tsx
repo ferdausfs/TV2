@@ -75,13 +75,11 @@ import {
 } from "./DrawingToolsOverlay.tsx";
 import { DrawingToolRail } from "./DrawingToolRail.tsx";
 import { DRAWING_STYLES_EVENT, getStyleDefaults } from "./drawingStyles.ts";
-import { NewsOverlay } from "./NewsOverlay.tsx";
 import { ObjectTreePanel } from "./ObjectTreePanel.tsx";
 import { useChallengeLevels } from "./useChallengeLevels.ts";
 import type { IndicatorInstance } from "../../lib/indicator-instances.ts";
 import { IndicatorLegendRows, IndicatorSettingsDialog } from "./IndicatorSettings.tsx";
 import { useIndicators } from "./useIndicators.ts";
-import { useNewsOverlay } from "./useNewsOverlay.ts";
 import { useSlTpDrag } from "./useSlTpDrag.ts";
 import {
   formatCountdown,
@@ -1498,14 +1496,6 @@ export function ChartPanel({
   }, [historicalExtra, candles, selectedSymbol, timeframe]);
   const { chartData, volumeData } = useChartData(allCandles, colors);
 
-  const {
-    newsConfig,
-    setNewsConfig,
-    showNewsConfigDialog,
-    setShowNewsConfigDialog,
-    newsPopup,
-    setNewsPopup,
-  } = useNewsOverlay(containerRef, chartRef, selectedSymbol, isDark, chartData);
 
   const dragPrice = useSlTpDrag(
     containerRef,
@@ -2773,22 +2763,6 @@ export function ChartPanel({
         </div>
       )}
 
-      {/* News overlay (popup, config dialog, button) */}
-      {/* No economic-calendar data source exists for Hyperliquid markets. */}
-      {!isHyperliquidMode() && (
-        <NewsOverlay
-          newsConfig={newsConfig}
-          setNewsConfig={setNewsConfig}
-          showNewsConfigDialog={showNewsConfigDialog}
-          setShowNewsConfigDialog={setShowNewsConfigDialog}
-          newsPopup={newsPopup}
-          setNewsPopup={setNewsPopup}
-          isDark={isDark}
-          pipDigits={pipDigits}
-          containerRef={containerRef}
-        />
-      )}
-
       {/* Chart-wide right-click menu (TradingView-style) */}
       {chartMenu && (
         <ChartContextMenu
@@ -2826,7 +2800,7 @@ export function ChartPanel({
         isDark={isDark}
         activePlugins={activePlugins}
         onTogglePlugin={onTogglePlugin}
-        onOpenNewsConfig={() => setShowNewsConfigDialog(true)}
+        onOpenNewsConfig={() => {}}
         hasAccount={!!accountId}
       />
 
