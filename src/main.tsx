@@ -48,6 +48,32 @@ function handleChunkLoadError(event: ErrorEvent | PromiseRejectionEvent) {
 window.addEventListener("error", handleChunkLoadError);
 window.addEventListener("unhandledrejection", handleChunkLoadError);
 
+// ── PWA service worker (feature 12) ───────────────────────────────
+// Registered only in production builds, after load. Scope-safe for GitHub
+// Pages: the relative path resolves under /TV2/ there. The waiting-worker →
+// update-chip flow lives in lib/pwa-update.ts.
+if (import.meta.env.PROD && "serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker
+      .register("./sw.js")
+      .then((reg) => {
+        // A worker is waiting from a previous deploy — surface the chip now.
+        if (reg.waiting) window.dispatchEvent(new Event("sw-waiting"));
+        reg.addEventListener("updatefound", () => {
+          const installing = reg.installing;
+          installing?.addEventListener("statechange", () => {
+            if (installing.state === "installed" && navigator.serviceWorker.controller) {
+              window.dispatchEvent(new Event("sw-waiting"));
+            }
+          });
+        });
+      })
+      .catch(() => {
+        /* SW is a progressive enhancement — never block the app on it. */
+      });
+  });
+}
+
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <Root />

@@ -18,6 +18,44 @@
   (PR #16, CI + E2E green)
 - **Results:** adapter.test 20/20 ✅ · typecheck ✅
 
+## 2026-11-14 — Session 2 · Feature 12: PWA — offline app shell + update prompt
+
+- **Agent/tool:** OpenCode (GLM) · branch `auto/pwa` → PR → merge
+- **Plan (reviewed first):** hand-rolled service worker (no new dependency —
+  `vite-plugin-pwa` pulls workbox and fights this repo's injected CSP meta tag): (1)
+  **`public/sw.js`** — cache-first for same-origin precache (shell: `/`, icons, fonts,
+  manifest) + a runtime cache (stale-while-revalidate) for hashed
+  `assets/*`/`fonts/*`; network-first for `api/*`/`ws` untouched (WS never
+  intercepted); versioned cache name `tv2-vN` with old-cache cleanup on activate;
+  (2) **registration** in `main.tsx` (prod only, `import.meta.env.PROD`, on
+  `window.load`, GitHub-Pages-safe scope `/TV2/` via relative register path); (3)
+  **update prompt** — `controllerchange` + a detected waiting worker → a small
+  toast-style chip "New version available — Reload" (in-app, dismissible, no window
+  reload loop: clicking reloads once and the chip state guards re-shows). Manifest
+  already exists. CSP: `worker-src 'self'` present via default-src 'self' — verify
+  build headers after.
+- **Recorded assumptions:** offline = shell + last-loaded JS (SPA re-render from
+  cache); market data is never cached (always live); the prompt is a plain component
+  not a workbox prompt because there is no workbox.
+- **What changed:** `public/sw.js` — hand-rolled worker: precache of the shell
+  (`./`, manifest, icons) at install + skipWaiting; activate cleans old `tv2-v*`
+  caches + clients.claim; fetch handler: stale-while-revalidate for versioned
+  `assets/*`/`fonts/*`, network-first-with-cache-fallback for navigations (offline
+  boots the cached shell), cache-first for other same-origin GETs; WS/API/never
+  non-GET never intercepted; `SKIP_WAITING` message handler. Registration in
+  `main.tsx` (PROD + `window.load` + relative `./sw.js` so the GitHub-Pages scope is
+  `/TV2/`; waiting worker → `sw-waiting` window event). New
+  `lib/pwa-update.tsx` `PwaUpdateChip` — dismissible "New version available — Reload"
+  chip (mounted in `Root`; session-dismiss flag, controllerchange → single reload).
+  No new dependency (vite-plugin-pwa/workbox intentionally skipped — CSP meta +
+  minimal surface).
+- **Touched files:** public/sw.js (new), src/main.tsx, src/Root.tsx,
+  src/lib/pwa-update.tsx (new), AGENT_LOG.md
+- **Commit:** branch `auto/pwa` → PR `<fill>`
+- **Results:** typecheck ✅ · lint --max-warnings=0 ✅ · tests **780 passed | 1 skipped** ✅ ·
+  `VITE_ADAPTER=binance` build "✓ built" ✅ · check:size within budget ✅ · dist/sw.js
+  emitted ✅
+
 ## 2026-11-14 — Session 2 · Feature 10: Screenshot PNG, fullscreen, JSON export/import
 
 - **Agent/tool:** OpenCode (GLM) · branch `auto/export-suite` → PR → merge
