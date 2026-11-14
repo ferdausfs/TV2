@@ -20,6 +20,14 @@ import {
   atr,
   stochastic,
   vwap,
+  wma,
+  hma,
+  keltnerChannels,
+  donchianChannels,
+  stochRsi,
+  obv,
+  williamsR,
+  roc,
 } from "../../lib/indicators.ts";
 import { effectiveColor, seriesKey, type IndicatorInstance } from "../../lib/indicator-instances.ts";
 import { toIndicatorCandles } from "./utils.ts";
@@ -229,6 +237,112 @@ export function useIndicators(
           setLine(
             seriesKey(inst, "VWAP"),
             { color, lineWidth: 2, lineStyle: LineStyle.Dashed, priceScaleId: "right" },
+            data.map((p) => ({ time: p.time as Time, value: p.value })),
+          );
+          break;
+        }
+        case "WMA": {
+          const data = wma(indCandles, inst.params.period ?? 20);
+          setLine(
+            seriesKey(inst, "WMA"),
+            { color, lineWidth: 1, priceScaleId: "right" },
+            data.map((p) => ({ time: p.time as Time, value: p.value })),
+          );
+          break;
+        }
+        case "HMA": {
+          const data = hma(indCandles, inst.params.period ?? 20);
+          setLine(
+            seriesKey(inst, "HMA"),
+            { color, lineWidth: 2, priceScaleId: "right" },
+            data.map((p) => ({ time: p.time as Time, value: p.value })),
+          );
+          break;
+        }
+        case "KELTNER": {
+          const data = keltnerChannels(
+            indCandles,
+            inst.params.period ?? 20,
+            inst.params.multiplier ?? 2,
+          );
+          setLine(
+            seriesKey(inst, "KC-upper"),
+            { color: color + "80", lineWidth: 1, priceScaleId: "right" },
+            data.upper.map((p) => ({ time: p.time as Time, value: p.value })),
+          );
+          setLine(
+            seriesKey(inst, "KC-mid"),
+            { color, lineWidth: 1, priceScaleId: "right" },
+            data.middle.map((p) => ({ time: p.time as Time, value: p.value })),
+          );
+          setLine(
+            seriesKey(inst, "KC-lower"),
+            { color: color + "80", lineWidth: 1, priceScaleId: "right" },
+            data.lower.map((p) => ({ time: p.time as Time, value: p.value })),
+          );
+          break;
+        }
+        case "DONCHIAN": {
+          const data = donchianChannels(indCandles, inst.params.period ?? 20);
+          setLine(
+            seriesKey(inst, "DC-upper"),
+            { color, lineWidth: 1, priceScaleId: "right" },
+            data.upper.map((p) => ({ time: p.time as Time, value: p.value })),
+          );
+          setLine(
+            seriesKey(inst, "DC-mid"),
+            { color: color + "80", lineWidth: 1, lineStyle: LineStyle.Dashed, priceScaleId: "right" },
+            data.middle.map((p) => ({ time: p.time as Time, value: p.value })),
+          );
+          setLine(
+            seriesKey(inst, "DC-lower"),
+            { color, lineWidth: 1, priceScaleId: "right" },
+            data.lower.map((p) => ({ time: p.time as Time, value: p.value })),
+          );
+          break;
+        }
+        case "STOCHRSI": {
+          const data = stochRsi(
+            indCandles,
+            inst.params.rsiPeriod ?? 14,
+            inst.params.stochPeriod ?? 14,
+            inst.params.dPeriod ?? 3,
+          );
+          setLine(
+            seriesKey(inst, "SRSI-K"),
+            { color, lineWidth: 1, priceScaleId: "stochrsi" },
+            data.k.map((p) => ({ time: p.time as Time, value: p.value })),
+          );
+          setLine(
+            seriesKey(inst, "SRSI-D"),
+            { color: "#ff9800", lineWidth: 1, priceScaleId: "stochrsi" },
+            data.d.map((p) => ({ time: p.time as Time, value: p.value })),
+          );
+          break;
+        }
+        case "OBV": {
+          const data = obv(indCandles);
+          setLine(
+            seriesKey(inst, "OBV"),
+            { color, lineWidth: 1, priceScaleId: "obv" },
+            data.map((p) => ({ time: p.time as Time, value: p.value })),
+          );
+          break;
+        }
+        case "WPR": {
+          const data = williamsR(indCandles, inst.params.period ?? 14);
+          setLine(
+            seriesKey(inst, "WPR"),
+            { color, lineWidth: 1, priceScaleId: "wpr" },
+            data.map((p) => ({ time: p.time as Time, value: p.value })),
+          );
+          break;
+        }
+        case "ROC": {
+          const data = roc(indCandles, inst.params.period ?? 9);
+          setLine(
+            seriesKey(inst, "ROC"),
+            { color, lineWidth: 1, priceScaleId: "roc" },
             data.map((p) => ({ time: p.time as Time, value: p.value })),
           );
           break;

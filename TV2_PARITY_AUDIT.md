@@ -70,7 +70,7 @@ REST; React context (`use-terminal`) for terminal wiring; chart state lives **ou
 
 | Item | Status | Notes |
 | --- | --- | --- |
-| Catalog | **Partial** | 8/27: SMA EMA RSI MACD BOLL ATR STOCH VWAP (`lib/indicators.ts`). Missing: WMA HMA Keltner Donchian Supertrend Ichimoku PSAR StochRSI ADX CCI MFI OBV W%R ROC Volume+MA Volume Profile Pivots |
+| Catalog | **Partial** | 16/27: SMA EMA WMA HMA RSI MACD BOLL Keltner Donchian STOCH StochRSI ATR VWAP OBV W%R ROC (`lib/indicators.ts`). Missing: Supertrend Ichimoku PSAR ADX CCI MFI Volume+MA Volume Profile Pivots |
 | Computation | **Partial** | sync on main thread — fine for 8, needs a Worker for profile/ichi-class |
 | Settings dialog (Inputs/Style/Visibility) | **Missing** | fixed default params only |
 | Menu: categories / search / favorites | **Missing** | plain list (PluginsDropdown, ChartToolbar.tsx) |
@@ -162,7 +162,7 @@ REST; React context (`use-terminal`) for terminal wiring; chart state lives **ou
 | 4 | Scales: log/percent/auto toggles + range buttons (1D…All) + Go-to-date | M | ChartPanel.tsx, ChartContextMenu.tsx |
 | 5 | Timeframes: +3m/+2h/+1M(+1s where feed supports) | S | constants.ts, ChartToolbar.tsx |
 | 6 | Indicator infra: settings dialog (Inputs/Style/Visibility), menu search/favorites, per-indicator legend rows (eye/gear/✕) | M-L | useIndicators.ts, ChartToolbar.tsx, ChartPanel.tsx |
-| 7 | Indicator catalog expansion batch 1 (WMA, HMA, Keltner, Donchian, StochRSI, OBV, W%R, ROC, Volume+MA, ADX, CCI, MFI) | M | lib/indicators.ts |
+| 7 | Indicator catalog expansion batch 1 (WMA, HMA, Keltner, Donchian, StochRSI, OBV, W%R, ROC) — **done**; Volume+MA, ADX, CCI, MFI deferred to batch 2 | M | lib/indicators.ts |
 | 8 | Watchlist v2: change%, sparkline, drag-reorder, multi-lists, colored flags | M | WatchlistPanel.tsx |
 | 9 | Compare/overlay symbol + real sub-panes (resizable) | L | ChartPanel.tsx, ChartPane.tsx |
 | 10 | Screenshot + fullscreen + JSON export/import | S | ChartPanel.tsx, ChartContextMenu.tsx |

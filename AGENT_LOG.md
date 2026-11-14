@@ -18,6 +18,38 @@
   (PR #16, CI + E2E green)
 - **Results:** adapter.test 20/20 ✅ · typecheck ✅
 
+## 2026-11-14 — Session 2 · Feature 7: Indicator catalog batch 1 (8 new indicators)
+
+- **Agent/tool:** OpenCode (GLM) · branch `auto/indicator-batch1` → PR → merge
+- **Plan (reviewed first):** add 8 indicators to the registry + calc lib, wired through
+  the feature-6 instance infra (each is registry entry + paramSpecs + a useIndicators
+  case): WMA(20, overlay), HMA(20, overlay), Keltner Channels(20, 2×ATR, overlay),
+  Donchian Channels(20, overlay), StochRSI(14/14/3/3, below), OBV(below, no inputs),
+  Williams %R(14, below), ROC(9, overlay). All computed in `lib/indicators.ts` from
+  the existing candle source; sub-pane placement via the existing pseudo-scale ids
+  (`rsi`-style dedicated priceScaleIds). Colors kept TV-palette-adjacent.
+  Tests: unit tests for each new calc (hand-computed values + NaN head behaviour
+  matching the existing calc test style).
+- **Recorded assumptions:** HMA = WMA(2×WMA(n) − WMA(n/2), √n) standard definition;
+  Keltner basis EMA(20) with ATR(20)±mult; Donchian uses highest-high/lowest-low of
+  the window inclusive of the current bar; StochRSI = stochastic of RSI, %K = raw
+  stoch, %D = SMA(3) of %K; W%R = (HH−C)/(HH−LL)×−100; ROC = 100×(C/C[n]−1), leading
+  NaNs aligned like the other calcs.
+- **What changed:** `lib/indicators.ts` gains 8 calcs — wma (linear weights),
+  hma (WMA of 2·WMA(n/2)−WMA(n) over √n, tail-aligned), keltnerChannels (EMA basis ±
+  mult·ATR, tail-aligned with ATR's one-bar delay), donchianChannels (HH/LL inclusive),
+  stochRsi (stochastic of the RSI series), obv (cumulative signed volume, starts 0),
+  williamsR (−100..0), roc (percent change). Registry: 8 entries with paramSpecs +
+  TV-palette-adjacent colors; IndicatorType now 16 members. useIndicators: one case per
+  new type; sub-panes on dedicated pseudo-scales (stochrsi/obv/wpr/roc); overlays share
+  "right". StochRSI %D and Keltner/Donchian mid styling follow the existing STOCH/BOLL
+  conventions. indicators.test.ts: +14 tests (67 total in file), all hand-verified.
+- **Touched files:** lib/indicators.ts, pages/trading/useIndicators.ts,
+  __tests__/indicators.test.ts, AGENT_LOG.md
+- **Commit:** branch `auto/indicator-batch1` → PR `<fill>`
+- **Results:** typecheck ✅ · lint --max-warnings=0 ✅ · tests **780 passed | 1 skipped** ✅
+  (baseline 762 → 780) · `VITE_ADAPTER=binance` build "✓ built" ✅ · check:size within budget ✅
+
 ## 2026-11-14 — Session 2 · Feature 6: Indicator infra — instances, per-indicator settings, menu search/favorites, legend rows
 
 - **Agent/tool:** OpenCode (GLM) · branch `auto/indicator-infra` → PR → merge
@@ -54,7 +86,8 @@
   pages/trading/useIndicators.ts, pages/trading/ChartPanel.tsx,
   pages/trading/ChartToolbar.tsx, pages/trading/IndicatorSettings.tsx (new),
   pages/TradingPage.tsx, AGENT_LOG.md
-- **Commit:** branch `auto/indicator-infra` → PR `<fill>`
+- **Commit:** branch `auto/indicator-infra` (`fb7208a`) → squash-merged `3bb384c`
+  (PR #18, CI + E2E green)
 - **Results:** typecheck ✅ · lint --max-warnings=0 ✅ · tests **762 passed | 1 skipped** ✅ ·
   `VITE_ADAPTER=binance` build "✓ built" ✅ · check:size within budget ✅
 
