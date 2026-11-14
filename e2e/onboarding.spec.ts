@@ -85,7 +85,12 @@ test.describe("wallet connect and one-time setup", () => {
 
     await page.reload();
     await waitForTerminal(page);
-    await expect(page.getByRole("button", { name: /^Wallet 0x/ })).toBeVisible();
+    // Scope to the topbar: the order panel also renders a ConnectButton, so an
+    // unscoped /^Wallet 0x/ locator resolves to two elements mid-mount and
+    // flakes (strict-mode violation seen on unrelated chart PRs).
+    await expect(
+      page.getByTestId("hl-topbar").getByRole("button", { name: /^Wallet 0x/ }),
+    ).toBeVisible();
     await expect(page.getByRole("dialog", { name: "Set up trading" })).toHaveCount(0);
     await expect(page.getByText("Setup needed")).toHaveCount(0);
     expect(hl.fake.actionsOfType("approveAgent")).toHaveLength(1); // no second approval
