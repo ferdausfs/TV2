@@ -2,9 +2,13 @@ import {
   ArrowDownToLine,
   ArrowUpFromLine,
   Bell,
+  Camera,
   ClipboardCopy,
+  FileJson,
+  FolderOpen,
   GitCompareArrows,
   ListTree,
+  Maximize,
   RotateCcw,
   Settings,
   Trash2,
@@ -40,6 +44,11 @@ export interface ChartContextMenuProps {
   onRemoveCompare?: () => void;
   /** The symbol currently compared (null = none). */
   compareSymbol?: string | null;
+  /** Export suite (feature 10). */
+  onScreenshot?: () => void;
+  onToggleFullscreen?: () => void;
+  onExportJson?: () => void;
+  onImportJson?: () => void;
   onOpenSettings: () => void;
 }
 
@@ -150,6 +159,10 @@ export function ChartContextMenu(props: ChartContextMenuProps) {
     onCompare,
     onRemoveCompare,
     compareSymbol,
+    onScreenshot,
+    onToggleFullscreen,
+    onExportJson,
+    onImportJson,
     onOpenSettings,
   } = props;
 
@@ -264,6 +277,48 @@ export function ChartContextMenu(props: ChartContextMenuProps) {
             danger
             onClick={() => {
               onRemoveCompare();
+              onClose();
+            }}
+          />
+        )}
+        {/* Export suite (feature 10) */}
+        {(onScreenshot || onToggleFullscreen || onExportJson || onImportJson) && <Separator />}
+        {onScreenshot && (
+          <MenuItem
+            icon={<Camera className="h-3.5 w-3.5" />}
+            label="Screenshot (PNG)"
+            onClick={() => {
+              onScreenshot();
+              onClose();
+            }}
+          />
+        )}
+        {onToggleFullscreen && (
+          <MenuItem
+            icon={<Maximize className="h-3.5 w-3.5" />}
+            label="Toggle fullscreen"
+            onClick={() => {
+              onToggleFullscreen();
+              onClose();
+            }}
+          />
+        )}
+        {onExportJson && (
+          <MenuItem
+            icon={<FileJson className="h-3.5 w-3.5" />}
+            label="Export config (JSON)"
+            onClick={() => {
+              onExportJson();
+              onClose();
+            }}
+          />
+        )}
+        {onImportJson && (
+          <MenuItem
+            icon={<FolderOpen className="h-3.5 w-3.5" />}
+            label="Import config (JSON)…"
+            onClick={() => {
+              onImportJson();
               onClose();
             }}
           />

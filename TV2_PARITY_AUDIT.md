@@ -63,7 +63,7 @@ REST; React context (`use-terminal`) for terminal wiring; chart state lives **ou
 | Multi-chart layouts 1/2/4/6 + sync | **Partial** | 1/2/4 only (TradingPage.tsx); secondary panes are bare charts (no indicators/replay), no crosshair/time sync |
 | Chart settings dialog | **Partial** | ChartSettingsDialog.tsx:36-44 — Appearance/Colors/Trading/Events/Challenge; missing Scales/Timezone/Precision/Session tabs |
 | Templates save/load | **Done** | ChartTemplatesMenu.tsx (server-side + autosave) |
-| Screenshot PNG / fullscreen | **Missing** | no takeScreenshot/toBlob, no fullscreen |
+| Screenshot PNG / fullscreen | **Partial** | chart-canvas screenshot with legend stamp + host-level fullscreen toggle (chart-export.ts, context menu); JSON config export/import included |
 | JSON export/import of layout | **Missing** | — |
 
 ### Indicators (spec §4)
