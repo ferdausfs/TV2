@@ -5,6 +5,11 @@ import {
   MobileTradingPanel,
   type MobileTab,
 } from "../components/MobileTradingPanel.tsx";
+import {
+  MobileBottomNav,
+  MobileChartActions,
+  MobileDrawSheet,
+} from "../components/MobileShell.tsx";
 import { NewsFeed as MarketNewsFeed } from "../components/TradingPowerFeatures.tsx";
 import { ConnectionIndicator } from "../components/ConnectionIndicator.tsx";
 import { TradingViewTechnicalAnalysis } from "../components/TradingViewWidgets.tsx";
@@ -106,6 +111,8 @@ export function TradingPage() {
     clearDrawings,
     undoDrawing,
     redoDrawing,
+    canUndoDrawing,
+    canRedoDrawing,
     activeAccountId,
     account,
     positions,
@@ -371,6 +378,19 @@ export function TradingPage() {
                   onClearDrawings={clearDrawings}
                   onClearIndicators={handleClearIndicators}
                 />
+                {/* Mobile §5.4: floating chart actions (hidden while drawing) */}
+                <MobileChartActions
+                  drawingToolArmed={drawingTool !== "none"}
+                  onIndicators={() => {
+                    setMobileTab("order");
+                    setMobilePanelOpen(true);
+                  }}
+                  onDraw={() => setDrawingTool("horizontal")}
+                  onAlert={() => {
+                    setMobileTab("alerts");
+                    setMobilePanelOpen(true);
+                  }}
+                />
               </div>
               {chartLayout !== "single" && (
                 <div className="relative min-w-0 min-h-0 bg-background">
@@ -560,6 +580,29 @@ export function TradingPage() {
             </div>
           </>
         )}
+      </div>
+
+      {/* ── Mobile §5.4 shell (feature 11) ─────────────── */}
+      <div className="md:hidden">
+        <MobileDrawSheet
+          tool={drawingTool}
+          canUndo={canUndoDrawing}
+          canRedo={canRedoDrawing}
+          hasDrawings={drawings.length > 0}
+          onUndo={undoDrawing}
+          onRedo={redoDrawing}
+          onClear={clearDrawings}
+          onDone={() => setDrawingTool("none")}
+        />
+        <MobileBottomNav
+          active={mobileTab}
+          sheetOpen={mobilePanelOpen}
+          onChart={() => setMobilePanelOpen(false)}
+          onOpenTab={(tab) => {
+            setMobileTab(tab);
+            setMobilePanelOpen(true);
+          }}
+        />
       </div>
 
     </div>

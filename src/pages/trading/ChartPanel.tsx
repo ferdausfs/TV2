@@ -67,6 +67,7 @@ import {
 import { ChartContextMenu } from "./ChartContextMenu.tsx";
 import { ChartScaleFooter } from "./ChartScaleFooter.tsx";
 import { ChartSettingsDialog } from "./ChartSettingsDialog.tsx";
+import { useChartTouchGestures } from "../../hooks/useChartTouchGestures.ts";
 import {
   DrawingContextMenu,
   DrawingFloatingToolbar,
@@ -231,6 +232,12 @@ export interface ChartPanelProps {
   onRemoveIndicatorInstance?: (id: string) => void;
   /** Full symbol list — powers the compare picker (feature 9). */
   symbols?: Symbol[];
+  /**
+   * Mobile §5.4 touch gestures (long-press crosshair, double-tap fit) —
+   * spread onto the chart container div. Undefined on desktop.
+   */
+  chartTouchGestures?: Record<string, unknown>;
+
   drawingTool: DrawingTool;
   drawings: DrawingLine[];
   onAddDrawing: (d: DrawingLine) => void;
@@ -1248,6 +1255,7 @@ export function ChartPanel({
   onUpdateIndicatorInstance,
   onRemoveIndicatorInstance,
   symbols = [],
+  chartTouchGestures,
   accountEquity = 0,
   accountId,
   onQuickOrder,
@@ -1701,6 +1709,13 @@ export function ChartPanel({
     },
     [selectedSymbol, onAddDrawing],
   );
+
+  // Mobile §5.4: long-press crosshair + double-tap fit (no-ops on desktop).
+  const chartTouchGesturesDefault = useChartTouchGestures(
+    chartRef as React.RefObject<never>,
+    candleSeriesRef as React.RefObject<never>,
+  );
+  const touchGestureProps = chartTouchGestures ?? chartTouchGesturesDefault;
 
   // ── Replay trade event markers ─────────────────────────────
   useEffect(() => {
@@ -2583,6 +2598,7 @@ export function ChartPanel({
         // the TradingView-app pattern where the rail appears contextually.
         drawingTool !== "none" && "drawing-active",
       )}
+      {...touchGestureProps}
     >
       {/* OHLCV Legend Overlay */}
       <ChartLegendHeader

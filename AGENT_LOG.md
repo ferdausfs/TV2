@@ -49,7 +49,8 @@
   re-adds drawings via onAddDrawing.
 - **Touched files:** lib/chart-export.ts (new), pages/trading/ChartPanel.tsx,
   pages/trading/ChartContextMenu.tsx, AGENT_LOG.md
-- **Commit:** branch `auto/export-suite` → PR `<fill>`
+- **Commit:** branch `auto/export-suite` (`305f20a`) → squash-merged `f412b3d`
+  (PR #22, CI + E2E green)
 - **Results:** typecheck ✅ · lint --max-warnings=0 ✅ · tests **780 passed | 1 skipped** ✅ ·
   `VITE_ADAPTER=binance` build "✓ built" ✅ · check:size within budget ✅
 
@@ -83,6 +84,51 @@
   services/queries.ts, pages/TradingPage.tsx, AGENT_LOG.md
 - **Commit:** branch `auto/compare-overlay` (`c9ca7bc`) → squash-merged `547cadb`
   (PR #21, CI + E2E green)
+- **Results:** typecheck ✅ · lint --max-warnings=0 ✅ · tests **780 passed | 1 skipped** ✅ ·
+  `VITE_ADAPTER=binance` build "✓ built" ✅ · check:size within budget ✅
+
+## 2026-11-14 — Session 2 · Feature 11: Mobile §5.4 — bottom nav, floating action row, draw bottom-sheet, long-press crosshair, double-tap fit
+
+- **Agent/tool:** OpenCode (GLM) · branch `auto/mobile-54` → PR → merge
+- **Plan (reviewed first):** complete the mobile shell (audit §Mobile, gaps listed):
+  (1) **Bottom nav** (mobile-only, fixed above the action bar): Chart / Orders /
+    Alerts / Lists tabs — Chart closes the sheet; the rest open the trading panel
+    bottom-sheet on that tab (Orders = positions tab, Lists reuses the alerts sheet
+    for now — mobile watchlist logged as a follow-up);
+  (2) **Floating action row** — small pill row floating over the chart's top-right:
+    Indicators (compact sheet with the same registry list — the desktop toolbar is
+    hidden on mobile), Draw (arms the drawing tool → the DrawingToolRail mobile CSS
+    already shows), Alert (opens the alerts sheet pre-set to the chart symbol);
+  (3) **Draw bottom-sheet** — when a drawing tool is armed on mobile, a compact
+    sheet lists the active tool + Undo/Redo/Clear + Done (disarms); reuses the
+    drawing callbacks already wired to ChartPanel;
+  (4) **Long-press crosshair** — a 350ms touch-hold on the chart shows the
+    crosshair + price/time labels (moves with the finger, hides on release) via
+    `setCrosshairPosition`/`clearCrosshairPosition`;
+  (5) **Double-tap auto-fit** — 300ms double-tap on the chart container calls
+    `timeScale.fitContent()` + `scrollToRealTime()`.
+  All mobile-only (md:hidden); desktop untouched. No adapter or store-schema change.
+- **Recorded assumptions:** Lists tab reuses the Alerts sheet for now (mobile
+  watchlist = follow-up); long-press suppresses the browser context menu on the
+  chart container only; the floating row hides while a drawing tool is armed (the
+  rail takes over).
+- **What changed:** new `components/MobileShell.tsx` — `MobileBottomNav` (Chart /
+  Orders / Alerts / Trade tabs; in-flow, sits above the sell/buy bar), `MobileChartActions`
+  (floating pill: Indicators / Draw / Alert; hides while a tool is armed), `MobileDrawSheet`
+  (active tool + Undo/Redo/Clear/Done, anchored above the nav). New
+  `hooks/useChartTouchGestures.ts` — 350ms long-press pins the crosshair under the finger
+  (`setCrosshairPosition`, follows touchmove, clears on release), 300ms double-tap calls
+  `fitContent()` + `scrollToRealTime()`; context menu suppressed while the long-press is
+  active. `ChartPanel` instantiates the hook and spreads it on the chart host
+  (`chartTouchGestures` prop can override; mobile-only effect). `TradingPage` mounts
+  nav/draw-sheet in `md:hidden` blocks and the floating row inside the chart area;
+  Indicators/Alert actions open the existing bottom-sheet on the right tab.
+  `useChartDrawings` exposes `canUndo`/`canRedo` (historyDepth mirrored on drawings
+  change) → terminal context (`canUndoDrawing`/`canRedoDrawing`).
+- **Touched files:** components/MobileShell.tsx (new), hooks/useChartTouchGestures.ts
+  (new), hooks/useChartDrawings.ts, terminal/context.tsx, terminal/use-terminal.ts,
+  pages/trading/ChartPanel.tsx, pages/TradingPage.tsx, AGENT_LOG.md
+- **Commit:** branch `auto/mobile-54` → PR `<fill>`
 - **Results:** typecheck ✅ · lint --max-warnings=0 ✅ · tests **780 passed | 1 skipped** ✅ ·
   `VITE_ADAPTER=binance` build "✓ built" ✅ · check:size within budget ✅
 - **Pending/notes:** real resizable sub-panes need a pane API — revisit on

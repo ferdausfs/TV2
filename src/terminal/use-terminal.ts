@@ -75,6 +75,9 @@ export interface TerminalContextValue {
   clearDrawings: () => void;
   undoDrawing: () => void;
   redoDrawing: () => void;
+  /** Drawing history stack depths (mobile draw sheet buttons). */
+  canUndoDrawing: boolean;
+  canRedoDrawing: boolean;
 
   // Account and trading
   activeAccountId: string | null;
