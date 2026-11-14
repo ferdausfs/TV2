@@ -25,6 +25,10 @@ export interface ChartPreferences {
   showPrevCloseLine: boolean;
   /** Series last-value label on the price scale (off by default: stacks with Ask). */
   showLastPriceLabel: boolean;
+  /** Right price scale mode: normal (default) / log / percent. */
+  priceScaleMode: "normal" | "log" | "percent";
+  /** Auto-scale the right price scale to the visible data (default on). */
+  priceScaleAuto: boolean;
   /** Hex override for up candles; empty string = theme default. */
   candleUpColor: string;
   /** Hex override for down candles; empty string = theme default. */
@@ -76,6 +80,8 @@ const DEFAULT_CHART_PREFS: ChartPreferences = {
   chartType: "candles",
   showPrevCloseLine: true,
   showLastPriceLabel: false,
+  priceScaleMode: "normal",
+  priceScaleAuto: true,
   candleUpColor: "",
   candleDownColor: "",
   colorBackground: "",
@@ -120,6 +126,7 @@ const BOOL_PREF_KEYS = [
   "showOhlcLegend",
   "showPrevCloseLine",
   "showLastPriceLabel",
+  "priceScaleAuto",
   "challengeOverlay",
   "challengeDailyLossLine",
   "challengeMaxDrawdownLine",
@@ -130,6 +137,7 @@ const BOOL_PREF_KEYS = [
 /** String preference keys stored raw (empty string allowed). */
 const STRING_PREF_KEYS = [
   "chartType",
+  "priceScaleMode",
   "candleUpColor",
   "candleDownColor",
   "colorBackground",
@@ -164,11 +172,13 @@ export const TEMPLATE_PREF_KEYS = [
   "showOhlcLegend",
   "showPrevCloseLine",
   "showLastPriceLabel",
+  "priceScaleAuto",
   "challengeOverlay",
   "challengeDailyLossLine",
   "challengeMaxDrawdownLine",
   "challengeProfitTargetLine",
   "chartType",
+  "priceScaleMode",
   "candleUpColor",
   "candleDownColor",
   "colorBackground",
@@ -224,7 +234,9 @@ export function getChartPreferencesFromStorage(): ChartPreferences {
     result[key] = toBool(prefs[key], DEFAULT_CHART_PREFS[key]);
   }
   for (const key of STRING_PREF_KEYS) {
-    if (key === "chartType") continue; // union-typed below — raw string breaks it
+    if (key === "chartType" || key === "priceScaleMode") {
+      continue; // union-typed below — raw string breaks it
+    }
     result[key] = prefs[key] ?? DEFAULT_CHART_PREFS[key];
   }
   // Chart type: guard against arbitrary stored strings (do this AFTER the
@@ -234,6 +246,10 @@ export function getChartPreferencesFromStorage(): ChartPreferences {
     rawType === "line" || rawType === "area" || rawType === "baseline" || rawType === "bars"
       ? rawType
       : "candles";
+  // Scale mode: same guard.
+  const rawMode = prefs.priceScaleMode;
+  result.priceScaleMode =
+    rawMode === "log" || rawMode === "percent" ? rawMode : "normal";
   // Migrate the old boolean magnet flag to the tri-state when unset.
   result.magnetMode =
     toMagnetMode(prefs.magnetMode) ?? (toBool(prefs.drawingMagnet, false) ? "weak" : "none");

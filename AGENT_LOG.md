@@ -6,6 +6,36 @@
 
 ---
 
+## 2026-11-14 — Session 2 · Feature 4: Scales — log/percent/auto, range buttons, go-to-date
+
+- **Agent/tool:** OpenCode (GLM) · branch `auto/scale-controls` → PR → merge
+- **Plan (reviewed first):** TradingView-style scale controls in a compact footer bar
+  pinned inside the chart host (bottom-right, horizontally scrollable on mobile):
+  Auto toggle (priceScale.autoScale), Log/Percent mode buttons (PriceScaleMode via
+  priceScale("right").applyOptions), range buttons 1D/5D/1M/3M/6M/YTD/1Y/All
+  (setVisibleRange from the latest loaded bar; All = fitContent), and a go-to-date
+  popover (native date input → binary-search the loaded bars → setVisibleLogicalRange
+  around the target index — left-edge history loader then loads older bars naturally).
+  New prefs: `priceScaleMode` (string, guarded union, default normal, template key) and
+  `priceScaleAuto` (bool, default true, template key) applied via a chartEpoch-keyed
+  effect; handleResetView syncs priceScaleAuto so the toggle stays truthful.
+- **Recorded assumptions:** range jumps operate on LOADED data — jumping beyond the
+  loaded window shows the oldest loaded bars until the scroll-triggered history loader
+  fills in (progressive, TradingView-like); YTD = Jan 1 UTC; month/year spans are
+  calendar-approximate (30d/365d steps, no per-month day-count math in v1).
+- **What changed:** new `pages/trading/ChartScaleFooter.tsx` — Auto/Log/% buttons,
+  range buttons 1D/5D/1M/3M/6M/1Y/5Y/YTD/All, and a go-to-date popover (native date
+  input → binary search → setVisibleLogicalRange). New prefs `priceScaleMode`
+  (guarded union, template key) + `priceScaleAuto` (bool, template key) applied via a
+  chartEpoch-keyed `priceScale("right")` effect; handleResetView syncs the Auto toggle;
+  footer mounted inside the chart host.
+- **Touched files:** pages/trading/ChartScaleFooter.tsx (new), pages/trading/ChartPanel.tsx,
+  hooks/useChartPreferences.ts, AGENT_LOG.md
+- **Commit:** branch `auto/scale-controls` → PR `<fill>`
+- **Results:** typecheck ✅ · lint --max-warnings=0 ✅ · tests **762 passed | 1 skipped** ✅ ·
+  `VITE_ADAPTER=binance` build "✓ built" ✅ · check:size within budget ✅
+- **Pending/notes:** per-symbol scale persistence (TV stores scale per symbol) later.
+
 ## 2026-11-14 — Session 2 · Feature 3: Price-scale pack (countdown all TFs, prev-close, day H/L, last-price label)
 
 - **Agent/tool:** OpenCode (GLM) · branch `auto/price-scale-pack` → PR → merge
@@ -33,7 +63,9 @@
   effect, and two Chart Settings rows.
 - **Touched files:** hooks/useChartPreferences.ts, pages/trading/ChartPanel.tsx,
   pages/trading/ChartSettingsDialog.tsx, AGENT_LOG.md
-- **Commit:** branch `auto/price-scale-pack` → PR `<fill>`
+- **Commit:** branch `auto/price-scale-pack` (`2e5e987` + e2e stabilization `734e011`)
+  → squash-merged `709f15f` (PR #14, CI green; E2E hit the dual-ConnectButton flake once,
+  fixed by scoping the returning-user locator to `hl-topbar`, rerun green → merged)
 - **Results:** typecheck ✅ · lint --max-warnings=0 ✅ · tests **762 passed | 1 skipped** ✅ ·
   `VITE_ADAPTER=binance` build "✓ built" ✅ · check:size within budget ✅
 - **Pending/notes:** session-aware prev close for FX/metals (trading-hours close) when a
