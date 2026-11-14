@@ -3,67 +3,68 @@
 @tailwind utilities;
 
 @layer base {
-  /* TV.2 dark theme — the TradingView charcoal terminal (per DESIGN.TV2.md §2).
-     Canvas #131722, card #1e222d, elevated/border #2a2e39, single interaction
-     blue #2962FF, candles teal #26a69a / red #ef5350, gold #f0b90b reserved for
-     pending orders. Chart canvas (CHART_COLORS.dark.background) matches
-     --background so panels and chart read as one surface. */
+  /* TV.2 pastel theme (feature 18) — the user's template palette (TradingView
+     Advanced Charts CSS demo): lavender platform #d1c4e9, pink pane #FBDFF4,
+     pink interaction #F48FB1, magenta ink #88184F / deep purple #4A148C.
+     Light mode = the template exactly; dark mode = a deep-plum translation of
+     the same identity. Chart canvas (CHART_COLORS.*.background) matches --card
+     so panels and chart read as one surface. */
   :root {
-    /* #131722 */
-    --background: 224 28% 10%;
-    --foreground: 224 14% 84%; /* #d1d4dc */
-    --card: 224 20% 15%; /* #1e222d */
-    --card-foreground: 224 14% 84%;
-    --primary: 224 100% 58%; /* #2962FF — interaction only */
-    --primary-foreground: 0 0% 100%; /* white on blue = 4.9:1 AA */
-    --secondary: 224 15% 19%; /* #2a2e39 hover surfaces */
-    --secondary-foreground: 224 14% 84%;
-    --muted: 224 15% 19%;
-    --muted-foreground: 227 8% 58%; /* #8a8e9c — AA (5.5:1) on the canvas */
-    --accent: 224 100% 58%;
-    --accent-foreground: 0 0% 100%;
+    /* deep plum — dark translation of the lavender platform */
+    --background: 261 35% 12%; /* #171021 */
+    --foreground: 315 40% 92%; /* #F5DDEF */
+    --card: 261 30% 17%; /* #241731 */
+    --card-foreground: 315 40% 92%;
+    --primary: 340 82% 76%; /* #F48FB1 — interaction */
+    --primary-foreground: 330 70% 20%; /* deep magenta on pink */
+    --secondary: 261 25% 24%; /* #322047 hover surfaces */
+    --secondary-foreground: 315 40% 92%;
+    --muted: 261 25% 24%;
+    --muted-foreground: 315 15% 68%; /* #C9A3C0 — AA on the plum card */
+    --accent: 340 82% 76%;
+    --accent-foreground: 330 70% 20%;
     --destructive: 1 83% 63%; /* #ef5350 */
-    --destructive-foreground: 224 28% 10%; /* ink on red — AA (5.1:1) */
-    --border: 224 15% 19%; /* #2a2e39 — 1px hairlines */
-    --input: 224 15% 19%;
-    --ring: 224 100% 58%; /* #2962FF focus ring */
+    --destructive-foreground: 261 35% 12%;
+    --border: 261 22% 26%; /* plum hairlines */
+    --input: 261 22% 26%;
+    --ring: 340 82% 70%; /* pink focus ring */
     --radius: 0.5rem;
-    --ink: 224 28% 10%; /* ink on teal/red fills — AA */
+    --ink: 261 35% 12%; /* ink on teal/red fills */
     --success: 174 63% 40%; /* #26a69a */
     --warning: 46 91% 49%; /* #f0b90b — pending orders only */
     --buy: 174 63% 40%;
     --sell: 1 83% 63%;
-    --panel-header: 224 20% 15%;
+    --panel-header: 261 30% 17%;
   }
 
-  /* Light theme — master spec §5.2 light column: white canvas, TradingView
-     panel tints, same interaction blue. Market-direction TEXT darkens for AA
-     on white; chart candles stay #26a69a/#ef5350 (CHART_COLORS.light). */
+  /* Light pastel — the template palette exactly: lavender platform, pink pane
+     cards + chart canvas, pink accents, magenta/purple ink. Candles stay
+     #26a69a/#ef5350 (the template does not override series colors). */
   .light {
-    --background: 0 0% 100%;
-    --foreground: 224 28% 10%; /* #131722 */
-    --card: 228 56% 98%; /* #F8F9FD */
-    --card-foreground: 224 28% 10%;
-    --primary: 224 100% 58%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 210 23% 95%; /* #EFF2F5 */
-    --secondary-foreground: 224 28% 10%;
-    --muted: 210 23% 95%;
-    --muted-foreground: 222 8% 46%; /* #6c7280 — AA (4.8:1) on white */
-    --accent: 224 100% 58%;
-    --accent-foreground: 0 0% 100%;
-    --destructive: 353 64% 53%; /* #d43a4d — AA as text on white */
+    --background: 261 46% 84%; /* #d1c4e9 — platform */
+    --foreground: 267 75% 31%; /* #4A148C */
+    --card: 315 77% 93%; /* #FBDFF4 — pane pink */
+    --card-foreground: 267 75% 31%;
+    --primary: 340 82% 76%; /* #F48FB1 */
+    --primary-foreground: 330 70% 31%; /* #88184F on pink */
+    --secondary: 315 84% 85%; /* #F9B9E9 hover surfaces */
+    --secondary-foreground: 267 75% 31%;
+    --muted: 315 84% 85%;
+    --muted-foreground: 330 45% 42%; /* AA on the pink card */
+    --accent: 340 82% 76%;
+    --accent-foreground: 330 70% 31%;
+    --destructive: 353 64% 45%; /* AA as text on pink */
     --destructive-foreground: 0 0% 100%;
-    --border: 224 22% 90%; /* #E0E3EB */
-    --input: 224 22% 90%;
-    --ring: 224 100% 58%;
+    --border: 315 35% 78%; /* pink-tinted hairlines */
+    --input: 315 35% 78%;
+    --ring: 340 82% 55%; /* deeper pink for focus visibility */
     --radius: 0.5rem;
     --ink: 0 0% 100%; /* white on darkened fills */
-    --success: 157 88% 27%; /* #087f52 — AA as text on white */
+    --success: 157 88% 27%; /* #087f52 — AA on pink */
     --warning: 46 91% 40%;
     --buy: 157 88% 27%;
-    --sell: 353 64% 53%;
-    --panel-header: 210 23% 95%;
+    --sell: 353 64% 45%;
+    --panel-header: 315 60% 90%;
   }
 
   * {

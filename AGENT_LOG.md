@@ -1,6 +1,47 @@
 # TV2 — Agent Log
 
 > Continuity file. Entries are **prepended** (newest first) and never deleted.
+
+## 2026-11-14 — Session 3 · Feature 18: Pastel theme (user template palette)
+
+- **Agent/tool:** OpenCode (GLM) · branch `auto/pastel-theme` → PR → merge
+- **Context:** the user shared TradingView's "Advanced Charts starter template
+  with custom CSS" (pink/lavender palette) and asked for the whole app in that
+  look, light + dark, iterating one-by-one afterwards. The template's CSS vars
+  are for TradingView's own charting library (not our code), so the palette was
+  translated into our token system.
+- **Plan (reviewed first):** (1) rewrite the global.css token blocks — light =
+  the template exactly (platform `#d1c4e9` bg, pane `#FBDFF4` cards/chart, pink
+  `#F48FB1` interaction, magenta `#88184F`/purple `#4A148C` ink, pink-tint
+  borders); dark = deep-plum translation (`#171021` bg, `#241731` cards,
+  `#F5DDEF` text, same pink accent); (2) CHART_COLORS dark/light swapped to the
+  pastel surfaces (+ new `crosshairLabelBg` field, replacing two hardcoded
+  `#2a2e39` crosshair label backgrounds in ChartPanel); (3) manifest +
+  theme-color meta → `#171021`; (4) dark surface stragglers (NewsOverlay,
+  delta-tooltip chip) → plum; (5) DESIGN.TV2.md palette contract rewritten
+  (pink = interaction; candles unchanged). OHLC/delta white chips unchanged
+  (recorded assumption). Tests: none reference the old hexes.
+- **Recorded assumptions:** the garish demo accents (pure blue/red/magenta
+  active states) were softened to the template's pastel identity (pink
+  interaction, magenta ink); light-mode buy/sell text darkened for AA on pink;
+  the deep-plum dark keeps the same pastel identity rather than copying the
+  template's light values into dark (a same-as-light dark mode would break the
+  dark-first terminal usage).
+- **What changed:** global.css token blocks rewritten (light = template palette
+  exactly; dark = deep-plum translation — see DESIGN.TV2.md §2); CHART_COLORS
+  dark/light swapped to pastel surfaces with a new `crosshairLabelBg` field
+  (replaces 2 hardcoded `#2a2e39` label backgrounds in ChartPanel); index.html
+  theme-color + manifest background/theme colors → `#171021`; NewsOverlay dark
+  surfaces + delta-tooltip chip → plum. OHLC/delta white chips unchanged
+  (recorded). DESIGN.TV2.md palette contract rewritten (pink = interaction,
+  candles unchanged).
+- **Touched files:** src/styles/global.css, src/pages/trading/constants.ts,
+  src/pages/trading/ChartPanel.tsx, src/pages/trading/NewsOverlay.tsx,
+  src/lib/chart-plugins/delta-tooltip/delta-tooltip-pane.ts, index.html,
+  public/manifest.json, DESIGN.TV2.md, AGENT_LOG.md
+- **Commit:** branch `auto/pastel-theme` → PR `<fill>`
+- **Results:** typecheck ✅ · lint --max-warnings=0 ✅ · tests **792 passed | 1 skipped** ✅ ·
+  `VITE_ADAPTER=binance` build "✓ built" ✅ · check:size within budget ✅
 > Every entry: session date, agent/tool, feature, what changed, touched files,
 > commit hash, pending items, notes for the next agent.
 
@@ -116,7 +157,8 @@
   indicators.test.ts: +10 tests (87 total in file).
 - **Touched files:** lib/indicators.ts, pages/trading/useIndicators.ts,
   __tests__/indicators.test.ts, AGENT_LOG.md
-- **Commit:** branch `auto/indicator-batch2` → PR `<fill>`
+- **Commit:** branch `auto/indicator-batch2` (`f7d8c19` → rebased `6b625ed`) →
+  squash-merged `2ae058b` (PR #27, CI + E2E green)
 - **Results:** typecheck ✅ · lint --max-warnings=0 ✅ · tests **790 passed | 1 skipped** ✅
   (baseline 780 → 790) · `VITE_ADAPTER=binance` build "✓ built" ✅ · check:size within
   budget ✅
@@ -160,10 +202,50 @@
   {types,resolve,manager,renderers,hit-test}.ts, pages/trading/DrawingToolRail.tsx,
   pages/trading/DrawingToolsOverlay.tsx, __tests__/drawExtras.test.ts (new),
   AGENT_LOG.md
-- **Commit:** branch `auto/draw-extras` → PR `<fill>`
+- **Commit:** branch `auto/draw-extras` (`088e016` → cherry-picked `e3cad58`) →
+  squash-merged `ab91efd` (PR #28, CI + E2E green); live bundle contains
+  `drawing_favorites`
 - **Results:** typecheck ✅ · lint --max-warnings=0 ✅ · tests **792 passed | 1 skipped** ✅
   (baseline 790 → 792) · `VITE_ADAPTER=binance` build "✓ built" ✅ · check:size within
   budget ✅
+
+## 2026-11-14 — Session 2 · Feature 17 (final): Capacitor Android APK
+
+- **Agent/tool:** OpenCode (GLM) · branch `auto/capacitor-apk` → PR → merge
+- **Plan (reviewed first):** wrap the existing SPA in Capacitor (no code change to
+  the app): (1) `capacitor.config.ts` — appId `com.ferdausfs.tv2`, appName `TV.2`,
+  `webDir: "dist"`, bundled `server: { androidScheme: "https" }`; (2) Capacitor as
+  a devDependency (`@capacitor/core @capacitor/cli @capacitor/android`, pinned to
+  the current major); (3) **no `android/` folder committed** — it's generated in
+  CI via `npx cap add android` so the repo stays clean and gradle never lands in
+  git; (4) a **manual-dispatch workflow** `.github/workflows/apk.yml`: npm ci →
+  build (VITE_ADAPTER=binance, BASE_PATH="/" — a WebView loads from the device,
+  not a sub-path) → `cap add android` → `cap sync` → assemble debug APK → upload
+  the artifact; no signing/Play-Store steps (personal-use APK, logged); (5) PWA
+  service worker: left as-is — it self-disables effectively in the WebView since
+  navigations are network-first and the shell is local (harmless either way,
+  assumption logged). Java/Android-SDK absent on both the phone and the VPS, so
+  the build runs on GitHub Actions runners (has setup-java + android SDK baked
+  in); artifact = debug APK the user can sideload.
+- **Recorded assumptions:** debug APK (unsigned for release) is the deliverable;
+  appId/company domain chosen from the repo owner; the manifest/SW interplay in a
+  WebView is benign; CI builds on ubuntu-latest with Java 21 temurin.
+- **What changed:** `capacitor.config.ts` (appId `com.ferdausfs.tv2`, appName
+  `TV.2`, webDir `dist`, `androidScheme: "https"`); Capacitor 8.6.2 as devDeps
+  (`@capacitor/core|cli|android`) + `cap:sync` npm script; manual-dispatch
+  `.github/workflows/apk.yml` — npm ci → `VITE_ADAPTER=binance BASE_PATH=/` build →
+  `npx cap add android` (generated in CI, `android/` gitignored — no gradle tree
+  in the repo) → `cap sync` → `assembleDebug` (Java 21 temurin) → upload
+  `tv2-debug-apk` artifact. No signing/Play steps (personal-use sideload APK).
+- **Touched files:** capacitor.config.ts (new), .github/workflows/apk.yml (new),
+  package.json, package-lock.json, .gitignore, AGENT_LOG.md
+- **Commit:** branch `auto/capacitor-apk` (`6552f58` + lockfile fix `f7f66d2` →
+  cherry-picked `bfe4b4e`/`97dd00d`) → squash-merged `374afe7` (PR #29, CI + E2E
+  green after fixing npm-ci lockfile sync)
+- **Results:** typecheck ✅ · lint --max-warnings=0 ✅ · tests **792 passed | 1 skipped** ✅ ·
+  `VITE_ADAPTER=binance` build "✓ built" ✅ · check:size within budget ✅ · APK build
+  delegated to the manual `Android APK (Capacitor)` workflow (Java/SDK absent on
+  phone+VPS — verified config validates)
 
 ## 2026-11-14 — Session 2 · Feature 13: Market screener (client-computed, virtualized)
 

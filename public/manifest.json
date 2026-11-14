@@ -5,8 +5,8 @@
   "start_url": "./",
   "display": "standalone",
   "orientation": "any",
-  "background_color": "#0b0e11",
-  "theme_color": "#0b0e11",
+  "background_color": "#171021",
+  "theme_color": "#171021",
   "categories": [
     "finance",
     "business"
