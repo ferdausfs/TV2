@@ -8,6 +8,7 @@ import type {
   LineData,
   LineSeriesPartialOptions,
   Time,
+  SeriesType,
 } from "lightweight-charts";
 import { LineStyle } from "lightweight-charts";
 import {
@@ -38,7 +39,7 @@ import { CHART_COLORS } from "./constants.ts";
  */
 export function useIndicators(
   chartRef: React.RefObject<IChartApi | null>,
-  candleSeriesRef: React.RefObject<ISeriesApi<"Candlestick"> | null>,
+  candleSeriesRef: React.RefObject<ISeriesApi<SeriesType> | null>,
   chartData: CandlestickData<Time>[],
   activeIndicators: IndicatorType[],
   isDark: boolean,

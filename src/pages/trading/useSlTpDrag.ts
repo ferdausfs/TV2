@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, type RefObject } from "react";
-import type { IChartApi, ISeriesApi, IPriceLine } from "lightweight-charts";
+import type { IChartApi, ISeriesApi, IPriceLine, SeriesType } from "lightweight-charts";
 import type { DrawingTool } from "./constants.ts";
 
 // ── Types ────────────────────────────────────────────────────
@@ -31,7 +31,7 @@ export interface SymbolInfo {
 export function useSlTpDrag(
   containerRef: RefObject<HTMLDivElement | null>,
   chartRef: RefObject<IChartApi | null>,
-  candleSeriesRef: RefObject<ISeriesApi<"Candlestick"> | null>,
+  candleSeriesRef: RefObject<ISeriesApi<SeriesType> | null>,
   slTpLinesRef: RefObject<Map<string, SlTpLineEntry>>,
   drawingTool: DrawingTool,
   onModifyPosition:

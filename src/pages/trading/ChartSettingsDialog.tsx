@@ -209,6 +209,24 @@ function AppearanceTab({ prefs }: { prefs: ChartPreferences }) {
   const set = updateChartPreferences;
   return (
     <div>
+      <SectionTitle>Series</SectionTitle>
+      <div className="grid grid-cols-5 gap-1 px-3 py-2">
+        {(["candles", "bars", "line", "area", "baseline"] as const).map((t) => (
+          <button
+            key={t}
+            type="button"
+            onClick={() => set({ chartType: t })}
+            className={cn(
+              "py-1.5 rounded-md text-[11px] font-medium capitalize transition border",
+              prefs.chartType === t
+                ? "bg-primary text-primary-foreground border-primary"
+                : "bg-secondary text-muted-foreground border-border hover:text-foreground",
+            )}
+          >
+            {t}
+          </button>
+        ))}
+      </div>
       <SectionTitle>Candles</SectionTitle>
       <ToggleRow label="Wicks" checked={prefs.showWicks} onChange={(v) => set({ showWicks: v })} />
       <ToggleRow

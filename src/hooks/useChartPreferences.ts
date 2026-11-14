@@ -19,6 +19,8 @@ export interface ChartPreferences {
   /** Plugin IDs that are currently active (persisted across page loads). */
   activePlugins: string[];
   // ── Appearance (Chart Settings dialog) ──
+  /** Series type: candles (default) / line / area / baseline / bars. */
+  chartType: "candles" | "line" | "area" | "baseline" | "bars";
   /** Hex override for up candles; empty string = theme default. */
   candleUpColor: string;
   /** Hex override for down candles; empty string = theme default. */
@@ -67,6 +69,7 @@ const DEFAULT_CHART_PREFS: ChartPreferences = {
   magnetMode: "none",
   stayInDrawingMode: false,
   activePlugins: [],
+  chartType: "candles",
   candleUpColor: "",
   candleDownColor: "",
   colorBackground: "",
@@ -118,6 +121,7 @@ const BOOL_PREF_KEYS = [
 
 /** String preference keys stored raw (empty string allowed). */
 const STRING_PREF_KEYS = [
+  "chartType",
   "candleUpColor",
   "candleDownColor",
   "colorBackground",
@@ -154,6 +158,7 @@ export const TEMPLATE_PREF_KEYS = [
   "challengeDailyLossLine",
   "challengeMaxDrawdownLine",
   "challengeProfitTargetLine",
+  "chartType",
   "candleUpColor",
   "candleDownColor",
   "colorBackground",
@@ -209,8 +214,16 @@ export function getChartPreferencesFromStorage(): ChartPreferences {
     result[key] = toBool(prefs[key], DEFAULT_CHART_PREFS[key]);
   }
   for (const key of STRING_PREF_KEYS) {
+    if (key === "chartType") continue; // union-typed below — raw string breaks it
     result[key] = prefs[key] ?? DEFAULT_CHART_PREFS[key];
   }
+  // Chart type: guard against arbitrary stored strings (do this AFTER the
+  // string-pref loop so the union type survives).
+  const rawType = prefs.chartType;
+  result.chartType =
+    rawType === "line" || rawType === "area" || rawType === "baseline" || rawType === "bars"
+      ? rawType
+      : "candles";
   // Migrate the old boolean magnet flag to the tri-state when unset.
   result.magnetMode =
     toMagnetMode(prefs.magnetMode) ?? (toBool(prefs.drawingMagnet, false) ? "weak" : "none");

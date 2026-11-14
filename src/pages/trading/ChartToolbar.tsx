@@ -75,6 +75,9 @@ export interface ChartToolbarProps {
   onSymbolChange: (s: string) => void;
   timeframe: Timeframe;
   onTimeframeChange: (tf: Timeframe) => void;
+  /** Series type (candles/line/area/baseline/bars) + its setter. */
+  chartType?: "candles" | "line" | "area" | "baseline" | "bars";
+  onChartTypeChange?: (t: "candles" | "line" | "area" | "baseline" | "bars") => void;
   activeIndicators: IndicatorType[];
   onToggleIndicator: (type: IndicatorType) => void;
   showIndicatorMenu: boolean;
@@ -123,6 +126,8 @@ export function ChartToolbar({
   onSymbolChange,
   timeframe,
   onTimeframeChange,
+  chartType = "candles",
+  onChartTypeChange,
   activeIndicators,
   onToggleIndicator,
   showIndicatorMenu,
@@ -396,6 +401,36 @@ export function ChartToolbar({
           </button>
         ))}
       </div>
+
+      {/* Chart type selector — candles/line/area/baseline/bars (TradingView-style) */}
+      {onChartTypeChange && (
+        <div className="flex items-center gap-0.5 shrink-0">
+          {(
+            [
+              { key: "candles", label: "🕯" },
+              { key: "bars", label: "𝄙" },
+              { key: "line", label: "╱" },
+              { key: "area", label: "◣" },
+              { key: "baseline", label: "═" },
+            ] as const
+          ).map((t) => (
+            <button
+              key={t.key}
+              onClick={() => onChartTypeChange(t.key)}
+              title={t.key.charAt(0).toUpperCase() + t.key.slice(1)}
+              aria-label={`Chart type: ${t.key}`}
+              className={cn(
+                "px-2 py-1 rounded-md text-xs leading-none transition-all",
+                t.key === chartType
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "hover:bg-secondary/80 text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Session replay controls — disabled until the feature is QA'd */}
       {REPLAY_ENABLED && replayAccountId != null && <ReplayHUD accountId={replayAccountId} />}
