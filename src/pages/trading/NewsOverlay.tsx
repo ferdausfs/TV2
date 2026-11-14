@@ -64,7 +64,7 @@ export function NewsOverlay({
           <div
             className={cn(
               "w-[calc(100vw-2rem)] sm:w-[280px] rounded-lg shadow-2xl border overflow-hidden",
-              isDark ? "bg-[#1e222d] border-[#2a2e39]" : "bg-white border-gray-200",
+              isDark ? "bg-[#241731] border-[#322047]" : "bg-white border-gray-200",
             )}
           >
             <div
@@ -178,7 +178,7 @@ export function NewsOverlay({
           <div
             className={cn(
               "rounded-lg shadow-2xl border overflow-hidden",
-              isDark ? "bg-[#1e222d] border-[#2a2e39]" : "bg-white border-gray-200",
+              isDark ? "bg-[#241731] border-[#322047]" : "bg-white border-gray-200",
             )}
           >
             <div

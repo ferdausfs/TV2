@@ -6,16 +6,20 @@ DESIGN.md spec (as catalogued by VoltAgent/awesome-design-md); the working
 rules absorb the agency-agents design division's methodology (tokens before
 screens, WCAG AA, every state specified, anti-generic finish gate).
 
-**Identity statement**: TV.2 is a trading floor at night. A charcoal canvas
-(`#131722`), one commanding blue (`#2962FF`) for interaction, and the candles —
-the only loud colors on screen — speaking in teal and red. Everything else
-whispers. No decoration that does not inform a trade.
+**Identity statement**: TV.2 wears the user's pastel template (TradingView
+Advanced Charts CSS demo): a lavender platform (`#d1c4e9`), a pink pane
+(`#FBDFF4`) for chart + panels, pink interaction (`#F48FB1`), magenta/deep-
+purple ink. Dark mode is a deep-plum translation of the same identity
+(platform `#171021`, card `#241731`). The candles stay the only loud colors —
+teal and red. (This supersedes the original charcoal/blue identity; the user
+chose the pastel palette on 2026-11-14.)
 
 ---
 
 ## 1. Visual Theme & Atmosphere
 
-- **Dark-first**. The light theme exists but is secondary; design for dark.
+- **Dark-first** (deep plum). The light pastel theme is the template's exact
+  palette and is equally first-class — the user's template shows both.
 - **Data-dense**: whitespace budget is spent on the chart, not around it.
 - **Flat chrome**: surfaces are separated by 1px borders, not shadows. Depth
   is reserved for floating layers (dropdowns, dialogs, drawing toolbar).
@@ -26,25 +30,27 @@ whispers. No decoration that does not inform a trade.
 
 ## 2. Color Palette & Roles
 
-| Token | Hex | Role |
-| --- | --- | --- |
-| background | `#131722` | App + chart canvas (seamless) |
-| card | `#1e222d` | Panels, dialogs, tables |
-| secondary | `#2a2e39` | Hover surfaces, input backgrounds |
-| border | `#2a2e39` | 1px separators |
-| foreground | `#d1d4dc` | Primary text |
-| muted-foreground | `#787b86` | Secondary text, labels |
-| primary / accent | `#2962FF` | **Interaction only**: buttons, links, selection, active tool, focus ring |
-| up / success / buy | `#26a69a` | Market direction, profit, long |
-| down / destructive / sell | `#ef5350` | Market direction, loss, short, danger |
-| warning / order-line | `#f0b90b` | Pending orders, working lines |
+Light (the template palette) / dark (plum translation):
+
+| Token | Light | Dark | Role |
+| --- | --- | --- | --- |
+| background | `#d1c4e9` | `#171021` | App platform + (dark) chart canvas |
+| card | `#FBDFF4` | `#241731` | Panels, dialogs, tables, light chart canvas |
+| secondary | `#F9B9E9` | `#322047` | Hover surfaces, input backgrounds |
+| border | pink-tint | `#322047` | 1px separators |
+| foreground | `#4A148C` | `#F5DDEF` | Primary text |
+| muted-foreground | softened magenta | `#C9A3C0` | Secondary text, labels |
+| primary / accent | `#F48FB1` | `#F48FB1` | **Interaction only**: buttons, links, selection, active tool, focus ring |
+| up / success / buy | `#087f52` | `#26a69a` | Market direction, profit, long |
+| down / destructive / sell | `#c2334a` | `#ef5350` | Market direction, loss, short, danger |
+| warning / order-line | `#f0b90b`-family | `#f0b90b` | Pending orders, working lines |
 | watermark | `rgba(255,255,255,0.04)` | Chart watermark |
 
 **Color discipline (the rules that keep TV.2 looking intentional):**
-- Blue means "you can act on this". Never use it for market state.
+- Pink means "you can act on this". Never use it for market state.
 - Green/red mean market direction. Never use them for decoration.
 - Gold means "waiting to fill". Nothing else.
-- Muted gray for everything that is not currently important.
+- Muted magenta/plum for everything that is not currently important.
 
 ## 3. Typography Rules
 
@@ -127,9 +133,10 @@ whispers. No decoration that does not inform a trade.
 
 ## 9. Agent Prompt Guide
 
-**Quick tokens**: bg `#131722` · card `#1e222d` · secondary/border `#2a2e39` ·
-text `#d1d4dc` · muted `#787b86` · primary `#2962FF` · up `#26a69a` ·
-down `#ef5350` · order `#f0b90b` · radius 6px · numerals tabular.
+**Quick tokens**: light bg `#d1c4e9` · card/pane `#FBDFF4` · ink `#4A148C`/
+`#88184F` · interaction `#F48FB1` · dark bg `#171021` · dark card `#241731` ·
+dark text `#F5DDEF` · up `#26a69a` · down `#ef5350` · order `#f0b90b` ·
+radius 6px · numerals tabular.
 
 **Design QA checklist (finish gate — run before shipping any UI change):**
 1. Tokens only from §2 — no ad-hoc hexes.
