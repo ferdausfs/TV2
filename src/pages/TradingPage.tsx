@@ -263,6 +263,8 @@ export function TradingPage() {
           onSymbolChange={setSelectedSymbol}
           timeframe={timeframe}
           onTimeframeChange={handleTimeframeChange}
+          chartType={chartPrefs.chartType}
+          onChartTypeChange={(t) => updateChartPreferences({ chartType: t })}
           activeIndicators={activeIndicators}
           onToggleIndicator={toggleIndicator}
           showIndicatorMenu={showIndicatorMenu}

@@ -1,4 +1,4 @@
-import type { IPriceLine, ISeriesApi } from "lightweight-charts";
+import type { IPriceLine, ISeriesApi, SeriesType } from "lightweight-charts";
 import { LineStyle } from "lightweight-charts";
 import { useEffect, useMemo, useRef, type RefObject } from "react";
 import type { AccountMetricsResponse } from "../../services/api/auth.ts";
@@ -156,7 +156,7 @@ function buildLevels(
 
 /** Diff-sync the rendered price lines against the wanted set (no churn per tick). */
 function syncLines(
-  series: ISeriesApi<"Candlestick">,
+  series: ISeriesApi<SeriesType>,
   map: Map<string, IPriceLine>,
   levels: LevelSpec[],
 ): void {
@@ -197,7 +197,7 @@ export function useChallengeLevels(opts: {
   tick: { bid: number; ask: number } | undefined;
   contractSize: number;
   accountEquity: number;
-  candleSeriesRef: RefObject<ISeriesApi<"Candlestick"> | null>;
+  candleSeriesRef: RefObject<ISeriesApi<SeriesType> | null>;
   flags: ChallengeLevelFlags;
   chartEpoch: number;
 }): void {

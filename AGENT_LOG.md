@@ -6,6 +6,40 @@
 
 ---
 
+## 2026-11-13 — Session 2 · Feature 2: Chart-type selector (5 types)
+
+- **Agent/tool:** OpenCode (GLM) · branch `auto/chart-types` → PR → merge
+- **Plan (reviewed first):** candles-only chart gains a TradingView-style type selector:
+  candles / line / area / baseline / bars. Series type lives in chart preferences
+  (`chartType` string pref, persisted per trader + included in templates). Lightweight-
+  charts v4 series swap in the existing create/destroy effect keyed by chartEpoch; the
+  imperative pump keeps using the interface (update/setData applyOptions unaffected);
+  applyServerCandle/buildTickBar untouched (regression gate respected). Selector UI:
+  chart-type dropdown in ChartToolbar (candles icon) + appearance tab in
+  ChartSettingsDialog. Indicator overlay + volume histogram unaffected (separate
+  series). Note: main now carries parallel-session commits (replay clock) — rebase
+  onto fresh main before pushing; never `git add -A`.
+- **Recorded assumptions:** hollow/step/renko deferred (custom renderers, later batch);
+  line/area/baseline use close prices; baseline basis = series median of visible? —
+  no: first-loaded close (stable, no per-zoom recompute).
+- **What changed:** `chartType` union pref (candles/line/area/baseline/bars) in
+  useChartPreferences (string-pref + template key + storage guard). ChartPanel creates
+  the series per type behind the existing create/destroy effect — the pump/RT ctx types
+  were loosened to `ISeriesApi<SeriesType>` so the swap is transparent; an rAF-scheduled
+  chartEpoch bump rebuilds on type change (data effects re-hydrate; indicators +
+  challenge levels re-bind via their epoch hooks). ChartToolbar gains a 5-button type
+  selector; ChartSettingsDialog Appearance tab gains a Series row. baseline basis is
+  seeded from the first loaded close on hydrate (stable, no per-zoom recompute).
+- **Touched files:** hooks/useChartPreferences.ts, pages/trading/ChartPanel.tsx,
+  pages/trading/ChartToolbar.tsx, pages/trading/ChartSettingsDialog.tsx,
+  pages/TradingPage.tsx, pages/trading/useIndicators.ts,
+  pages/trading/useChallengeLevels.ts, pages/trading/useSlTpDrag.ts,
+  lib/chart-plugins/drawing-tools/manager.ts (setSeries), AGENT_LOG.md
+- **Commit:** branch `auto/chart-types` → PR `<fill>`
+- **Results:** typecheck ✅ · lint --max-warnings=0 ✅ · tests **762 passed | 1 skipped** ✅ ·
+  `VITE_ADAPTER=binance` build "✓ built" ✅ · check:size within budget ✅
+- **Pending/notes:** hollow candles + step line + renko/range/kagi/P&F in a later batch.
+
 ## 2026-11-13 — Session 2 · Feature 1: Price alerts v1 (real, persistent)
 
 - **Agent/tool:** OpenCode (GLM) · branch `auto/price-alerts-v1` → PR → merge
@@ -34,7 +68,7 @@
   components/PriceAlertsPanel.tsx (new), components/MobileTradingPanel.tsx,
   pages/TradingPage.tsx, pages/trading/ChartPanel.tsx, pages/trading/ChartToolbar.tsx,
   __tests__/price-alerts.test.ts (new), AGENT_LOG.md
-- **Commit:** `<fill>`
+- **Commit:** branch `f76a19c` → squash-merged `74d4ab2` (PR #12, CI+E2E green)
 - **Results:** typecheck ✅ · lint --max-warnings=0 ✅ · tests **762 passed | 1 skipped**
   (748 baseline + 14 new) ✅ · `VITE_ADAPTER=binance` build "✓ built" ✅ · check:size within
   budget ✅
@@ -69,7 +103,6 @@
   delta-tooltip-pane.ts, tooltip-element.ts, manager.ts, renderers.ts, resolve.ts,
   ChartPanel.tsx, DrawingToolsOverlay.tsx, NewsOverlay.tsx, useChallengeLevels.ts,
   DESIGN.md, DESIGN.TV2.md (new), AGENT_LOG.md
-- **Commit:** branch `ccf97c6` → squash-merged `1eaa6cd` (PR #11, CI+E2E green)
 - **Commit:** branch `ccf97c6` → squash-merged `1eaa6cd` (PR #11, CI+E2E green)
 - **Results:** typecheck ✅ · lint --max-warnings=0 ✅ · tests **748 passed | 1 skipped** ✅ ·
   `VITE_ADAPTER=binance` build "✓ built" ✅ · check:size 72% raw / 69% gzip — within budget ✅ ·

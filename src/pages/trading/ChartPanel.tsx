@@ -13,6 +13,7 @@ import {
   LineStyle,
   type LogicalRange,
   type SeriesMarker,
+  type SeriesType,
   type Time,
 } from "lightweight-charts";
 import { Clock, ListTree } from "lucide-react";
@@ -118,14 +119,14 @@ type LoadMoreState = {
 // loader kept walking backwards one window per scroll forever.
 const MAX_EMPTY_WINDOWS = 4;
 
-function getSeriesOldestMs(series: ISeriesApi<"Candlestick">): number {
+function getSeriesOldestMs(series: ISeriesApi<SeriesType>): number {
   const data = series.data();
   return data.length === 0 ? 0 : (data[0]!.time as number) * 1_000;
 }
 
 function isLoadMoreEligible(
   state: LoadMoreState,
-  series: ISeriesApi<"Candlestick">,
+  series: ISeriesApi<SeriesType>,
   range: LogicalRange,
 ): boolean {
   if (state.loading || state.noMoreData) return false;
@@ -182,7 +183,7 @@ function fetchOlderRange(
 function makeHistoryLoader(
   symbol: string,
   timeframeRef: { current: string },
-  seriesRef: { current: ISeriesApi<"Candlestick"> | null },
+  seriesRef: { current: ISeriesApi<SeriesType> | null },
   stateRef: { current: LoadMoreState },
   onLoaded: (bars: Candle[]) => void,
 ): (range: LogicalRange | null) => void {
@@ -356,7 +357,7 @@ type LiveCandleData = {
 type TickData = { bid: number; ask: number; timestamp: number };
 
 interface RtCtx {
-  series: ISeriesApi<"Candlestick">;
+  series: ISeriesApi<SeriesType>;
   volume: ISeriesApi<"Histogram"> | null;
   lastCandle: Ref<CandlestickData<Time> | null>;
   liveCandleTs: Ref<number>;
@@ -390,6 +391,81 @@ function paintServerVolume(live: LiveCandleData, barTime: Time, ctx: RtCtx): voi
     });
   } catch {
     /* safe to ignore */
+  }
+}
+
+// Chart-type preference (feature 2: series-type selector).
+type ChartTypePref = "candles" | "line" | "area" | "baseline" | "bars";
+
+/**
+ * Create the primary price series for the chosen chart type. Used by both the
+ * chart create effect and the series-type swap effect so the option sets stay
+ * in lockstep (last-value label off — the Bid/Ask price lines are the
+ * authoritative right-edge prices).
+ */
+function createPriceSeries(
+  chart: IChartApi,
+  chartType: ChartTypePref,
+  colors: { up: string; down: string },
+  priceFormat: { type: "price"; precision: number; minMove: number },
+): ISeriesApi<SeriesType> {
+  const common = {
+    priceFormat,
+    lastValueVisible: false,
+    priceLineVisible: false,
+  } as const;
+  switch (chartType) {
+    case "line":
+      return chart.addLineSeries({
+        ...common,
+        color: colors.up,
+        lineWidth: 2,
+      });
+    case "area":
+      return chart.addAreaSeries({
+        ...common,
+        lineColor: colors.up,
+        topColor: "rgba(38, 166, 154, 0.28)",
+        bottomColor: "rgba(38, 166, 154, 0.02)",
+        lineWidth: 2,
+      });
+    case "baseline":
+      return chart.addBaselineSeries({
+        ...common,
+        baseValue: { type: "price", price: 0 },
+        topLineColor: colors.up,
+        topFillColor1: "rgba(38, 166, 154, 0.28)",
+        topFillColor2: "rgba(38, 166, 154, 0.02)",
+        bottomLineColor: colors.down,
+        bottomFillColor1: "rgba(239, 83, 80, 0.02)",
+        bottomFillColor2: "rgba(239, 83, 80, 0.28)",
+        lineWidth: 2,
+      });
+    case "bars":
+      return chart.addBarSeries({
+        ...common,
+        upColor: colors.up,
+        downColor: colors.down,
+        thinBars: false,
+      });
+    default:
+      return chart.addCandlestickSeries({
+        ...common,
+        upColor: colors.up,
+        downColor: colors.down,
+        borderUpColor: colors.up,
+        borderDownColor: colors.down,
+        wickUpColor: colors.up,
+        wickDownColor: colors.down,
+        // Candle close is the mid price ((bid+ask)/2) — with a 1-pip spread
+        // that sits half a pip below Ask, so the mid label stacks visually
+        // next to the Ask label and rounds to the same 5-decimal string. The
+        // explicit Bid/Ask price lines below are the authoritative right-edge
+        // prices for trading; the mid label is redundant.
+        priceLineWidth: 1,
+        priceLineColor: "",
+        priceLineStyle: LineStyle.Dotted,
+      });
   }
 }
 
@@ -495,7 +571,7 @@ function applyTick(tick: TickData, ctx: RtCtx): void {
   ctx.setLegend({ ...candleToLegend(bar, 0), v });
 }
 
-function removePriceLineSafe(ref: Ref<IPriceLine | null>, series: ISeriesApi<"Candlestick">): void {
+function removePriceLineSafe(ref: Ref<IPriceLine | null>, series: ISeriesApi<SeriesType>): void {
   if (!ref.current) return;
   try {
     series.removePriceLine(ref.current);
@@ -509,9 +585,9 @@ function removePriceLineSafe(ref: Ref<IPriceLine | null>, series: ISeriesApi<"Ca
 // remove+create churn that flickers the chart at tick rate.
 function upsertPriceLine(
   ref: Ref<IPriceLine | null>,
-  series: ISeriesApi<"Candlestick">,
+  series: ISeriesApi<SeriesType>,
   enabled: boolean,
-  opts: Parameters<ISeriesApi<"Candlestick">["createPriceLine"]>[0],
+  opts: Parameters<ISeriesApi<SeriesType>["createPriceLine"]>[0],
 ): void {
   if (!enabled) {
     removePriceLineSafe(ref, series);
@@ -573,7 +649,7 @@ function applyBidAskLines(
   });
 }
 
-function detachPlugins(series: ISeriesApi<"Candlestick">, list: ISeriesPrimitive<Time>[]): void {
+function detachPlugins(series: ISeriesApi<SeriesType>, list: ISeriesPrimitive<Time>[]): void {
   for (const p of list) {
     try {
       series.detachPrimitive(p);
@@ -584,7 +660,7 @@ function detachPlugins(series: ISeriesApi<"Candlestick">, list: ISeriesPrimitive
 }
 
 function attachPlugins(
-  series: ISeriesApi<"Candlestick">,
+  series: ISeriesApi<SeriesType>,
   ids: string[],
   ctx: PluginBuildCtx,
   list: ISeriesPrimitive<Time>[],
@@ -702,7 +778,7 @@ interface OverlayOpts {
   contractSize: number;
 }
 
-function clearPriceLines(series: ISeriesApi<"Candlestick">, list: IPriceLine[]): void {
+function clearPriceLines(series: ISeriesApi<SeriesType>, list: IPriceLine[]): void {
   for (const pl of list) {
     try {
       series.removePriceLine(pl);
@@ -714,7 +790,7 @@ function clearPriceLines(series: ISeriesApi<"Candlestick">, list: IPriceLine[]):
 
 // One SL or TP line for a position, registered in the drag-to-edit map.
 function addSlTpLine(
-  series: ISeriesApi<"Candlestick">,
+  series: ISeriesApi<SeriesType>,
   pos: Position,
   field: SlTpField,
   price: number,
@@ -745,7 +821,7 @@ function addSlTpLine(
 }
 
 function addPositionOverlay(
-  series: ISeriesApi<"Candlestick">,
+  series: ISeriesApi<SeriesType>,
   pos: Position,
   opts: OverlayOpts,
   out: IPriceLine[],
@@ -785,7 +861,7 @@ function addPositionOverlay(
 }
 
 function addOrderOverlay(
-  series: ISeriesApi<"Candlestick">,
+  series: ISeriesApi<SeriesType>,
   ord: Order,
   symbol: string,
   orderColor: string,
@@ -1124,7 +1200,12 @@ export function ChartPanel({
   const lastGapRefetchAtRef = useRef<number>(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
-  const candleSeriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
+  // The price series can be any of the supported types (chart-type selector);
+  // consumers only use the ISeriesApi common surface (update/setData/
+  // applyOptions/priceToCoordinate), so type the ref at the base.
+  const candleSeriesRef = useRef<ISeriesApi<SeriesType> | null>(null);
+  /** Which series type the ref currently holds (chart-type swap bookkeeping). */
+  const seriesTypeRef = useRef<"candles" | "line" | "area" | "baseline" | "bars">("candles");
 
   // Scroll-triggered historical extension — older bars prepended as the user
   // scrolls left past what the initial deep-fetch already loaded.
@@ -1497,6 +1578,12 @@ export function ChartPanel({
     if (!containerRef.current) return;
 
     const minMove = getMinMove(pipDigits);
+    const chartType = chartPrefs.chartType ?? "candles";
+    const priceFormat = {
+      type: "price" as const,
+      precision: pipDigits,
+      minMove,
+    };
 
     const chart = createChart(containerRef.current, {
       // Track the container's box ourselves (mobile URL-bar show/hide, layout
@@ -1574,31 +1661,12 @@ export function ChartPanel({
 
     chartRef.current = chart;
 
-    const candleSeries = chart.addCandlestickSeries({
-      upColor: colors.up,
-      downColor: colors.down,
-      borderUpColor: colors.up,
-      borderDownColor: colors.down,
-      wickUpColor: colors.up,
-      wickDownColor: colors.down,
-      priceFormat: {
-        type: "price",
-        precision: pipDigits,
-        minMove,
-      },
-      // Hide the candle's own last-value label and default close price-line.
-      // Candle close is the mid price ((bid+ask)/2) — with a 1-pip spread that
-      // sits half a pip below Ask, so the mid label stacks visually next to
-      // the Ask label and rounds to the same 5-decimal string. The explicit
-      // Bid/Ask price lines below are the authoritative right-edge prices for
-      // trading; the mid label is redundant and creates the "misaligned" look.
-      lastValueVisible: false,
-      priceLineVisible: false,
-      priceLineWidth: 1,
-      priceLineColor: "",
-      priceLineStyle: LineStyle.Dotted,
-    });
+    // Primary price series — type follows the chartType preference (swap is
+    // handled by the series-type effect below; the pump and every consumer
+    // read the ref, so they pick the new series up transparently).
+    const candleSeries = createPriceSeries(chart, chartType, colors, priceFormat);
     candleSeriesRef.current = candleSeries;
+    seriesTypeRef.current = chartType;
 
     // Volume histogram at the bottom of the chart
     const volumeSeries = chart.addHistogramSeries({
@@ -1760,6 +1828,54 @@ export function ChartPanel({
     });
   }, [colors.background, colors.text, colors.grid, colors.crosshair, chartEpoch]);
 
+  // ── Series-type swap ──
+  // lightweight-charts has no "change series type" — remove the old price
+  // series, create the new one, move the drawing primitive across, and bump
+  // the epoch so data hydration + overlays re-bind. rAF keeps the lint's
+  // cascading-render rule and React happy (state is never set synchronously).
+  useEffect(() => {
+    const wanted = chartPrefs.chartType;
+    if (seriesTypeRef.current === wanted) return; // mount: create-effect already matched
+    const raf = requestAnimationFrame(() => {
+      const chart = chartRef.current;
+      if (!chart) {
+        seriesTypeRef.current = wanted;
+        return;
+      }
+      const old = candleSeriesRef.current;
+      if (old) {
+        try {
+          chart.removeSeries(old);
+        } catch {
+          /* already detached */
+        }
+      }
+      const created = createPriceSeries(chart, wanted, colors, {
+        type: "price",
+        precision: pipDigits,
+        minMove: getMinMove(pipDigits),
+      });
+      candleSeriesRef.current = created;
+      seriesTypeRef.current = wanted;
+      // Baseline anchors on the first loaded close — a stable basis that
+      // doesn't recompute per zoom (assumption logged in AGENT_LOG).
+      if (wanted === "baseline" && chartData.length > 0) {
+        (created as ISeriesApi<"Baseline">).applyOptions({
+          baseValue: { type: "price", price: chartData[0]!.close },
+        });
+      }
+      drawingManagerRef.current?.setSeries(created);
+      // Force the data-sync + overlay effects to re-bind to the new series.
+      lastDataLenRef.current = 0;
+      setChartEpoch((e) => e + 1);
+    });
+    return () => cancelAnimationFrame(raf);
+    // Snapshot-at-swap: chartData/colors/pipDigits are read on the
+    // type-change render; data re-hydration happens in the epoch-keyed
+    // data-sync effect below.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chartPrefs.chartType]);
+
   // ── Precision changes apply in place ──
   useEffect(() => {
     candleSeriesRef.current?.applyOptions({
@@ -1783,10 +1899,15 @@ export function ChartPanel({
 
   // ── Live appearance settings (no chart recreation) ──
   useEffect(() => {
+    const series = candleSeriesRef.current;
+    if (!series) return;
+    // Body/wick styling only exists on the candlestick series; other types
+    // are created with the live theme colors by the series-type swap.
+    if ((chartPrefs.chartType ?? "candles") !== "candles") return;
     // `colors` already carries the user's overrides (mergeChartColors).
     const up = colors.up;
     const down = colors.down;
-    candleSeriesRef.current?.applyOptions({
+    (series as ISeriesApi<"Candlestick">).applyOptions({
       upColor: up,
       downColor: down,
       borderUpColor: up,
@@ -1797,6 +1918,7 @@ export function ChartPanel({
       borderVisible: chartPrefs.showCandleBorders,
     });
   }, [
+    chartPrefs.chartType,
     chartPrefs.candleUpColor,
     chartPrefs.candleDownColor,
     chartPrefs.showWicks,
@@ -1862,7 +1984,7 @@ export function ChartPanel({
   // listing those values individually (refs and setLegend are stable).
   const lastLegendVRef = useRef(0);
   const makeRtCtx = useCallback(
-    (series: ISeriesApi<"Candlestick">): RtCtx => ({
+    (series: ISeriesApi<SeriesType>): RtCtx => ({
       series,
       volume: volumeSeriesRef.current,
       lastCandle: lastCandleRef,
@@ -1910,6 +2032,7 @@ export function ChartPanel({
       if (lastVol) volumeSeriesRef.current?.update(lastVol);
       // eslint-disable-next-line react-hooks/immutability
       lastCandleRef.current = lastBar;
+      // eslint-disable-next-line react-hooks/immutability
       lastDataLenRef.current = chartData.length;
       lastFirstTimeRef.current = chartData[0]!.time;
       setLegendThrottled(candleToLegend(lastBar, lastVol?.value || 0));
@@ -1965,7 +2088,7 @@ export function ChartPanel({
     liveCandleTsRef.current = 0;
     replayBufferedLive(buffered, chartData, ctx);
     return scheduleStaleRefetch(chartData, ctx);
-  }, [chartData, volumeData, selectedSymbol, timeframe, makeRtCtx, isReplaying, setLegendThrottled]);
+  }, [chartData, volumeData, selectedSymbol, timeframe, makeRtCtx, isReplaying, setLegendThrottled, chartEpoch]);
 
   // ── Real-time candle updates ──────────────────────────
 
@@ -2098,7 +2221,7 @@ export function ChartPanel({
       { isDark, timeframe, symbolCategory },
       chartPluginsRef.current,
     );
-  }, [activePlugins, isDark, selectedSymbol, timeframe, symbolCategory]);
+  }, [activePlugins, isDark, selectedSymbol, timeframe, symbolCategory, chartEpoch]);
 
   // ── Live bid/ask price tracking lines ──────────────────────
   // Re-applied when the preferences change; the per-tick moves happen in the
@@ -2113,7 +2236,7 @@ export function ChartPanel({
       { showBidLine: chartPrefs.showBidLine, showAskLine: chartPrefs.showAskLine },
       makeRtCtx(series),
     );
-  }, [chartPrefs.showBidLine, chartPrefs.showAskLine, makeRtCtx, selectedSymbol]);
+  }, [chartPrefs.showBidLine, chartPrefs.showAskLine, makeRtCtx, selectedSymbol, chartEpoch]);
 
   // ── Position/order overlays ────────────────────────────────
   useEffect(() => {

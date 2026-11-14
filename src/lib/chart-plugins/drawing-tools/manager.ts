@@ -133,7 +133,7 @@ export interface DrawingToolsManagerOptions {
  */
 export class DrawingToolsManager {
   private readonly chart: IChartApi;
-  private readonly series: ISeriesApi<SeriesType>;
+  private series: ISeriesApi<SeriesType>;
   private readonly container: HTMLElement;
   private readonly cb: DrawingCallbacks;
   private readonly primitive: DrawingsPrimitive;
@@ -204,6 +204,24 @@ export class DrawingToolsManager {
       /* chart already removed */
     }
     this.container.style.cursor = "";
+  }
+
+  /**
+   * Rebind to a new price series (chart-type swap): move the rendering
+   * primitive across, keeping all manager state (drawings, clipboard,
+   * long-press) untouched.
+   */
+  setSeries(newSeries: ISeriesApi<SeriesType>): void {
+    if (newSeries === this.series) return;
+    try {
+      this.series.detachPrimitive(this.primitive);
+    } catch {
+      /* old series already removed from the chart */
+    }
+    this.series = newSeries;
+    this.series.attachPrimitive(this.primitive);
+    // Force a repaint on the new host.
+    this.primitive.setDrawings(this.drawings);
   }
 
   setTool(tool: DrawingTool): void {
