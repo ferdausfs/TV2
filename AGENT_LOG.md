@@ -14,8 +14,38 @@
   cursors and arm a leaked `setInterval` (the cause of the intermittent "window is not
   defined" unhandled error after vitest teardown — hit main CI once after #15).
 - **Touched files:** services/demo/feed.ts, AGENT_LOG.md
-- **Commit:** branch `auto/feed-race-fix` → PR `<fill>`
+- **Commit:** branch `auto/feed-race-fix` (`85efb7a`) → squash-merged `a67b739`
+  (PR #16, CI + E2E green)
 - **Results:** adapter.test 20/20 ✅ · typecheck ✅
+
+## 2026-11-14 — Session 2 · Feature 5: Timeframes +3m / +2h / +1M
+
+- **Agent/tool:** OpenCode (GLM) · branch `auto/timeframes` → PR → merge
+- **Plan (reviewed first):** extend the timeframe set to
+  1m/3m/5m/15m/30m/1h/2h/4h/1d/1w/1M. TF_INTERVAL_MS gains 3m/2h (exact) and 1M
+  (30d approximation for gap/staleness math only). `getCandleBucketTime` special-cases
+  1M (UTC month start) and 1w (Monday 00:00 UTC) — this also fixes the logged
+  weekly-bucket phantom-bar misalignment for live ticks (the epoch floor lands on a
+  Thursday, months are 28–31d). Countdown effect: 1M → next UTC-month start; 1d/1w
+  already UTC-midnight/Monday-aligned. `deepLimitFor` in terminal/context gains
+  3m → 3000, 2h → 6000, 1M → 260 (monthly depth halved vs weekly). Demo candles
+  TF_SECONDS gains 3m/2h/1M. Binance adapter passes timeframe through verbatim —
+  3m/2h/1M are native Binance intervals, no adapter change.
+- **Recorded assumptions:** weekly buckets Monday 00:00 UTC, monthly on the 1st
+  (Binance alignment); +1s timeframe deferred until a confirmed feed supports it.
+- **What changed:** TIMEFRAMES extended to 11 entries (constants.ts + TF_INTERVAL_MS;
+  1M = 30d approximation for gap/staleness math). `getCandleBucketTime` special-cases
+  1M (UTC month start) and 1w (Monday 00:00 UTC) — fixes the logged weekly
+  phantom-bar misalignment where live ticks painted onto epoch-floored buckets.
+  Countdown timer: 1M branch targets the next UTC-month start. `deepLimitFor` gains
+  3m → 3000 / 2h → 6000 / 1M → 260. Demo TF_SECONDS gains 3m/2h/1M. Toolbar renders
+  all 11 (overflow-scroll already present).
+- **Touched files:** pages/trading/constants.ts, pages/trading/utils.ts,
+  pages/trading/ChartPanel.tsx, terminal/context.tsx, services/demo/candles.ts,
+  AGENT_LOG.md
+- **Commit:** branch `auto/timeframes` → PR `<fill>`
+- **Results:** typecheck ✅ · lint --max-warnings=0 ✅ · tests **762 passed | 1 skipped** ✅ ·
+  `VITE_ADAPTER=binance` build "✓ built" ✅ · check:size within budget ✅
 
 ## 2026-11-14 — Session 2 · Feature 4: Scales — log/percent/auto, range buttons, go-to-date
 

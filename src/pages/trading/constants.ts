@@ -1,6 +1,18 @@
 // ── Trading Page Constants ────────────────────────────────────────────────────
 
-export const TIMEFRAMES = ["1m", "5m", "15m", "30m", "1h", "4h", "1d", "1w"] as const;
+export const TIMEFRAMES = [
+  "1m",
+  "3m",
+  "5m",
+  "15m",
+  "30m",
+  "1h",
+  "2h",
+  "4h",
+  "1d",
+  "1w",
+  "1M",
+] as const;
 export type Timeframe = (typeof TIMEFRAMES)[number];
 
 /**
@@ -225,16 +237,21 @@ export const DRAWING_COLORS = [
 
 export const DRAWING_WIDTHS = [1, 2, 3, 4] as const;
 
-/** Timeframe interval in milliseconds */
+/** Timeframe interval in milliseconds. 1M is the 30d approximation used for
+ * gap/staleness math; true month buckets are calendar-aligned in
+ * getCandleBucketTime and the countdown. */
 export const TF_INTERVAL_MS: Record<Timeframe, number> = {
   "1m": 60_000,
+  "3m": 3 * 60_000,
   "5m": 5 * 60_000,
   "15m": 15 * 60_000,
   "30m": 30 * 60_000,
   "1h": 60 * 60_000,
+  "2h": 2 * 60 * 60_000,
   "4h": 4 * 60 * 60_000,
   "1d": 24 * 60 * 60_000,
   "1w": 7 * 24 * 60 * 60_000,
+  "1M": 30 * 24 * 60 * 60_000,
 };
 
 export const KNOWN_CURRENCIES = [

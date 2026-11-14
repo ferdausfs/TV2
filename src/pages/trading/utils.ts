@@ -84,15 +84,29 @@ export function extractCurrencies(symbol: string): string[] {
 /** Return the candle-bucket start (unix seconds) for a given timestamp */
 export function getCandleBucketTime(timestampMs: number, tf: Timeframe): number {
   const SEC = 1000;
-  const intervals: Record<Timeframe, number> = {
+  // Week/month buckets are calendar-aligned on the server (Binance weekly
+  // klines open Monday 00:00 UTC, monthly on the 1st) — floor-to-interval
+  // would misalign (the epoch is a Thursday; months are 28-31d) and paint
+  // live ticks onto phantom bars.
+  if (tf === "1M") {
+    const d = new Date(timestampMs);
+    return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1) / SEC;
+  }
+  if (tf === "1w") {
+    const utcMidnight = Math.floor(timestampMs / 86_400_000) * 86_400_000;
+    const daysSinceMonday = (new Date(timestampMs).getUTCDay() + 6) % 7;
+    return (utcMidnight - daysSinceMonday * 86_400_000) / SEC;
+  }
+  const intervals: Record<Exclude<Timeframe, "1w" | "1M">, number> = {
     "1m": 60 * SEC,
+    "3m": 3 * 60 * SEC,
     "5m": 5 * 60 * SEC,
     "15m": 15 * 60 * SEC,
     "30m": 30 * 60 * SEC,
     "1h": 60 * 60 * SEC,
+    "2h": 2 * 60 * 60 * SEC,
     "4h": 4 * 60 * 60 * SEC,
     "1d": 24 * 60 * 60 * SEC,
-    "1w": 7 * 24 * 60 * 60 * SEC,
   };
   const ms = intervals[tf];
   return Math.floor((Math.floor(timestampMs / ms) * ms) / 1000);
