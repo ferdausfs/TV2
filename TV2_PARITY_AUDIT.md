@@ -155,7 +155,16 @@ REST; React context (`use-terminal`) for terminal wiring; chart state lives **ou
 
 | P | Feature | Size | Files (main) |
 | --- | --- | --- | --- |
-| 0 | **Token migration to DESIGN.TV2.md** (TV palette; reconcile docs; manifest/theme-color; kill stray hexes) | M | global.css, constants.ts, 9 hex-bearing files, manifest, DESIGN.md |
+
+**Roadmap status — COMPLETE (17/17, features 0–17, PRs #11–#29).** Test baseline
+780 → **792 passed | 1 skipped** across the run. Deferred/backlog items are noted
+inline per row below and in AGENT_LOG.md (mobile watchlist, real resizable
+sub-panes, Supertrend/Ichimoku/PSAR/Volume Profile/Pivots, pitchfork/gann/
+time-zones, signed release APK).
+
+| P | Feature | Size | Files (main) |
+| --- | --- | --- | --- |
+| 0 | **Token migration to DESIGN.TV2.md** (TV palette; reconcile docs; manifest/theme-color; kill stray hexes) — **done** (`1eaa6cd`) | M | global.css, constants.ts, 9 hex-bearing files, manifest, DESIGN.md |
 | 1 | Mobile Alerts v1 (real price-cross alerts: once/every-time, expiry, toast+sound+Notification, list UI, localStorage persistence) | M | notifications.ts, MobileTradingPanel.tsx (Alerts tab), terminal context |
 | 2 | Chart-type selector (line/area/bar/baseline/HA via lightweight-charts built-ins + HA computation) | S-M | ChartPanel.tsx, ChartToolbar.tsx, constants |
 | 3 | Price-scale pack: last-price label on, countdown on all TFs, prev-close line, high/low markers | S | ChartPanel.tsx |
@@ -172,7 +181,7 @@ REST; React context (`use-terminal`) for terminal wiring; chart state lives **ou
 | 14 | Keyboard shortcuts + focus traps pass — **done** (digit TF shortcuts + focus traps) | S | various |
 | 15 | Advanced indicators batch 2 (ADX/DMI, CCI, MFI, Volume MA done in feature 15; Supertrend, Ichimoku, PSAR, Pivot Points, Volume Profile in a Worker remain) | L | lib/indicators.ts + worker |
 | 16 | Drawing TV-extras batch (brush, callout, note, fib channel, favorites toolbar) — **done**; pitchfork/gann/time-zones/regression remain | L | drawing-tools |
-| 17 | Capacitor Android APK | L | new (last) |
+| 17 | Capacitor Android APK — **done** (manual workflow builds a debug APK artifact; android/ generated in CI) | L | new (last) |
 
 Each item ships alone on its own branch (`auto/<name>`), CI+e2e green on the PR, then merge → main → deploy.
 
