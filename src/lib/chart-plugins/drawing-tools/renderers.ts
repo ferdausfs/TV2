@@ -116,6 +116,18 @@ export function renderEntry(
     case "text":
       renderText(scope, e);
       break;
+    case "callout":
+      renderCallout(scope, e);
+      break;
+    case "note":
+      renderNote(scope, e);
+      break;
+    case "brush":
+      renderBrush(scope, e);
+      break;
+    case "fibchannel":
+      renderFibChannel(scope, e);
+      break;
     case "fibextension":
       renderFibonacci(scope, e);
       break;
@@ -609,6 +621,146 @@ function renderFibConnector(scope: BitmapCoordinatesRenderingScope, e: ResolvedE
   const a = toBitmap(scope, e.x1, e.y1);
   const b = toBitmap(scope, e.x2, e.y2);
   strokeLine(scope, a, b, e.d.color, 1, [4, 4]);
+  if (showHandles(e)) {
+    drawHandle(scope, a, e.d.color);
+    drawHandle(scope, b, e.d.color);
+  }
+}
+
+// ── TV-extras: brush / callout / note / fib channel (feature 16) ─────────────
+
+// Freehand polyline through the sampled points; anchors double as endpoints.
+function renderBrush(scope: BitmapCoordinatesRenderingScope, e: ResolvedEntry): void {
+  const pts = e.pts ?? [];
+  if (pts.length < 2) return;
+  const ctx = scope.context;
+  ctx.save();
+  ctx.strokeStyle = e.d.color;
+  ctx.lineWidth = (e.d.width ?? 2) * scope.verticalPixelRatio;
+  ctx.lineJoin = "round";
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  const first = toBitmap(scope, pts[0]!.x, pts[0]!.y);
+  ctx.moveTo(first.x, first.y);
+  for (let i = 1; i < pts.length; i++) {
+    const p = toBitmap(scope, pts[i]!.x, pts[i]!.y);
+    ctx.lineTo(p.x, p.y);
+  }
+  ctx.stroke();
+  ctx.restore();
+  if (showHandles(e)) {
+    drawHandle(scope, first, e.d.color);
+    const lastAt = toBitmap(scope, pts[pts.length - 1]!.x, pts[pts.length - 1]!.y);
+    drawHandle(scope, lastAt, e.d.color);
+  }
+}
+
+// Shared text-box geometry (callout box, note label) in media pixels.
+function textBoxGeom(
+  scope: BitmapCoordinatesRenderingScope,
+  e: ResolvedEntry,
+): { bx: number; by: number; w: number; h: number; at: BPt; pad: number } | null {
+  if (e.x1 === null || e.y1 === null) return null;
+  const ctx = scope.context;
+  const hpr = scope.horizontalPixelRatio;
+  const size = (e.d.fontSize ?? 14) * scope.verticalPixelRatio;
+  const lines = (e.d.text ?? "Text").split("\n");
+  ctx.save();
+  ctx.font = textFont(e.d, size);
+  const textW = Math.max(...lines.map((l) => ctx.measureText(l).width));
+  ctx.restore();
+  const pad = 4 * hpr;
+  return {
+    bx: e.x1 * scope.horizontalPixelRatio - pad,
+    by: e.y1 * scope.verticalPixelRatio - pad,
+    w: textW + pad * 2,
+    h: lines.length * size * 1.3 + pad * 2,
+    at: toBitmap(scope, e.x1, e.y1),
+    pad,
+  };
+}
+
+function paintTextBox(
+  scope: BitmapCoordinatesRenderingScope,
+  e: ResolvedEntry,
+  geom: { bx: number; by: number; w: number; h: number; at: BPt },
+): void {
+  const ctx = scope.context;
+  const hpr = scope.horizontalPixelRatio;
+  const size = (e.d.fontSize ?? 14) * scope.verticalPixelRatio;
+  const lines = (e.d.text ?? "Text").split("\n");
+  ctx.save();
+  ctx.fillStyle = e.d.textBg ? (e.d.textBgColor ?? "#1e222d") : hexToRgba(e.d.color, 0.12);
+  ctx.fillRect(geom.bx, geom.by, geom.w, geom.h);
+  ctx.strokeStyle = e.d.color;
+  ctx.lineWidth = hpr;
+  ctx.strokeRect(geom.bx, geom.by, geom.w, geom.h);
+  ctx.font = textFont(e.d, size);
+  ctx.textBaseline = "top";
+  ctx.fillStyle = e.d.color;
+  const inner = 2 * hpr;
+  lines.forEach((l, i) => ctx.fillText(l, geom.bx + inner, geom.by + inner + i * size * 1.3));
+  if (showHandles(e)) {
+    ctx.setLineDash([3 * hpr, 3 * hpr]);
+    ctx.strokeRect(geom.bx, geom.by, geom.w, geom.h);
+  }
+  ctx.restore();
+}
+
+// Callout: text box anchored at p1, leader line from the box edge to p2.
+function renderCallout(scope: BitmapCoordinatesRenderingScope, e: ResolvedEntry): void {
+  const geom = textBoxGeom(scope, e);
+  if (!geom) return;
+  if (e.x2 !== null && e.y2 !== null) {
+    const b = toBitmap(scope, e.x2, e.y2);
+    // Leader starts at the box's bottom-left corner region — close enough for
+    // a pointer, and it tracks the anchor when either end moves.
+    strokeLine(scope, { x: geom.bx, y: geom.by + geom.h }, b, e.d.color, 1);
+    drawArrowhead(scope, { x: geom.bx, y: geom.by + geom.h }, b, e.d.color);
+  }
+  paintTextBox(scope, e, geom);
+  if (showHandles(e)) {
+    drawHandle(scope, geom.at, e.d.color);
+    if (e.x2 !== null && e.y2 !== null) drawHandle(scope, toBitmap(scope, e.x2, e.y2), e.d.color);
+  }
+}
+
+// Note: a small sticky label at its single anchor (no leader).
+function renderNote(scope: BitmapCoordinatesRenderingScope, e: ResolvedEntry): void {
+  const geom = textBoxGeom(scope, e);
+  if (!geom) return;
+  paintTextBox(scope, e, geom);
+  if (showHandles(e)) drawHandle(scope, geom.at, e.d.color);
+}
+
+// Fib channel: parallel sloped fib-level lines + the base + direction stub.
+function renderFibChannel(scope: BitmapCoordinatesRenderingScope, e: ResolvedEntry): void {
+  if (e.x1 === null || e.y1 === null || e.x2 === null || e.y2 === null) return;
+  const a = toBitmap(scope, e.x1, e.y1);
+  const b = toBitmap(scope, e.x2, e.y2);
+  for (const lvl of e.channelLevels ?? []) {
+    if (lvl.x1 === null || lvl.y1 === null || lvl.x2 === null || lvl.y2 === null) continue;
+    const la = toBitmap(scope, lvl.x1, lvl.y1);
+    const lb = toBitmap(scope, lvl.x2, lvl.y2);
+    strokeLine(scope, la, lb, lvl.color, 1);
+    if (lvl.level !== 0 && lvl.level !== 1) {
+      const ctx = scope.context;
+      ctx.save();
+      ctx.font = `${Math.round(10 * scope.verticalPixelRatio)}px monospace`;
+      ctx.textAlign = "right";
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = lvl.color;
+      ctx.fillText(lvl.label, la.x - 6 * scope.horizontalPixelRatio, la.y);
+      ctx.restore();
+    }
+  }
+  // Dashed base (p1→p2) and direction stub (p1→p3) — where handles live.
+  strokeLine(scope, a, b, e.d.color, 1, [4, 4]);
+  if (e.x3 != null && e.y3 != null) {
+    const c = toBitmap(scope, e.x3, e.y3);
+    strokeLine(scope, a, c, e.d.color, 1, [4, 4]);
+    if (showHandles(e)) drawHandle(scope, c, e.d.color);
+  }
   if (showHandles(e)) {
     drawHandle(scope, a, e.d.color);
     drawHandle(scope, b, e.d.color);

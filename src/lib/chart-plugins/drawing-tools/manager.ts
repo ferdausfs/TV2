@@ -339,6 +339,24 @@ export class DrawingToolsManager {
       return { ...two, type: "channel", time3: p1.time, price3: 2 * p1.price - p2.price };
     }
     if (tool === "text") return { ...two, type: "text", text: "Text" };
+    if (tool === "brush")
+      return {
+        ...base,
+        type: "brush",
+        price: p1.price,
+        time: p1.time,
+        price2: p2.price,
+        time2: p2.time,
+        // The freehand trace lives here; anchors p1/p2 stay as the bounding
+        // endpoints so move/resize machinery works unchanged.
+        points: [{ time: p1.time, price: p1.price }, { time: p2.time, price: p2.price }],
+      };
+    if (tool === "callout") return { ...two, type: "callout", text: "Callout" };
+    if (tool === "note") return { ...base, type: "note", price: p1.price, time: p1.time, text: "Note" };
+    if (tool === "fibchannel") {
+      // Direction anchor defaults mirrored below the base so it's draggable.
+      return { ...two, type: "fibchannel", time3: p1.time, price3: 2 * p1.price - p2.price };
+    }
     return { ...two, type: tool as DrawingType };
   }
 
@@ -826,11 +844,40 @@ export class DrawingToolsManager {
       return p ? { ...origin, time: p.time } : null;
     }
     if (origin.type === "position") return this.shiftPosition(origin, entry, dx, dy);
-    if (origin.type === "channel") return this.shiftChannel(origin, entry, dx, dy);
+    if (origin.type === "channel" || origin.type === "fibchannel")
+      return this.shiftChannel(origin, entry, dx, dy);
+    if (origin.type === "brush") return this.shiftBrush(origin, entry, dx, dy);
     const p1 = this.shiftPoint(entry.x1, entry.y1, dx, dy);
     const p2 = this.shiftPoint(entry.x2, entry.y2, dx, dy);
     if (!p1 || !p2) return null;
     return { ...origin, time: p1.time, price: p1.price, time2: p2.time, price2: p2.price };
+  }
+
+  // Body-drag a brush: translate every freehand sample (cheap, in pixel space
+  // via the resolved points — same as the other multi-anchor bodies).
+  private shiftBrush(
+    origin: DrawingLine,
+    entry: ResolvedEntry,
+    dx: number,
+    dy: number,
+  ): DrawingLine | null {
+    const moved: DataPoint[] = [];
+    for (const p of entry.pts ?? []) {
+      const pt = this.toPoint({ x: p.x + dx, y: p.y + dy });
+      if (!pt) return null;
+      moved.push(pt);
+    }
+    if (moved.length === 0) return null;
+    const first = moved[0]!;
+    const last = moved[moved.length - 1]!;
+    return {
+      ...origin,
+      time: first.time,
+      price: first.price,
+      time2: last.time,
+      price2: last.price,
+      points: moved.map((p) => ({ time: p.time, price: p.price })),
+    };
   }
 
   // Body-drag a parallel channel: move all three anchors together.

@@ -143,7 +143,11 @@ export type DrawingTool =
   | "position"
   | "long-position"
   | "short-position"
-  | "measure";
+  | "measure"
+  | "brush"
+  | "callout"
+  | "note"
+  | "fibchannel";
 
 /** Stored drawing kinds (excludes placement-only aliases). */
 export type DrawingType = Exclude<
@@ -209,6 +213,11 @@ export interface DrawingLine {
   textBorderColor?: string;
   /** Custom fibonacci levels (fractions); defaults applied when absent. */
   fibLevels?: number[];
+  /**
+   * Brush freehand samples — chart-space points between the two anchors
+   * (throttled by pointer-move distance, capped at 200).
+   */
+  points?: Array<{ time: number; price: number }>;
   // ── Position tool (long/short risk-reward) ──
   side?: "long" | "short";
   /** Stop-loss price (position tool). */

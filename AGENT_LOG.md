@@ -121,6 +121,50 @@
   (baseline 780 → 790) · `VITE_ADAPTER=binance` build "✓ built" ✅ · check:size within
   budget ✅
 
+## 2026-11-14 — Session 2 · Feature 16: Drawing TV-extras (brush, callout, note, fib channel, favorites toolbar)
+
+- **Agent/tool:** OpenCode (GLM) · branch `auto/draw-extras` → PR → merge
+- **Plan (reviewed first):** a pragmatic batch of the audit's TV-extras list (the
+  heavier geometric tools — pitchfork/gann/time-zones/regression — deferred, logged):
+  (1) **brush** — freehand polyline: pointerdown starts capture, sampled points
+  stored as a compressed `points` array on the drawing (`type: "brush"`, renderer =
+  polyline through points, hit-test = distance to any segment); (2) **callout** —
+  text box anchored at point 1 with a leader line to point 2 (`type: "callout"`,
+  reuses text rendering + leader segment, editable via the existing settings
+  dialog); (3) **note** — a small sticky-label at point 1 (one-anchor, like
+  horizontal but freeform placement, `type: "note"`); (4) **fib channel** — three
+  anchors (base line p1→p2 + direction p3), fib-level parallel lines
+  (`type: "fibchannel"`, renderer extends the existing fibonacci level math along
+  the channel direction); (5) **favorites toolbar** — star a drawing tool
+  (`drawing_favorites` persisted list), favorites render as a compact first group in
+  the DrawingToolRail. Each new type: DrawingTool/DrawingType union entry,
+  buildNew case, renderer, hit-test participation, rail entry.
+- **Recorded assumptions:** brush stores ≤200 sampled points (throttled by pointer
+  move distance) inline in the drawing object — no schema migration needed since
+  DrawingLine tolerates extra fields; callout/note reuse the text editing UX;
+  pitchfork/gann/fib time-zones/regression/anchored-VWAP/emoji stay on the backlog
+  (heavier math, lower usage).
+- **What changed:** 4 new drawing types end-to-end. **brush** (`PencilLine`) —
+  freehand polyline stored as a `points` array on DrawingLine (≤200 samples,
+  anchors double as endpoints); renderer = polyline, hit = any segment, body-drag
+  translates every sample. **callout** (`MessageSquareText`) — text box at p1 +
+  arrow leader to p2, editable via the text settings path. **note** (`StickyNote`)
+  — one-anchor sticky label. **fibchannel** (`GitFork`) — 3 anchors (base p1→p2 +
+  direction p3), FIB_LEVELS rendered as sloped parallel lines (dy·level offset,
+  `ResolvedChannelLevel` in resolve.ts), hit = anchors/p3/any level line, body-drag
+  = 3-anchor shift (shared with channel). Settings dialog treats callout/note as
+  text drawings. **Favorites toolbar**: star per tool in every flyout +
+  starred tools render as a compact first group, persisted `drawing_favorites`
+  (safeStorage JSON). Rail gained an "Annotations" group.
+- **Touched files:** pages/trading/constants.ts, lib/chart-plugins/drawing-tools/
+  {types,resolve,manager,renderers,hit-test}.ts, pages/trading/DrawingToolRail.tsx,
+  pages/trading/DrawingToolsOverlay.tsx, __tests__/drawExtras.test.ts (new),
+  AGENT_LOG.md
+- **Commit:** branch `auto/draw-extras` → PR `<fill>`
+- **Results:** typecheck ✅ · lint --max-warnings=0 ✅ · tests **792 passed | 1 skipped** ✅
+  (baseline 790 → 792) · `VITE_ADAPTER=binance` build "✓ built" ✅ · check:size within
+  budget ✅
+
 ## 2026-11-14 — Session 2 · Feature 13: Market screener (client-computed, virtualized)
 
 - **Agent/tool:** OpenCode (GLM) · branch `auto/screener` → PR → merge

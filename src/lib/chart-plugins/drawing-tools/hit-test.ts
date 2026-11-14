@@ -48,6 +48,14 @@ function hitEntry(e: ResolvedEntry, p: Pt, tol: Tol): Hit | null {
       return hitBoxShape(e, p, tol);
     case "text":
       return hitText(e, p, tol);
+    case "callout":
+      return hitCallout(e, p, tol);
+    case "note":
+      return hitTextBox(e, p, tol);
+    case "brush":
+      return hitBrush(e, p, tol);
+    case "fibchannel":
+      return hitFibChannel(e, p, tol);
     default:
       return null;
   }
@@ -94,6 +102,65 @@ function hitText(e: ResolvedEntry, p: Pt, tol: Tol): Hit | null {
   return inside
     ? { id: e.d.id, region: { kind: "point", timeKey: "time", priceKey: "price" } }
     : null;
+}
+
+// Shared text-box rect test (callout box / note label) — mirrors renderers'
+// textBoxGeom padding so the hit area matches what's painted.
+function hitTextBox(e: ResolvedEntry, p: Pt, tol: Tol): Hit | null {
+  if (e.x1 === null || e.y1 === null) return null;
+  const size = e.d.fontSize ?? 14;
+  const lines = (e.d.text ?? "Text").split("\n");
+  const longest = lines.reduce((m, l) => Math.max(m, l.length), 4);
+  const pad = 6;
+  const w = longest * size * 0.6 + pad * 2;
+  const h = lines.length * size * 1.3 + pad * 2;
+  const inside =
+    p.x >= e.x1 - pad - tol.line &&
+    p.x <= e.x1 - pad + w + tol.line &&
+    p.y >= e.y1 - pad - tol.line &&
+    p.y <= e.y1 - pad + h + tol.line;
+  return inside
+    ? { id: e.d.id, region: { kind: "point", timeKey: "time", priceKey: "price" } }
+    : null;
+}
+
+function hitCallout(e: ResolvedEntry, p: Pt, tol: Tol): Hit | null {
+  const box = hitTextBox(e, p, tol);
+  if (box) return box;
+  const anchor = anchorHit(e, p, tol);
+  if (anchor) return anchor;
+  if (e.x1 === null || e.y1 === null || e.x2 === null || e.y2 === null) return null;
+  // Leader line from the box's bottom-left to the second anchor.
+  const from = { x: e.x1 - 6, y: e.y1 + (e.d.fontSize ?? 14) * 1.3 + 6 };
+  const near = distToSegment(p, from, { x: e.x2, y: e.y2 }) <= tol.line;  return near ? bodyHit(e) : null;
+}
+
+// Brush: near any sampled segment (or either endpoint handle).
+function hitBrush(e: ResolvedEntry, p: Pt, tol: Tol): Hit | null {
+  const anchor = anchorHit(e, p, tol);
+  if (anchor) return anchor;
+  const pts = e.pts ?? [];
+  for (let i = 0; i < pts.length - 1; i++) {
+    const a = pts[i]!;
+    const b = pts[i + 1]!;
+    if (distToSegment(p, { x: a.x, y: a.y }, { x: b.x, y: b.y }) <= tol.line) return bodyHit(e);
+  }
+  return null;
+}
+
+// Fib channel: anchors first, then proximity to any sloped level line.
+function hitFibChannel(e: ResolvedEntry, p: Pt, tol: Tol): Hit | null {
+  const anchor = anchorHit(e, p, tol);
+  if (anchor) return anchor;
+  if (e.x3 != null && e.y3 != null && dist(p, { x: e.x3, y: e.y3 }) <= tol.handle) {
+    return { id: e.d.id, region: { kind: "point", timeKey: "time3", priceKey: "price3" } };
+  }
+  for (const lvl of e.channelLevels ?? []) {
+    if (lvl.x1 === null || lvl.y1 === null || lvl.x2 === null || lvl.y2 === null) continue;
+    if (distToSegment(p, { x: lvl.x1, y: lvl.y1 }, { x: lvl.x2, y: lvl.y2 }) <= tol.line)
+      return bodyHit(e);
+  }
+  return null;
 }
 
 function pointHit(e: ResolvedEntry, timeKey: TimeKey | null, priceKey: PriceKey | null): Hit {

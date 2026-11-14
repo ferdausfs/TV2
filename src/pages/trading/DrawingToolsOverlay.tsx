@@ -639,7 +639,7 @@ export function DrawingSettingsDialog({
 }: DrawingSettingsProps) {
   const patch = (p: Partial<DrawingLine>) => onUpdate({ ...drawing, ...p });
   const drag = useDragOffset();
-  const isText = drawing.type === "text";
+  const isText = drawing.type === "text" || drawing.type === "callout" || drawing.type === "note";
   return (
     <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/40">
       <div

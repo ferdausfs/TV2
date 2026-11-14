@@ -84,8 +84,8 @@ REST; React context (`use-terminal`) for terminal wiring; chart state lives **ou
 | Core suite | **Done** | 16 tools + none (constants.ts:116-134): trend, ray, extended, h/v line, channel, fib ret/ ext, rect, ellipse, arrow, triangle, text, long/short position, measure |
 | Magnet weak/strong, stay-in-draw, lock/hide/z-order, per-TF visibility | **Done** | manager.ts:21, ObjectTreePanel.tsx |
 | Persistence + templates + undo/redo | **Done** | `oc_drawings_${symbol}` storage driver; line-cross alerts (toast+sound, session-only) |
-| TV extras (pitchfork, gann, fib channel/time-zones/circles, regression, brush, callout, note, signpost, ranges, forecast, anchored VWAP, emoji) | **Missing** | renderer architecture supports adding; batch later |
-| Favorites toolbar | **Missing** | — |
+| TV extras (pitchfork, gann, fib channel/time-zones/circles, regression, brush, callout, note, signpost, ranges, forecast, anchored VWAP, emoji) | **Partial** | + brush, callout, note, fib channel (feature 16); pitchfork/gann/time-zones/regression/anchored-VWAP/emoji remain |
+| Favorites toolbar | **Partial** | starred tools persist (`drawing_favorites`) and render as a compact first rail group (DrawingToolRail.tsx) |
 
 ### Data / symbols / watchlist / alerts / screener (spec §4)
 
@@ -171,7 +171,7 @@ REST; React context (`use-terminal`) for terminal wiring; chart state lives **ou
 | 13 | Screener (client, virtualized) — **done** (desktop rail; mobile deferred) | M | new |
 | 14 | Keyboard shortcuts + focus traps pass — **done** (digit TF shortcuts + focus traps) | S | various |
 | 15 | Advanced indicators batch 2 (ADX/DMI, CCI, MFI, Volume MA done in feature 15; Supertrend, Ichimoku, PSAR, Pivot Points, Volume Profile in a Worker remain) | L | lib/indicators.ts + worker |
-| 16 | Drawing TV-extras batch (pitchfork, fib channel/time-zones, brush, callout, note, anchored VWAP, favorites toolbar) | L | drawing-tools |
+| 16 | Drawing TV-extras batch (brush, callout, note, fib channel, favorites toolbar) — **done**; pitchfork/gann/time-zones/regression remain | L | drawing-tools |
 | 17 | Capacitor Android APK | L | new (last) |
 
 Each item ships alone on its own branch (`auto/<name>`), CI+e2e green on the PR, then merge → main → deploy.
