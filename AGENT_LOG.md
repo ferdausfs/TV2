@@ -2,6 +2,23 @@
 
 > Continuity file. Entries are **prepended** (newest first) and never deleted.
 
+## 2026-11-14 — Session 3 (hotfix): SW cache bump → tv2-v2
+
+- **Agent/tool:** OpenCode (GLM) · branch `auto/sw-cache-bump` → PR #31 → merge
+- **Context:** the user reported an empty chart right after the pastel deploy.
+  Diagnosed: server + app verified healthy (Playwright, desktop + Pixel 7 mobile
+  viewports, zero console errors, Binance REST 200 from the client side; the
+  user's SIM reaches `data-api.binance.vision` fine). Likely a long-lived install
+  holding stale `tv2-v1` cache entries — the version had never been bumped
+  across 18 deploys, so the activate handler never wiped it.
+- **What changed:** `public/sw.js` — `CACHE_VERSION` `tv2-v1` → `tv2-v2`; the new
+  service worker's activate handler deletes the old cache so every client
+  rebuilds from the fresh deploy. No app code touched.
+- **Commit:** squash-merged `28fefd6` (PR #31, CI + E2E green); live sw.js serves
+  `tv2-v2`
+- **Results:** typecheck/lint unchanged (asset-only) · CI ✅ · E2E ✅ · live
+  verify `tv2-v2` ✅
+
 ## 2026-11-14 — Session 3 · Feature 18: Pastel theme (user template palette)
 
 - **Agent/tool:** OpenCode (GLM) · branch `auto/pastel-theme` → PR → merge
