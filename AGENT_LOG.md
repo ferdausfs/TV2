@@ -18,8 +18,12 @@
   long-press crosshair, double-tap fit.
 - **Touched files:** src/pages/TradingPage.tsx, src/pages/trading/ChartScaleFooter.tsx,
   src/pages/trading/BottomPanel.tsx, AGENT_LOG.md
-- **Commit:** `<fill>`
-- **Results:** `<fill>`
+- **Commit:** branch `auto/mobile-chart-only` (cherry-picked `43ea824` from shared
+  `b498daa`) → squash-merged `23ed5d6` (PR #32, CI + E2E green)
+- **Results:** typecheck ✅ · lint --max-warnings=0 ✅ · tests **792 passed | 1 skipped** ✅ ·
+  `VITE_ADAPTER=binance` build "✓ built" ✅ · check:size within budget ✅ · live
+  mobile-viewport check: bottom nav / scale footer / sell-buy all absent, chart
+  canvas renders ✅
 
 ## 2026-11-14 — Session 3 (hotfix): SW cache bump → tv2-v2
 
