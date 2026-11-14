@@ -91,6 +91,8 @@ function deepLimitFor(timeframe: Timeframe): number {
   switch (timeframe) {
     case "1m":
       return 3_000;
+    case "3m":
+      return 3_000;
     case "5m":
       return 5_000;
     case "15m":
@@ -99,12 +101,16 @@ function deepLimitFor(timeframe: Timeframe): number {
       return 8_000;
     case "1h":
       return 8_000;
+    case "2h":
+      return 6_000;
     case "4h":
       return 4_000;
     case "1d":
       return 2_000;
     case "1w":
       return 520;
+    case "1M":
+      return 260;
     default:
       return 5_000;
   }

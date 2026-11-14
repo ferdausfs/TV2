@@ -76,13 +76,16 @@ export function loadSeries(symbol: string, timeframe: string): Promise<Candle[]>
 
 const TF_SECONDS: Record<string, number> = {
   "1m": 60,
+  "3m": 180,
   "5m": 300,
   "15m": 900,
   "30m": 1800,
   "1h": 3600,
+  "2h": 7200,
   "4h": 14400,
   "1d": 86400,
   "1w": 604800,
+  "1M": 2592000,
 };
 
 /** Start of the current period (seconds) for a timeframe. */

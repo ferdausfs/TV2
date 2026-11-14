@@ -1572,7 +1572,11 @@ export function ChartPanel({
     const tick = () => {
       const now = Date.now();
       let nextBucketStart: number;
-      if (intervalMs >= 86_400_000) {
+      if (timeframe === "1M") {
+        // Monthly bars open on the 1st (UTC) — a 30d floor would drift.
+        const d = new Date(now);
+        nextBucketStart = Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 1);
+      } else if (intervalMs >= 86_400_000) {
         const dayStart = Math.floor(now / 86_400_000) * 86_400_000;
         const daysSinceMonday = (new Date(now).getUTCDay() + 6) % 7;
         const bucketStart =
