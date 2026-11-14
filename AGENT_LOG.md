@@ -18,6 +18,46 @@
   (PR #16, CI + E2E green)
 - **Results:** adapter.test 20/20 ✅ · typecheck ✅
 
+## 2026-11-14 — Session 2 · Feature 6: Indicator infra — instances, per-indicator settings, menu search/favorites, legend rows
+
+- **Agent/tool:** OpenCode (GLM) · branch `auto/indicator-infra` → PR → merge
+- **Plan (reviewed first):** move indicators from a flat type list to **instance-based**
+  state: `IndicatorInstance = { id, type, params, color?, visible }` persisted in trader
+  prefs (`indicatorInstances`, JSON, like activePlugins). Registry gains `paramSpecs`
+  (key/label/min/max/step/default) so Inputs dialogs are generated, not hand-written.
+  `useIndicators` re-keys series by instance id (`<id>:<sub>`), applies visibility via
+  `applyOptions({visible})`, recomputes data on param change, applies color/width on
+  style change. Back-compat: `activeIndicators` (types) derived from instances;
+  `toggleIndicator(type)` toggles the first instance of that type; template
+  `indicators: string[]` maps to default-param instances on apply. UI: (1) legend
+  header gains one row per indicator (colored dot + label + eye/gear/✕ — pointer-events
+  re-enabled per row); (2) new `IndicatorSettingsDialog` (Inputs + Style tabs, opened
+  from the gear); (3) toolbar menu gains a search input and favorites (star, persisted
+  `indicatorFavorites`), favorites pinned on top.
+- **Recorded assumptions:** one instance per type initially (multi-instance supported by
+  the model, UI allows adding the same type again); template apply resets params to
+  defaults (v1 templates only stored type strings); VWAP has no inputs (session-anchored).
+- **What changed:** new `lib/indicator-instances.ts` (instance model + storage
+  sanitize/repair, `makeInstance`, `seriesKey` = `<id>:<sub>`); registry gained
+  `paramSpecs` (generated Inputs dialogs) + `defaultParamsFor`. Prefs:
+  `indicatorInstances` + `indicatorFavorites` (JSON strings, repaired on read).
+  Terminal context: instance CRUD (`add/remove/updateIndicator`,
+  `toggleIndicatorFavorite`) + derived `activeIndicators` for legacy consumers;
+  `toggleIndicator(type)` toggles the first instance of the type; template
+  `setIndicators` maps type strings → default-param instances. `useIndicators`
+  re-keyed per instance, `applyOptions` for style changes, visibility via the eye
+  (series simply not painted). UI: per-indicator legend rows (dot/label/eye/gear/✕),
+  `IndicatorSettingsDialog` (Inputs from paramSpecs + Style color), toolbar menu with
+  search + favorites sections.
+- **Touched files:** lib/indicators.ts, lib/indicator-instances.ts (new),
+  hooks/useChartPreferences.ts, terminal/context.tsx, terminal/use-terminal.ts,
+  pages/trading/useIndicators.ts, pages/trading/ChartPanel.tsx,
+  pages/trading/ChartToolbar.tsx, pages/trading/IndicatorSettings.tsx (new),
+  pages/TradingPage.tsx, AGENT_LOG.md
+- **Commit:** branch `auto/indicator-infra` → PR `<fill>`
+- **Results:** typecheck ✅ · lint --max-warnings=0 ✅ · tests **762 passed | 1 skipped** ✅ ·
+  `VITE_ADAPTER=binance` build "✓ built" ✅ · check:size within budget ✅
+
 ## 2026-11-14 — Session 2 · Feature 5: Timeframes +3m / +2h / +1M
 
 - **Agent/tool:** OpenCode (GLM) · branch `auto/timeframes` → PR → merge
@@ -43,7 +83,8 @@
 - **Touched files:** pages/trading/constants.ts, pages/trading/utils.ts,
   pages/trading/ChartPanel.tsx, terminal/context.tsx, services/demo/candles.ts,
   AGENT_LOG.md
-- **Commit:** branch `auto/timeframes` → PR `<fill>`
+- **Commit:** branch `auto/timeframes` (`9ecf552`) → squash-merged `531f537`
+  (PR #17, CI + E2E green)
 - **Results:** typecheck ✅ · lint --max-warnings=0 ✅ · tests **762 passed | 1 skipped** ✅ ·
   `VITE_ADAPTER=binance` build "✓ built" ✅ · check:size within budget ✅
 

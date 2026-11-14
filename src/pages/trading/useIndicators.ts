@@ -20,28 +20,26 @@ import {
   atr,
   stochastic,
   vwap,
-  INDICATOR_REGISTRY,
-  type IndicatorType,
 } from "../../lib/indicators.ts";
+import { effectiveColor, seriesKey, type IndicatorInstance } from "../../lib/indicator-instances.ts";
 import { toIndicatorCandles } from "./utils.ts";
 import { CHART_COLORS } from "./constants.ts";
 
 /**
- * Paints the active indicators onto the chart.
+ * Paints the active indicators onto the chart (feature 6: instance-based).
  *
- * Series are REUSED, not recreated (audit #8/#34): the previous version tore
- * every indicator series down and re-added it whenever the chart data
- * identity changed — i.e. on every periodic refetch (each candle close) and
- * every replay cursor tick — which flickered and forced a full repaint.
- * Here the series maps persist and only `setData` is re-run; series are
- * removed only when their indicator is switched off, and recreated only when
- * the chart instance itself is (chartEpoch bump).
+ * Each instance owns its series under `<id>:<sub>` keys, so two instances of
+ * the same type never collide and param/style edits touch only their own
+ * series. Series are REUSED, not recreated (audit #8/#34): the maps persist
+ * and only `setData` re-runs; series are removed when their instance is
+ * removed, and recreated only when the chart instance itself is (epoch bump).
+ * Visibility is applied via applyOptions (no data churn).
  */
 export function useIndicators(
   chartRef: React.RefObject<IChartApi | null>,
   candleSeriesRef: React.RefObject<ISeriesApi<SeriesType> | null>,
   chartData: CandlestickData<Time>[],
-  activeIndicators: IndicatorType[],
+  instances: IndicatorInstance[],
   isDark: boolean,
   chartEpoch = 0,
 ): void {
@@ -73,6 +71,10 @@ export function useIndicators(
       if (!s) {
         s = chart.addLineSeries(opts);
         lineSeriesRef.current.set(key, s);
+      } else {
+        // Style may have changed on the instance (settings dialog) — apply in
+        // place; applies are cheap and idempotent.
+        s.applyOptions(opts);
       }
       return s;
     };
@@ -85,6 +87,8 @@ export function useIndicators(
       if (!s) {
         s = chart.addHistogramSeries(opts);
         histSeriesRef.current.set(key, s);
+      } else {
+        s.applyOptions(opts);
       }
       return s;
     };
@@ -99,43 +103,42 @@ export function useIndicators(
       histogram(key, opts).setData(data);
     };
 
-    for (const type of activeIndicators) {
-      const config = INDICATOR_REGISTRY.find((r) => r.type === type);
-      if (!config) continue;
-
-      switch (type) {
+    for (const inst of instances) {
+      if (!inst.visible) continue; // eye toggle — series stays out until re-shown
+      const color = effectiveColor(inst);
+      switch (inst.type) {
         case "SMA": {
-          const data = sma(indCandles, config.defaultParams.period!);
+          const data = sma(indCandles, inst.params.period ?? 20);
           setLine(
-            "SMA",
-            { color: config.color, lineWidth: 1, priceScaleId: "right" },
+            seriesKey(inst, "SMA"),
+            { color, lineWidth: 1, priceScaleId: "right" },
             data.map((p) => ({ time: p.time as Time, value: p.value })),
           );
           break;
         }
         case "EMA": {
-          const data = ema(indCandles, config.defaultParams.period!);
+          const data = ema(indCandles, inst.params.period ?? 20);
           setLine(
-            "EMA",
-            { color: config.color, lineWidth: 1, priceScaleId: "right" },
+            seriesKey(inst, "EMA"),
+            { color, lineWidth: 1, priceScaleId: "right" },
             data.map((p) => ({ time: p.time as Time, value: p.value })),
           );
           break;
         }
         case "RSI": {
-          const data = rsi(indCandles, config.defaultParams.period);
+          const data = rsi(indCandles, inst.params.period ?? 14);
           setLine(
-            "RSI",
-            { color: config.color, lineWidth: 1, priceScaleId: "rsi" },
+            seriesKey(inst, "RSI"),
+            { color, lineWidth: 1, priceScaleId: "rsi" },
             data.map((p) => ({ time: p.time as Time, value: p.value })),
           );
           setLine(
-            "RSI-70",
+            seriesKey(inst, "RSI-70"),
             { color: "#555", lineWidth: 1, lineStyle: LineStyle.Dashed, priceScaleId: "rsi" },
             data.map((p) => ({ time: p.time as Time, value: 70 })),
           );
           setLine(
-            "RSI-30",
+            seriesKey(inst, "RSI-30"),
             { color: "#555", lineWidth: 1, lineStyle: LineStyle.Dashed, priceScaleId: "rsi" },
             data.map((p) => ({ time: p.time as Time, value: 30 })),
           );
@@ -144,24 +147,24 @@ export function useIndicators(
         case "MACD": {
           const data = macd(
             indCandles,
-            config.defaultParams.fast,
-            config.defaultParams.slow,
-            config.defaultParams.signal,
+            inst.params.fast ?? 12,
+            inst.params.slow ?? 26,
+            inst.params.signal ?? 9,
           );
           setLine(
-            "MACD-line",
-            { color: "#2962FF", lineWidth: 1, priceScaleId: "macd" },
+            seriesKey(inst, "MACD-line"),
+            { color, lineWidth: 1, priceScaleId: "macd" },
             data.macd.map((p) => ({ time: p.time as Time, value: p.value })),
           );
           setLine(
-            "MACD-signal",
+            seriesKey(inst, "MACD-signal"),
             { color: "#ff9800", lineWidth: 1, priceScaleId: "macd" },
             data.signal.map((p) => ({ time: p.time as Time, value: p.value })),
           );
           // Histogram colours are baked into the data; re-setData picks up the
           // current palette when the theme flips.
           setHist(
-            "MACD-hist",
+            seriesKey(inst, "MACD-hist"),
             { priceScaleId: "macd" },
             data.histogram.map((p) => ({
               time: p.time as Time,
@@ -174,31 +177,31 @@ export function useIndicators(
         case "BOLL": {
           const data = bollingerBands(
             indCandles,
-            config.defaultParams.period,
-            config.defaultParams.stdDev,
+            inst.params.period ?? 20,
+            inst.params.stdDev ?? 2,
           );
           setLine(
-            "BOLL-upper",
-            { color: config.color + "80", lineWidth: 1, priceScaleId: "right" },
+            seriesKey(inst, "BOLL-upper"),
+            { color: color + "80", lineWidth: 1, priceScaleId: "right" },
             data.upper.map((p) => ({ time: p.time as Time, value: p.value })),
           );
           setLine(
-            "BOLL-mid",
-            { color: config.color, lineWidth: 1, priceScaleId: "right" },
+            seriesKey(inst, "BOLL-mid"),
+            { color, lineWidth: 1, priceScaleId: "right" },
             data.middle.map((p) => ({ time: p.time as Time, value: p.value })),
           );
           setLine(
-            "BOLL-lower",
-            { color: config.color + "80", lineWidth: 1, priceScaleId: "right" },
+            seriesKey(inst, "BOLL-lower"),
+            { color: color + "80", lineWidth: 1, priceScaleId: "right" },
             data.lower.map((p) => ({ time: p.time as Time, value: p.value })),
           );
           break;
         }
         case "ATR": {
-          const data = atr(indCandles, config.defaultParams.period);
+          const data = atr(indCandles, inst.params.period ?? 14);
           setLine(
-            "ATR",
-            { color: config.color, lineWidth: 1, priceScaleId: "atr" },
+            seriesKey(inst, "ATR"),
+            { color, lineWidth: 1, priceScaleId: "atr" },
             data.map((p) => ({ time: p.time as Time, value: p.value })),
           );
           break;
@@ -206,16 +209,16 @@ export function useIndicators(
         case "STOCH": {
           const data = stochastic(
             indCandles,
-            config.defaultParams.kPeriod,
-            config.defaultParams.dPeriod,
+            inst.params.kPeriod ?? 14,
+            inst.params.dPeriod ?? 3,
           );
           setLine(
-            "STOCH-K",
+            seriesKey(inst, "STOCH-K"),
             { color: "#ab47bc", lineWidth: 1, priceScaleId: "stoch" },
             data.k.map((p) => ({ time: p.time as Time, value: p.value })),
           );
           setLine(
-            "STOCH-D",
+            seriesKey(inst, "STOCH-D"),
             { color: "#ff7043", lineWidth: 1, priceScaleId: "stoch" },
             data.d.map((p) => ({ time: p.time as Time, value: p.value })),
           );
@@ -224,8 +227,8 @@ export function useIndicators(
         case "VWAP": {
           const data = vwap(indCandles);
           setLine(
-            "VWAP",
-            { color: config.color, lineWidth: 2, lineStyle: LineStyle.Dashed, priceScaleId: "right" },
+            seriesKey(inst, "VWAP"),
+            { color, lineWidth: 2, lineStyle: LineStyle.Dashed, priceScaleId: "right" },
             data.map((p) => ({ time: p.time as Time, value: p.value })),
           );
           break;
@@ -233,7 +236,7 @@ export function useIndicators(
       }
     }
 
-    // Remove series whose indicator was switched off.
+    // Remove series whose instance disappeared (or had a sub-series dropped).
     for (const [key, series] of lineSeriesRef.current) {
       if (desiredLines.has(key)) continue;
       try {
@@ -254,5 +257,5 @@ export function useIndicators(
     }
     // chartRef/candleSeriesRef are stable refs; colors derived from isDark dep.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeIndicators, chartData, isDark, chartEpoch]);
+  }, [instances, chartData, isDark, chartEpoch]);
 }

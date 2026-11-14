@@ -28,6 +28,7 @@ import {
   useChartPreferences,
 } from "../hooks/useChartPreferences.ts";
 import { useTradeSound } from "../hooks/useTradeSound.ts";
+import { makeInstance, type IndicatorInstance } from "../lib/indicator-instances.ts";
 import { isDarkTheme, subscribeTheme } from "../lib/theme.ts";
 import { safeStorage } from "../lib/safe-storage.ts";
 import type { IndicatorType } from "../lib/indicators.ts";
@@ -237,13 +238,58 @@ export function TerminalProvider({ children }: { children: ReactNode }) {
 
   // ── Chart configuration
   const chartPrefs = useChartPreferences();
-  const [activeIndicators, setActiveIndicators] = useState<IndicatorType[]>([]);
-  const toggleIndicator = useCallback((type: IndicatorType) => {
-    setActiveIndicators((prev) =>
-      prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type],
-    );
+  // Indicators are instance-based (feature 6): the chartPrefs storage holds
+  // the instances; activeIndicators (type list) is derived for the legacy
+  // consumers (toolbar badge, templates, context menu).
+  const indicatorInstances = chartPrefs.indicatorInstances;
+  const activeIndicators = useMemo(
+    () => [...new Set(indicatorInstances.map((i) => i.type))],
+    [indicatorInstances],
+  );
+  const addIndicator = useCallback((type: IndicatorType) => {
+    const prefs = getChartPreferencesFromStorage();
+    updateChartPreferences({
+      indicatorInstances: [...prefs.indicatorInstances, makeInstance(type)],
+    });
   }, []);
-  const clearIndicators = useCallback(() => setActiveIndicators([]), []);
+  const removeIndicator = useCallback((id: string) => {
+    const prefs = getChartPreferencesFromStorage();
+    updateChartPreferences({
+      indicatorInstances: prefs.indicatorInstances.filter((i) => i.id !== id),
+    });
+  }, []);
+  const updateIndicator = useCallback((id: string, patch: Partial<IndicatorInstance>) => {
+    const prefs = getChartPreferencesFromStorage();
+    updateChartPreferences({
+      indicatorInstances: prefs.indicatorInstances.map((i) =>
+        i.id === id ? { ...i, ...patch } : i,
+      ),
+    });
+  }, []);
+  // Legacy single-type toggle: remove the first instance of the type, or add
+  // a fresh one (toolbar checkbox behaviour stays identical).
+  const toggleIndicator = useCallback(
+    (type: IndicatorType) => {
+      const prefs = getChartPreferencesFromStorage();
+      const existing = prefs.indicatorInstances.find((i) => i.type === type);
+      if (existing) {
+        removeIndicator(existing.id);
+      } else {
+        addIndicator(type);
+      }
+    },
+    [addIndicator, removeIndicator],
+  );
+  const clearIndicators = useCallback(() => {
+    updateChartPreferences({ indicatorInstances: [] });
+  }, []);
+  const toggleIndicatorFavorite = useCallback((type: IndicatorType) => {
+    const prefs = getChartPreferencesFromStorage();
+    const next = prefs.indicatorFavorites.includes(type)
+      ? prefs.indicatorFavorites.filter((t) => t !== type)
+      : [...prefs.indicatorFavorites, type];
+    updateChartPreferences({ indicatorFavorites: next });
+  }, []);
 
   const [activePlugins, setActivePlugins] = useState<string[]>(
     () => getChartPreferencesFromStorage().activePlugins,
@@ -563,7 +609,12 @@ export function TerminalProvider({ children }: { children: ReactNode }) {
 
       chartPrefs,
       activeIndicators,
+      indicatorInstances,
+      addIndicator,
+      removeIndicator,
+      updateIndicator,
       toggleIndicator,
+      toggleIndicatorFavorite,
       clearIndicators,
       activePlugins,
       togglePlugin,
@@ -625,7 +676,12 @@ export function TerminalProvider({ children }: { children: ReactNode }) {
       isReplaying,
       chartPrefs,
       activeIndicators,
+      indicatorInstances,
+      addIndicator,
+      removeIndicator,
+      updateIndicator,
       toggleIndicator,
+      toggleIndicatorFavorite,
       clearIndicators,
       activePlugins,
       togglePlugin,

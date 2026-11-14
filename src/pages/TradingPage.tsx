@@ -12,7 +12,8 @@ import type { IndicatorType } from "../lib/indicators.ts";
 import { cn } from "../lib/utils.ts";
 import { safeStorage } from "../lib/safe-storage.ts";
 import type { PlaceOrderInput } from "../services/schemas.ts";
-import { updateChartPreferences } from "../hooks/useChartPreferences.ts";
+import { updateChartPreferences, getChartPreferencesFromStorage } from "../hooks/useChartPreferences.ts";
+import { makeInstance } from "../lib/indicator-instances.ts";
 import { usePriceAlertEngine } from "../hooks/usePriceAlerts.ts";
 import { useTerminal } from "../terminal/use-terminal.ts";
 import { BottomPanel } from "./trading/BottomPanel.tsx";
@@ -86,7 +87,11 @@ export function TradingPage() {
     isReplaying,
     chartPrefs,
     activeIndicators,
+    indicatorInstances,
+    removeIndicator,
+    updateIndicator,
     toggleIndicator,
+    toggleIndicatorFavorite,
     clearIndicators: handleClearIndicators,
     activePlugins,
     togglePlugin: handleTogglePlugin,
@@ -202,14 +207,18 @@ export function TradingPage() {
     [bottomPanelHeight],
   );
 
-  // Loading a chart template swaps the whole indicator list; the toolbar's
-  // own menu toggles one at a time.
+  // Loading a chart template swaps the whole indicator list; each type maps
+  // to a fresh default-param instance (v1 templates store type strings only).
   const setIndicators = useCallback(
     (next: IndicatorType[]) => {
-      for (const type of next) if (!activeIndicators.includes(type)) toggleIndicator(type);
-      for (const type of activeIndicators) if (!next.includes(type)) toggleIndicator(type);
+      const current = getChartPreferencesFromStorage().indicatorInstances;
+      const keep = current.filter((i) => next.includes(i.type));
+      const added = next
+        .filter((type) => !current.some((i) => i.type === type))
+        .map((type) => makeInstance(type));
+      updateChartPreferences({ indicatorInstances: [...keep, ...added] });
     },
-    [activeIndicators, toggleIndicator],
+    [],
   );
 
   // ── Multi-chart layout (DESIGN.md §5) ───────────────────────
@@ -267,6 +276,7 @@ export function TradingPage() {
           onChartTypeChange={(t) => updateChartPreferences({ chartType: t })}
           activeIndicators={activeIndicators}
           onToggleIndicator={toggleIndicator}
+          onToggleFavorite={toggleIndicatorFavorite}
           showIndicatorMenu={showIndicatorMenu}
           onToggleIndicatorMenu={() => setShowIndicatorMenu((v) => !v)}
           drawingTool={drawingTool}
@@ -331,6 +341,9 @@ export function TradingPage() {
                   timeframe={timeframe}
                   isDark={isDark}
                   activeIndicators={activeIndicators}
+                  indicatorInstances={indicatorInstances}
+                  onUpdateIndicatorInstance={updateIndicator}
+                  onRemoveIndicatorInstance={removeIndicator}
                   drawingTool={drawingTool}
                   drawings={drawings}
                   onAddDrawing={addDrawing}
