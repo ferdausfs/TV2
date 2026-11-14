@@ -4,10 +4,16 @@
 
 ## 2026-11-14 — Session 3 · Feature 21: chart-only mobile (top bar + bottom nav + News removed)
 
-- **Agent/tool:** OpenCode (GLM) · branch `auto/chart-only-mobile` → PR `<fill>`
+- **Agent/tool:** OpenCode (GLM) · branch `auto/chart-only-mobile` → PR #34 → squash-merged `889f6a6`
+- **Request:** user said "এখন ওপরে যা আছে.. সব রিমুভ করো" — phone-এ শুধু চার্ট রাখো।
+- **What changed:** TradingPage.tsx — ChartToolbar মোবাইলে `hidden md:block`, Account Bar,
+  MobileChartActions, MobileTradingPanel sheet সরানো + unused imports/vars ক্লিন; ChartPanel.tsx —
+  NewsOverlay রেন্ডার + useNewsOverlay হুক সম্পূর্ণ সরানো, `onOpenNewsConfig` no-op। ডেস্কটপ অপরিবর্তিত।
+- **Touched files:** src/pages/TradingPage.tsx, src/pages/trading/ChartPanel.tsx, AGENT_LOG.md
 - **Results:** typecheck ✅ · lint --max-warnings=0 ✅ · tests **791 passed | 1 skipped** (1 pre-existing
   flaky in `features.test.ts` session-replay cursor timing — fails on clean main too, unrelated) ✅ ·
-  `VITE_ADAPTER=binance` build "✓ built" ✅ · check:size within budget ✅
+  `VITE_ADAPTER=binance` build "✓ built" ✅ · check:size within budget ✅ · PR #34 CI+Deploy গ্রিন,
+  লাইভে `hidden md:block` যাচাই হয়েছে (index-CwzZVsCx.js)
 
 ## 2026-11-14 — Session 3 · Feature 20: black TradingView theme (user reference)
 
