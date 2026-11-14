@@ -18,6 +18,37 @@
   (PR #16, CI + E2E green)
 - **Results:** adapter.test 20/20 ✅ · typecheck ✅
 
+## 2026-11-14 — Session 2 · Feature 8: Watchlist v2 — change %, sparklines, drag-reorder, custom lists
+
+- **Agent/tool:** OpenCode (GLM) · branch `auto/watchlist-v2` → PR → merge
+- **Plan (reviewed first):** upgrade the GENERIC watchlist (WatchlistPanel.tsx;
+  HlWatchlist untouched — it has its own richer UI): (1) **change %** per row — derived
+  from the tick stream: session reference = first tick seen after load per symbol →
+  `((mid − ref)/ref)×100`, TV green/red; (2) **sparkline** per row — tiny inline SVG
+  polyline from a per-symbol rolling price buffer (last ~30 ticks, ref-map, rows
+  redraw at 1Hz via a shared interval — no re-render per tick); (3) **drag-reorder**
+  of favorites (HTML5 dnd on rows, order persisted in `watchlist_order`); (4) **custom
+  lists** — named symbol sets persisted in `watchlist_lists`, chip row next to the
+  category chips, add/remove via row actions; (5) change% chip doubles as the colored
+  flag. Demo feed already streams every symbol; no adapter change.
+- **Recorded assumptions:** session reference = first tick after load (no server
+  session anchor in demo); sparkline is a rolling tick buffer, not historical bars
+  (cheap, no extra fetches); drag-reorder applies to favorites and custom lists (All
+  stays alphabetical); mobile uses the same panel.
+- **What changed:** `WatchlistPanel.tsx` (generic) rewritten around two 1Hz hooks —
+  `useChangePercent` (session ref = first mid after mount; TV green/red) and
+  `useSparklines` (30-point rolling mid buffer published as an immutable snapshot; ref
+  map never read during render). Rows now show bid/ask + change% chip + 60×20 SVG
+  sparkline. Favorites drag-reorder via HTML5 dnd (`watchlist_order`, missing names
+  fall back alphabetically behind the ordered ones). Custom named lists
+  (`watchlist_lists`): chip row with delete, row context menu on the star
+  (right-click/long-press → "add to list N"), per-row ✕ inside a list view. HlWatchlist
+  untouched. All ticks come from the existing feed — no adapter change.
+- **Touched files:** pages/trading/WatchlistPanel.tsx, AGENT_LOG.md
+- **Commit:** branch `auto/watchlist-v2` → PR `<fill>`
+- **Results:** typecheck ✅ · lint --max-warnings=0 ✅ · tests **780 passed | 1 skipped** ✅ ·
+  `VITE_ADAPTER=binance` build "✓ built" ✅ · check:size within budget ✅
+
 ## 2026-11-14 — Session 2 · Feature 7: Indicator catalog batch 1 (8 new indicators)
 
 - **Agent/tool:** OpenCode (GLM) · branch `auto/indicator-batch1` → PR → merge
@@ -46,7 +77,8 @@
   conventions. indicators.test.ts: +14 tests (67 total in file), all hand-verified.
 - **Touched files:** lib/indicators.ts, pages/trading/useIndicators.ts,
   __tests__/indicators.test.ts, AGENT_LOG.md
-- **Commit:** branch `auto/indicator-batch1` → PR `<fill>`
+- **Commit:** branch `auto/indicator-batch1` (`ded6cc0`) → squash-merged `4474b55`
+  (PR #19, CI + E2E green)
 - **Results:** typecheck ✅ · lint --max-warnings=0 ✅ · tests **780 passed | 1 skipped** ✅
   (baseline 762 → 780) · `VITE_ADAPTER=binance` build "✓ built" ✅ · check:size within budget ✅
 

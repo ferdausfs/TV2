@@ -95,7 +95,7 @@ REST; React context (`use-terminal`) for terminal wiring; chart state lives **ou
 | Adapters | **Done** | demo (bundled), hyperliquid (full broker), binance (live, lazy chunk, reconnect+heartbeat — 13 hits in examples/binance-adapter/binance-adapter.ts) |
 | Reconnect / offline banner | **Done** | HL ws backoff+jitter+ping/pong; ConnectionIndicator + Stale/Disconnected banners |
 | Symbol search chips/recents | **Partial** | text filter + desktop dropdown + mobile fullscreen modal (ChartToolbar.tsx:255-353); watchlist has category chips + favorites; search dialog itself lacks chips/recents |
-| Watchlist: multi-lists, flags, drag, sparkline, change% | **Partial** | chips + favorites + bid/ask + one-click B/S (WatchlistPanel.tsx, HlWatchlist.tsx); no multi-lists/drag/sparkline/change% |
+| Watchlist: multi-lists, flags, drag, sparkline, change% | **Partial→Mostly** | generic panel now has change%, sparklines, favorite drag-reorder, custom lists (WatchlistPanel.tsx); HlWatchlist keeps its own richer UI |
 | **Alerts: price cross / indicator cross / once-per / expiry / Notification API / list UI** | **Missing** | only drawing-line cross (line-alerts.ts, session-only, toast+beep); mobile Alerts tab is a "coming soon" **stub** (MobileTradingPanel.tsx:403) |
 | Screener | **Missing** | — |
 
