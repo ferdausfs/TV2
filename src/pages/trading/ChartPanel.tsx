@@ -17,7 +17,7 @@ import {
   type SeriesType,
   type Time,
 } from "lightweight-charts";
-import { Clock, ListTree } from "lucide-react";
+import { Clock, ListTree, X } from "lucide-react";
 import {
   type MouseEvent as ReactMouseEvent,
   useCallback,
@@ -45,7 +45,7 @@ import { TooltipPrimitive } from "../../lib/chart-plugins/tooltip/tooltip.ts";
 import type { IndicatorType } from "../../lib/indicators.ts";
 import { cn } from "../../lib/utils.ts";
 import { api } from "../../services/api.ts";
-import { queryKeys } from "../../services/queries.ts";
+import { queryKeys, useCandles } from "../../services/queries.ts";
 import type { Candle, Order, Position, Symbol } from "../../services/schemas.ts";
 import { toast } from "../../services/toast.ts";
 import {
@@ -222,6 +222,8 @@ export interface ChartPanelProps {
   /** Instance mutations from the legend rows (eye / gear / ✕). */
   onUpdateIndicatorInstance?: (id: string, patch: Partial<IndicatorInstance>) => void;
   onRemoveIndicatorInstance?: (id: string) => void;
+  /** Full symbol list — powers the compare picker (feature 9). */
+  symbols?: Symbol[];
   drawingTool: DrawingTool;
   drawings: DrawingLine[];
   onAddDrawing: (d: DrawingLine) => void;
@@ -1033,6 +1035,9 @@ function ChartLegendHeader({
   pipDigits,
   showOhlcLegend,
   showCountdown,
+  compareSymbol,
+  compareChange,
+  onRemoveCompare,
 }: {
   selectedSymbol: string;
   timeframe: Timeframe;
@@ -1042,6 +1047,10 @@ function ChartLegendHeader({
   pipDigits: number;
   showOhlcLegend: boolean;
   showCountdown: boolean;
+  /** Compare overlay (feature 9): symbol + live % change. */
+  compareSymbol?: string | null;
+  compareChange?: number | null;
+  onRemoveCompare?: () => void;
 }) {
   // Live bid/ask come from the shared quote feed unless the host passes a
   // tick — this small header re-renders per tick so the big panel doesn't.
@@ -1064,6 +1073,35 @@ function ChartLegendHeader({
       </div>
       {/* Secondary info row: Bid / Ask / Spread */}
       {liveTick && <BidAskRow tick={liveTick} pipDigits={pipDigits} />}
+      {/* Compare overlay row (feature 9) */}
+      {compareSymbol && (
+        <div className="mt-0.5 flex items-center gap-1.5 text-[11px] font-mono pointer-events-auto w-fit rounded bg-background/70 px-1 py-0.5">
+          <span className="w-1.5 h-1.5 rounded-full shrink-0 bg-[#f0b90b]" />
+          <span className="text-muted-foreground">vs</span>
+          <span className="font-semibold">{compareSymbol}</span>
+          {compareChange != null && (
+            <span
+              className={cn(
+                "tabular-nums",
+                compareChange >= 0 ? "text-buy" : "text-sell",
+              )}
+            >
+              {compareChange >= 0 ? "+" : ""}
+              {compareChange.toFixed(2)}%
+            </span>
+          )}
+          {onRemoveCompare && (
+            <button
+              type="button"
+              aria-label={`Remove compare ${compareSymbol}`}
+              onClick={onRemoveCompare}
+              className="p-0.5 rounded text-muted-foreground/50 hover:text-foreground"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -1202,6 +1240,7 @@ export function ChartPanel({
   indicatorInstances = [],
   onUpdateIndicatorInstance,
   onRemoveIndicatorInstance,
+  symbols = [],
   accountEquity = 0,
   accountId,
   onQuickOrder,
@@ -1554,6 +1593,75 @@ export function ChartPanel({
     isDark,
     chartEpoch,
   );
+
+  // ── Compare symbol overlay (feature 9) ──
+  const [compareSymbol, setCompareSymbol] = useState<string | null>(null);
+  const [comparePickerOpen, setComparePickerOpen] = useState(false);
+  const compareSeriesRef = useRef<ISeriesApi<"Line"> | null>(null);
+  const compareQuery = useCandles(
+    compareSymbol ?? "",
+    timeframe,
+    500,
+    // Skip the query entirely when no compare symbol is selected.
+    undefined,
+    compareSymbol != null,
+  );
+  useEffect(() => {
+    const chart = chartRef.current;
+    if (!chart) return;
+    const series = compareSeriesRef.current;
+    const candles = compareSymbol ? compareQuery.data : undefined;
+    if (!compareSymbol || !candles || candles.length === 0) {
+      if (series) {
+        try {
+          chart.removeSeries(series);
+        } catch {
+          /* already gone */
+        }
+        compareSeriesRef.current = null;
+      }
+      return;
+    }
+    // % change from the first loaded close — plotted on its own overlay scale
+    // so the main price scale is untouched (assumption in AGENT_LOG).
+    const base = candles[0]!.close;
+    const data = candles.map((c) => ({
+      time: toUnixSeconds(c.time) as Time,
+      value: ((c.close - base) / base) * 100,
+    }));
+    let line = compareSeriesRef.current;
+    if (!line) {
+      line = chart.addLineSeries({
+        priceScaleId: "compare",
+        color: "#f0b90b",
+        lineWidth: 1,
+        lastValueVisible: false,
+        priceLineVisible: false,
+        priceFormat: { type: "price", precision: 2, minMove: 0.01 },
+      });
+      line.priceScale().applyOptions({ scaleMargins: { top: 0.05, bottom: 0.05 } });
+      compareSeriesRef.current = line;
+    }
+    line.setData(data);
+    // The overlay scale must survive `chart.priceScale("right")` mode changes.
+    // Recreate the series on chartEpoch bumps (chart recreated) — handled by
+    // clearing the ref in the create/destroy cleanup path.
+  }, [compareSymbol, compareQuery.data, chartEpoch, timeframe]);
+
+  useEffect(() => {
+    // Compare data belongs to the old chart after a symbol/TF swap — drop it.
+    compareSeriesRef.current = null;
+  }, [selectedSymbol, timeframe]);
+
+  // Live % change of the compare overlay (legend badge) — last loaded bar.
+  const compareChange = useMemo(() => {
+    const candles = compareSymbol ? compareQuery.data : undefined;
+    if (!candles || candles.length === 0) return null;
+    const base = candles[0]!.close;
+    const last = candles[candles.length - 1]!.close;
+    if (!base) return null;
+    return ((last - base) / base) * 100;
+  }, [compareSymbol, compareQuery.data]);
 
   // ── Replay trade event markers ─────────────────────────────
   useEffect(() => {
@@ -2447,6 +2555,9 @@ export function ChartPanel({
         pipDigits={pipDigits}
         showOhlcLegend={chartPrefs.showOhlcLegend}
         showCountdown={chartPrefs.showCountdown}
+        compareSymbol={compareSymbol}
+        compareChange={compareChange}
+        onRemoveCompare={() => setCompareSymbol(null)}
       />
 
       {/* Per-indicator legend rows (feature 6): eye / gear / ✕ per instance */}
@@ -2548,6 +2659,53 @@ export function ChartPanel({
         onReorder={handleReorderDrawing}
       />
 
+      {/* Compare symbol picker (feature 9) */}
+      {comparePickerOpen && (
+        <div
+          className="fixed inset-0 z-[70] flex items-center justify-center bg-black/40 p-4"
+          role="dialog"
+          aria-label="Compare symbol"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setComparePickerOpen(false);
+          }}
+        >
+          <div className="w-full max-w-sm rounded-xl border border-border bg-card shadow-2xl flex flex-col max-h-[70vh]">
+            <div className="flex items-center justify-between px-3 py-2 border-b border-border">
+              <span className="text-xs font-semibold">Compare symbol</span>
+              <button
+                type="button"
+                onClick={() => setComparePickerOpen(false)}
+                aria-label="Close compare picker"
+                className="p-1 rounded text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+            <div className="overflow-y-auto p-1">
+              {symbols
+                .filter((s) => s.isActive !== false && s.name !== selectedSymbol)
+                .map((s) => (
+                  <button
+                    key={s.id || s.name}
+                    type="button"
+                    onClick={() => {
+                      setCompareSymbol(s.name);
+                      setComparePickerOpen(false);
+                    }}
+                    className={cn(
+                      "w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs hover:bg-secondary text-left",
+                      compareSymbol === s.name && "bg-secondary",
+                    )}
+                  >
+                    <span className="font-semibold">{s.name}</span>
+                    <span className="text-muted-foreground">{s.category}</span>
+                  </button>
+                ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* News overlay (popup, config dialog, button) */}
       {/* No economic-calendar data source exists for Hyperliquid markets. */}
       {!isHyperliquidMode() && (
@@ -2583,6 +2741,9 @@ export function ChartPanel({
           onOpenObjectTree={() => setShowObjectTree(true)}
           onRemoveAllDrawings={onClearDrawings}
           onClearIndicators={onClearIndicators}
+          onCompare={() => setComparePickerOpen(true)}
+          onRemoveCompare={() => setCompareSymbol(null)}
+          compareSymbol={compareSymbol}
           onOpenSettings={() => setShowChartSettings(true)}
         />
       )}

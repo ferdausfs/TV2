@@ -129,6 +129,7 @@ export function useCandles(
   timeframe: string,
   limit?: number,
   replayVersion?: number,
+  enabled = true,
 ) {
   return useQuery<MarketDataCandlesPayload, Error, Candle[]>({
     // Include replayVersion in the query key so each replay session forces a
@@ -139,6 +140,7 @@ export function useCandles(
     // Extract just the candles array for consumers — raw payload (with isPartial)
     // is still accessible via query.state.data inside refetchInterval below.
     select: (data) => data.candles,
+    enabled: enabled && !!symbol,
     staleTime: 30_000,
     // Keep previously-fetched candles visible while a new depth query (different
     // limit in the key) is in-flight. Without this, switching from firstPaint

@@ -58,7 +58,7 @@ REST; React context (`use-terminal`) for terminal wiring; chart state lives **ou
 | Last-price line + countdown | **Partial** | countdown :1468-1488 (hidden on 1d/1w); bid/ask/mid lines :530-573; `lastValueVisible:false` :1590 → no last-price scale label; no prev-close line, no high/low labels |
 | Session breaks / watermark | **Done** | session plugin :299-318; watermark toggle :1548-1555 |
 | Range buttons (1D…All) + Go to date | **Missing** | `fitContent` only on reset :624-629 |
-| Compare / overlay symbol | **Missing** | one series per chart |
+| Compare / overlay symbol | **Partial** | % -normalized compare overlay on its own price scale + legend row (ChartPanel.tsx); real resizable sub-panes deferred (needs pane API) |
 | Indicator sub-panes (resizable) | **Partial** | pseudo-scales `priceScaleId:"rsi"` etc. — overlaid, no real panes/resize/separators |
 | Multi-chart layouts 1/2/4/6 + sync | **Partial** | 1/2/4 only (TradingPage.tsx); secondary panes are bare charts (no indicators/replay), no crosshair/time sync |
 | Chart settings dialog | **Partial** | ChartSettingsDialog.tsx:36-44 — Appearance/Colors/Trading/Events/Challenge; missing Scales/Timezone/Precision/Session tabs |

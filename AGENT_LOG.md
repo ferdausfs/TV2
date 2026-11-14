@@ -18,6 +18,40 @@
   (PR #16, CI + E2E green)
 - **Results:** adapter.test 20/20 ✅ · typecheck ✅
 
+## 2026-11-14 — Session 2 · Feature 9: Compare symbol overlay (percentage scale)
+
+- **Agent/tool:** OpenCode (GLM) · branch `auto/compare-overlay` → PR → merge
+- **Plan (reviewed first):** TradingView-style **Compare** (overlay another symbol's
+  normalized price on the same chart). Scope note: *real resizable sub-panes need a
+  pane-separator API — deferred with a logged note; this ships the compare half.*
+  Implementation: chart context menu + toolbar get "Compare symbol…" → symbol picker
+  (reuses the symbol list); the compare symbol's candles are fetched via `useCandles`
+  (same timeframe, modest limit), normalized to % change from its first bar, and drawn
+  as a `LineSeries` on an overlay price scale (`priceScaleId: "compare"`, independent
+  axis via scaleMargins — no distortion of the main scale). Legend header shows the
+  compare symbol + its live % change. State: `compareSymbol` in ChartPanel
+  (session-only); context menu "Remove compare" clears it; series re-binds on
+  chartEpoch and is removed cleanly on clear.
+- **Recorded assumptions:** v1 compare is %-normalized on its own overlay scale
+  (TV's overlay look) — price-precise "same axis" mode deferred; compare uses bar
+  closes; one compare symbol at a time.
+- **What changed:** ChartPanel: `compareSymbol` state + `useCandles(compareSymbol, tf,
+  500, enabled)`; compare series = LineSeries on the "compare" overlay price scale
+  (gold #f0b90b, % from first loaded close, scaleMargins 0.05/0.05), re-bound on
+  chartEpoch, removed on clear/symbol/TF swap (ref nulled in the swap effect).
+  Legend header gains a "vs <SYM> ±x.xx%" row with a ✕ remove button (compareChange =
+  last/first − 1 from the loaded slice). ChartContextMenu: "Compare symbol…" +
+  "Remove compare (SYM)" items (GitCompareArrows icon). New compare picker dialog
+  (symbol list, active-only, excludes the main symbol) mounted in ChartPanel;
+  `symbols` prop threaded from TradingPage. useCandles gained an `enabled` flag.
+- **Touched files:** pages/trading/ChartPanel.tsx, pages/trading/ChartContextMenu.tsx,
+  services/queries.ts, pages/TradingPage.tsx, AGENT_LOG.md
+- **Commit:** branch `auto/compare-overlay` → PR `<fill>`
+- **Results:** typecheck ✅ · lint --max-warnings=0 ✅ · tests **780 passed | 1 skipped** ✅ ·
+  `VITE_ADAPTER=binance` build "✓ built" ✅ · check:size within budget ✅
+- **Pending/notes:** real resizable sub-panes need a pane API — revisit on
+  lightweight-charts upgrade.
+
 ## 2026-11-14 — Session 2 · Feature 8: Watchlist v2 — change %, sparklines, drag-reorder, custom lists
 
 - **Agent/tool:** OpenCode (GLM) · branch `auto/watchlist-v2` → PR → merge
@@ -45,7 +79,8 @@
   (right-click/long-press → "add to list N"), per-row ✕ inside a list view. HlWatchlist
   untouched. All ticks come from the existing feed — no adapter change.
 - **Touched files:** pages/trading/WatchlistPanel.tsx, AGENT_LOG.md
-- **Commit:** branch `auto/watchlist-v2` → PR `<fill>`
+- **Commit:** branch `auto/watchlist-v2` (`139760d`) → squash-merged `fe675c0`
+  (PR #20, CI + E2E green)
 - **Results:** typecheck ✅ · lint --max-warnings=0 ✅ · tests **780 passed | 1 skipped** ✅ ·
   `VITE_ADAPTER=binance` build "✓ built" ✅ · check:size within budget ✅
 
