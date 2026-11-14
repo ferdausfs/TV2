@@ -20,7 +20,7 @@ const styles = {
   tooltipLineFontWeights: [590, 400, 400] as number[],
   tooltipLineFontSizes: [14, 12, 12] as number[],
   tooltipLineLineHeights: [18, 16, 16] as number[],
-  tooltipLineColors: ["#241731", "#C9A3C0", "#C9A3C0"],
+  tooltipLineColors: ["#222222", "#b8b8b8", "#b8b8b8"],
 
   deltaFontWeights: [590, 400] as number[],
   deltaFontSizes: [14, 12] as number[],

@@ -289,7 +289,7 @@ function renderText(scope: BitmapCoordinatesRenderingScope, e: ResolvedEntry): v
   const by = at.y - pad;
 
   if (e.d.textBg) {
-    ctx.fillStyle = e.d.textBgColor ?? "#241731";
+    ctx.fillStyle = e.d.textBgColor ?? "#222222";
     ctx.fillRect(bx, by, boxW, boxH);
   }
   if (e.d.textBorder) {
@@ -531,7 +531,7 @@ function drawAlertBadge(scope: BitmapCoordinatesRenderingScope, x: number, y: nu
   const r = 4 * scope.horizontalPixelRatio;
   ctx.save();
   ctx.fillStyle = "#f0b90b";
-  ctx.strokeStyle = "#171021";
+  ctx.strokeStyle = "#000000";
   ctx.lineWidth = scope.horizontalPixelRatio;
   ctx.beginPath();
   ctx.arc(x, y, r, 0, Math.PI * 2);
@@ -690,7 +690,7 @@ function paintTextBox(
   const size = (e.d.fontSize ?? 14) * scope.verticalPixelRatio;
   const lines = (e.d.text ?? "Text").split("\n");
   ctx.save();
-  ctx.fillStyle = e.d.textBg ? (e.d.textBgColor ?? "#241731") : hexToRgba(e.d.color, 0.12);
+  ctx.fillStyle = e.d.textBg ? (e.d.textBgColor ?? "#222222") : hexToRgba(e.d.color, 0.12);
   ctx.fillRect(geom.bx, geom.by, geom.w, geom.h);
   ctx.strokeStyle = e.d.color;
   ctx.lineWidth = hpr;

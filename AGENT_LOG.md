@@ -2,6 +2,43 @@
 
 > Continuity file. Entries are **prepended** (newest first) and never deleted.
 
+## 2026-11-14 — Session 3 · Feature 20: black TradingView theme (user reference)
+
+- **Agent/tool:** OpenCode (GLM) · branch `auto/tv-black-theme` → PR → merge
+- **Context:** the user supplied a token extraction from their saved TradingView
+  chart page (`jg9IvL4H`) — pure-black platform, `#222222`/`#303030` surfaces,
+  `#b8b8b8` text, plus the earlier "pink na, black lagbe". Confirmed via question:
+  replace the pastel theme entirely; light mode becomes TradingView's light
+  default (white).
+- **Plan:** rewrite global.css tokens (dark = the reference black exactly; light =
+  TradingView light default — white platform, `#F8F9FD` cards, `#EFF2F5` hover,
+  `#E0E3EB` borders, same `#2962FF` interaction); CHART_COLORS dark → black
+  canvas `#000000`, text `#787878` (reference `#555555` tertiary reserved for
+  disabled — fails AA at normal sizes), grid `#222222`, crosshair label `#303030`;
+  light chart → white canvas; theme-color meta + manifest → `#000000`; plum
+  stragglers (NewsOverlay surfaces, delta-tooltip chip, drawing text boxes, alert
+  stroke) → `#222222`/`#000000`. Blue is the interaction color again (pink gone).
+  Candles/order-line unchanged.
+- **Recorded assumptions:** reference `radius.md` 8px matches the existing
+  `--radius: 0.5rem` (no radius change); typography scale left as-is (12–14px
+  components ≈ the reference's 13/14px, avoids a density regression); OHLC/delta
+  white chips unchanged (recorded).
+- **What changed:** global.css token blocks rewritten (dark = the reference black
+  exactly; light = TradingView light default — see DESIGN.TV2.md §2);
+  CHART_COLORS dark → black canvas + `crosshairLabelBg` `#303030`, light → white
+  canvas; index.html theme-color + manifest colors → `#000000`; NewsOverlay dark
+  surfaces → `#222222`, delta-tooltip chip → `#222222`/`#b8b8b8`, drawing
+  text-box defaults → `#222222`, alert stroke → `#000000`. OHLC/delta white
+  chips unchanged (recorded). DESIGN.TV2.md palette contract rewritten (blue =
+  interaction; candles unchanged).
+- **Touched files:** src/styles/global.css, src/pages/trading/constants.ts,
+  src/pages/trading/NewsOverlay.tsx,
+  src/lib/chart-plugins/delta-tooltip/delta-tooltip-pane.ts,
+  src/lib/chart-plugins/drawing-tools/renderers.ts, index.html,
+  public/manifest.json, DESIGN.TV2.md, AGENT_LOG.md
+- **Commit:** `<fill>`
+- **Results:** `<fill>`
+
 ## 2026-11-14 — Session 3 · Feature 19: mobile chart-only (bottom UI removed)
 
 - **Agent/tool:** OpenCode (GLM) · branch `auto/mobile-chart-only` → PR → merge

@@ -6,20 +6,19 @@ DESIGN.md spec (as catalogued by VoltAgent/awesome-design-md); the working
 rules absorb the agency-agents design division's methodology (tokens before
 screens, WCAG AA, every state specified, anti-generic finish gate).
 
-**Identity statement**: TV.2 wears the user's pastel template (TradingView
-Advanced Charts CSS demo): a lavender platform (`#d1c4e9`), a pink pane
-(`#FBDFF4`) for chart + panels, pink interaction (`#F48FB1`), magenta/deep-
-purple ink. Dark mode is a deep-plum translation of the same identity
-(platform `#171021`, card `#241731`). The candles stay the only loud colors —
-teal and red. (This supersedes the original charcoal/blue identity; the user
-chose the pastel palette on 2026-11-14.)
+**Identity statement**: TV.2 wears the user's TradingView chart reference
+(extracted tokens, 2026-11-14): a pure-black platform (`#000000`), muted
+surfaces (`#222222`) and elevated chrome (`#303030`), gray text (`#b8b8b8`),
+and one commanding TradingView blue (`#2962FF`) for interaction. The candles
+stay the only loud colors — teal and red. (This supersedes the pastel-pink
+theme, which the user replaced after seeing the real TradingView look.)
 
 ---
 
 ## 1. Visual Theme & Atmosphere
 
-- **Dark-first** (deep plum). The light pastel theme is the template's exact
-  palette and is equally first-class — the user's template shows both.
+- **Dark-first** (pure black, like the reference). Light mode is TradingView's
+  light default (white platform) and is equally first-class.
 - **Data-dense**: whitespace budget is spent on the chart, not around it.
 - **Flat chrome**: surfaces are separated by 1px borders, not shadows. Depth
   is reserved for floating layers (dropdowns, dialogs, drawing toolbar).
@@ -30,27 +29,28 @@ chose the pastel palette on 2026-11-14.)
 
 ## 2. Color Palette & Roles
 
-Light (the template palette) / dark (plum translation):
+Light (TradingView light default) / dark (the reference, black):
 
 | Token | Light | Dark | Role |
 | --- | --- | --- | --- |
-| background | `#d1c4e9` | `#171021` | App platform + (dark) chart canvas |
-| card | `#FBDFF4` | `#241731` | Panels, dialogs, tables, light chart canvas |
-| secondary | `#F9B9E9` | `#322047` | Hover surfaces, input backgrounds |
-| border | pink-tint | `#322047` | 1px separators |
-| foreground | `#4A148C` | `#F5DDEF` | Primary text |
-| muted-foreground | softened magenta | `#C9A3C0` | Secondary text, labels |
-| primary / accent | `#F48FB1` | `#F48FB1` | **Interaction only**: buttons, links, selection, active tool, focus ring |
+| background | `#ffffff` | `#000000` | App platform + (dark) chart canvas |
+| card | `#F8F9FD` | `#222222` | Panels, dialogs, tables |
+| secondary | `#EFF2F5` | `#303030` | Hover surfaces, input backgrounds |
+| border | `#E0E3EB` | `#303030` | 1px separators |
+| foreground | `#131722` | `#b8b8b8` | Primary text |
+| muted-foreground | `#6c7280` | `#787878` | Secondary text, labels (`#555` reserved for disabled) |
+| primary / accent | `#2962FF` | `#2962FF` | **Interaction only**: buttons, links, selection, active tool, focus ring |
 | up / success / buy | `#087f52` | `#26a69a` | Market direction, profit, long |
-| down / destructive / sell | `#c2334a` | `#ef5350` | Market direction, loss, short, danger |
+| down / destructive / sell | `#d43a4d` | `#ef5350` | Market direction, loss, short, danger |
 | warning / order-line | `#f0b90b`-family | `#f0b90b` | Pending orders, working lines |
-| watermark | `rgba(255,255,255,0.04)` | Chart watermark |
+| watermark | `rgba(0,0,0,0.03)` | `rgba(255,255,255,0.04)` | Chart watermark |
 
 **Color discipline (the rules that keep TV.2 looking intentional):**
-- Pink means "you can act on this". Never use it for market state.
+- Blue means "you can act on this". Never use it for market state.
 - Green/red mean market direction. Never use them for decoration.
 - Gold means "waiting to fill". Nothing else.
-- Muted magenta/plum for everything that is not currently important.
+- Muted gray for everything that is not currently important; `#555555` is
+  disabled-only (fails AA for normal text on black).
 
 ## 3. Typography Rules
 
@@ -133,10 +133,10 @@ Light (the template palette) / dark (plum translation):
 
 ## 9. Agent Prompt Guide
 
-**Quick tokens**: light bg `#d1c4e9` · card/pane `#FBDFF4` · ink `#4A148C`/
-`#88184F` · interaction `#F48FB1` · dark bg `#171021` · dark card `#241731` ·
-dark text `#F5DDEF` · up `#26a69a` · down `#ef5350` · order `#f0b90b` ·
-radius 6px · numerals tabular.
+**Quick tokens**: light bg `#ffffff` · card `#F8F9FD` · ink `#131722` ·
+interaction `#2962FF` · dark bg `#000000` · dark card `#222222` · dark hover
+`#303030` · dark text `#b8b8b8` · up `#26a69a` · down `#ef5350` ·
+order `#f0b90b` · radius 8px · numerals tabular.
 
 **Design QA checklist (finish gate — run before shipping any UI change):**
 1. Tokens only from §2 — no ad-hoc hexes.
