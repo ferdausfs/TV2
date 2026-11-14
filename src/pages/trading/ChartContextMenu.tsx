@@ -3,6 +3,7 @@ import {
   ArrowUpFromLine,
   Bell,
   ClipboardCopy,
+  GitCompareArrows,
   ListTree,
   RotateCcw,
   Settings,
@@ -33,6 +34,12 @@ export interface ChartContextMenuProps {
   onOpenObjectTree: () => void;
   onRemoveAllDrawings?: () => void;
   onClearIndicators?: () => void;
+  /** Open the compare-symbol picker (feature 9). */
+  onCompare?: () => void;
+  /** Remove the active compare overlay (feature 9). */
+  onRemoveCompare?: () => void;
+  /** The symbol currently compared (null = none). */
+  compareSymbol?: string | null;
   onOpenSettings: () => void;
 }
 
@@ -140,6 +147,9 @@ export function ChartContextMenu(props: ChartContextMenuProps) {
     onOpenObjectTree,
     onRemoveAllDrawings,
     onClearIndicators,
+    onCompare,
+    onRemoveCompare,
+    compareSymbol,
     onOpenSettings,
   } = props;
 
@@ -232,6 +242,28 @@ export function ChartContextMenu(props: ChartContextMenuProps) {
             danger
             onClick={() => {
               onClearIndicators();
+              onClose();
+            }}
+          />
+        )}
+        {/* Compare overlay (feature 9) */}
+        {onCompare && (
+          <MenuItem
+            icon={<GitCompareArrows className="h-3.5 w-3.5" />}
+            label={compareSymbol ? `Change compare (${compareSymbol})…` : "Compare symbol…"}
+            onClick={() => {
+              onCompare();
+              onClose();
+            }}
+          />
+        )}
+        {compareSymbol && onRemoveCompare && (
+          <MenuItem
+            icon={<Trash2 className="h-3.5 w-3.5" />}
+            label={`Remove compare (${compareSymbol})`}
+            danger
+            onClick={() => {
+              onRemoveCompare();
               onClose();
             }}
           />

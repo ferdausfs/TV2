@@ -344,6 +344,7 @@ export function TradingPage() {
                   indicatorInstances={indicatorInstances}
                   onUpdateIndicatorInstance={updateIndicator}
                   onRemoveIndicatorInstance={removeIndicator}
+                  symbols={symbols}
                   drawingTool={drawingTool}
                   drawings={drawings}
                   onAddDrawing={addDrawing}
