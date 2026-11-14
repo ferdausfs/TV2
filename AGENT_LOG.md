@@ -2,6 +2,25 @@
 
 > Continuity file. Entries are **prepended** (newest first) and never deleted.
 
+## 2026-11-14 — Session 3 · Feature 19: mobile chart-only (bottom UI removed)
+
+- **Agent/tool:** OpenCode (GLM) · branch `auto/mobile-chart-only` → PR → merge
+- **Request:** the user (screenshot of the mobile bottom strip) asked to remove
+  everything below the chart on phones — "no buttons, nothing; only the chart's
+  bottom edge remains". Desktop untouched.
+- **What changed:** (1) TradingPage.tsx — removed the mobile Sell/Buy action bar
+  and the MobileBottomNav (Chart/Orders/Alerts/Trade) render + imports;
+  (2) ChartScaleFooter.tsx — root gets `hidden md:block` so the Auto/Log/%·1D…All
+  overlay disappears on phones but stays on desktop; (3) BottomPanel.tsx — root
+  gets `max-md:hidden` so the Positions/Orders/…/News icon strip (and its
+  expand-on-tap behavior) is gone on phones. Kept: MobileAccountBar (top),
+  floating chart actions pill (chart top-right), drawing rail + draw sheet,
+  long-press crosshair, double-tap fit.
+- **Touched files:** src/pages/TradingPage.tsx, src/pages/trading/ChartScaleFooter.tsx,
+  src/pages/trading/BottomPanel.tsx, AGENT_LOG.md
+- **Commit:** `<fill>`
+- **Results:** `<fill>`
+
 ## 2026-11-14 — Session 3 (hotfix): SW cache bump → tv2-v2
 
 - **Agent/tool:** OpenCode (GLM) · branch `auto/sw-cache-bump` → PR #31 → merge

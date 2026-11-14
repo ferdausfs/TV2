@@ -226,8 +226,7 @@ export function BottomPanel({
   return (
     <div
       className={cn(
-        "border-t border-border flex flex-col shrink-0 bg-card md:max-h-none",
-        mobileOpen ? "max-md:max-h-[55vh]" : "max-md:max-h-9",
+        "border-t border-border flex flex-col shrink-0 bg-card md:max-h-none max-md:hidden",
       )}
       style={{ height }}
     >
