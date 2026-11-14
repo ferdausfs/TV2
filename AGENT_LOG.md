@@ -39,7 +39,8 @@
   src/pages/trading/ChartPanel.tsx, src/pages/trading/NewsOverlay.tsx,
   src/lib/chart-plugins/delta-tooltip/delta-tooltip-pane.ts, index.html,
   public/manifest.json, DESIGN.TV2.md, AGENT_LOG.md
-- **Commit:** branch `auto/pastel-theme` → PR `<fill>`
+- **Commit:** branch `auto/pastel-theme` (cherry-picked `c11b043` from shared `5c02277`) →
+  squash-merged `79ddbf1` (PR #30, CI + E2E green); live bundle contains `FBDFF4`
 - **Results:** typecheck ✅ · lint --max-warnings=0 ✅ · tests **792 passed | 1 skipped** ✅ ·
   `VITE_ADAPTER=binance` build "✓ built" ✅ · check:size within budget ✅
 > Every entry: session date, agent/tool, feature, what changed, touched files,
