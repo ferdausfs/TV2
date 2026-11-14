@@ -21,6 +21,10 @@ export interface ChartPreferences {
   // ── Appearance (Chart Settings dialog) ──
   /** Series type: candles (default) / line / area / baseline / bars. */
   chartType: "candles" | "line" | "area" | "baseline" | "bars";
+  /** Dotted line + scale label at the previous UTC-day close (price-scale pack). */
+  showPrevCloseLine: boolean;
+  /** Series last-value label on the price scale (off by default: stacks with Ask). */
+  showLastPriceLabel: boolean;
   /** Hex override for up candles; empty string = theme default. */
   candleUpColor: string;
   /** Hex override for down candles; empty string = theme default. */
@@ -70,6 +74,8 @@ const DEFAULT_CHART_PREFS: ChartPreferences = {
   stayInDrawingMode: false,
   activePlugins: [],
   chartType: "candles",
+  showPrevCloseLine: true,
+  showLastPriceLabel: false,
   candleUpColor: "",
   candleDownColor: "",
   colorBackground: "",
@@ -112,6 +118,8 @@ const BOOL_PREF_KEYS = [
   "showWatermark",
   "showCountdown",
   "showOhlcLegend",
+  "showPrevCloseLine",
+  "showLastPriceLabel",
   "challengeOverlay",
   "challengeDailyLossLine",
   "challengeMaxDrawdownLine",
@@ -154,6 +162,8 @@ export const TEMPLATE_PREF_KEYS = [
   "showWatermark",
   "showCountdown",
   "showOhlcLegend",
+  "showPrevCloseLine",
+  "showLastPriceLabel",
   "challengeOverlay",
   "challengeDailyLossLine",
   "challengeMaxDrawdownLine",

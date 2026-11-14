@@ -258,6 +258,18 @@ function AppearanceTab({ prefs }: { prefs: ChartPreferences }) {
         onChange={(v) => set({ showCountdown: v })}
       />
       <ToggleRow
+        label="Previous day close"
+        hint="Dotted line at yesterday's close (UTC)"
+        checked={prefs.showPrevCloseLine}
+        onChange={(v) => set({ showPrevCloseLine: v })}
+      />
+      <ToggleRow
+        label="Last price label"
+        hint="Price-scale label at the latest close (stacks with Bid/Ask labels when those lines are shown)"
+        checked={prefs.showLastPriceLabel}
+        onChange={(v) => set({ showLastPriceLabel: v })}
+      />
+      <ToggleRow
         label="OHLC legend"
         checked={prefs.showOhlcLegend}
         onChange={(v) => set({ showOhlcLegend: v })}
