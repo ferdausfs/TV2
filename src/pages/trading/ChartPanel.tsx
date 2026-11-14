@@ -408,10 +408,11 @@ function createPriceSeries(
   chartType: ChartTypePref,
   colors: { up: string; down: string },
   priceFormat: { type: "price"; precision: number; minMove: number },
+  lastValueVisible = false,
 ): ISeriesApi<SeriesType> {
   const common = {
     priceFormat,
-    lastValueVisible: false,
+    lastValueVisible,
     priceLineVisible: false,
   } as const;
   switch (chartType) {
@@ -1266,8 +1267,9 @@ export function ChartPanel({
   // no meaningful countdown (1d, 1w) instead of the timer effect clearing state.
   const [countdown, setCountdown] = useState("");
   const countdownIntervalMs = TF_INTERVAL_MS[timeframe];
-  const countdownText =
-    countdownIntervalMs && countdownIntervalMs < 86_400_000 ? countdown : "";
+  // Countdown runs on every timeframe now (feature 3) — daily/weekly buckets
+  // are UTC-aligned by the timer effect above.
+  const countdownText = countdownIntervalMs ? countdown : "";
   // True once the legend has been restored to the latest bar after the crosshair
   // left the series — prevents re-setting (and re-rendering) on every off-series
   // mouse move while the cursor sits outside the plotted data.
@@ -1552,21 +1554,32 @@ export function ChartPanel({
   }, [replayTradeEvents, timeframe]);
 
   // ── Candle close countdown timer ───────────────────────────
-  // Daily and weekly bars get no countdown; that is decided when rendering the
-  // legend (see `countdownText`) so the effect never has to blank the state.
+  // Runs for every timeframe (feature 3): intraday buckets align on their
+  // interval; daily buckets align to UTC midnight and weekly buckets to
+  // Monday 00:00 UTC (the crypto adapters aggregate in UTC — assumption
+  // logged in AGENT_LOG).
   useEffect(() => {
     // Hidden countdown = no 1s re-render of this whole component (audit #29).
     // No setState here when hidden: the render gates the text on
     // showCountdown, so the state can simply go stale while unused.
     if (!chartPrefs.showCountdown) return;
     const intervalMs = TF_INTERVAL_MS[timeframe];
-    if (!intervalMs || intervalMs >= 86_400_000) return;
+    if (!intervalMs) return;
     const tick = () => {
       const now = Date.now();
-      const currentBucketStart = Math.floor(now / intervalMs) * intervalMs;
-      const nextBucketStart = currentBucketStart + intervalMs;
-      const remainingSec = Math.max(0, (nextBucketStart - now) / 1000);
-      setCountdown(formatCountdown(remainingSec));
+      let nextBucketStart: number;
+      if (intervalMs >= 86_400_000) {
+        const dayStart = Math.floor(now / 86_400_000) * 86_400_000;
+        const daysSinceMonday = (new Date(now).getUTCDay() + 6) % 7;
+        const bucketStart =
+          intervalMs === 86_400_000
+            ? dayStart
+            : dayStart - daysSinceMonday * 86_400_000;
+        nextBucketStart = bucketStart + intervalMs;
+      } else {
+        nextBucketStart = (Math.floor(now / intervalMs) + 1) * intervalMs;
+      }
+      setCountdown(formatCountdown(Math.max(0, (nextBucketStart - now) / 1000)));
     };
     tick();
     const id = setInterval(tick, 1000);
@@ -1664,7 +1677,13 @@ export function ChartPanel({
     // Primary price series — type follows the chartType preference (swap is
     // handled by the series-type effect below; the pump and every consumer
     // read the ref, so they pick the new series up transparently).
-    const candleSeries = createPriceSeries(chart, chartType, colors, priceFormat);
+    const candleSeries = createPriceSeries(
+      chart,
+      chartType,
+      colors,
+      priceFormat,
+      chartPrefs.showLastPriceLabel,
+    );
     candleSeriesRef.current = candleSeries;
     seriesTypeRef.current = chartType;
 
@@ -1850,11 +1869,17 @@ export function ChartPanel({
           /* already detached */
         }
       }
-      const created = createPriceSeries(chart, wanted, colors, {
-        type: "price",
-        precision: pipDigits,
-        minMove: getMinMove(pipDigits),
-      });
+      const created = createPriceSeries(
+        chart,
+        wanted,
+        colors,
+        {
+          type: "price",
+          precision: pipDigits,
+          minMove: getMinMove(pipDigits),
+        },
+        chartPrefs.showLastPriceLabel,
+      );
       candleSeriesRef.current = created;
       seriesTypeRef.current = wanted;
       // Baseline anchors on the first loaded close — a stable basis that
@@ -1927,6 +1952,95 @@ export function ChartPanel({
     colors.down,
     chartEpoch,
   ]);
+
+  // ── Last-price label (price-scale pack) ──
+  useEffect(() => {
+    candleSeriesRef.current?.applyOptions({
+      lastValueVisible: chartPrefs.showLastPriceLabel,
+    });
+  }, [chartPrefs.showLastPriceLabel, chartEpoch]);
+
+  // ── Prev close + day high/low (price-scale pack) ──
+  // Derived from the loaded candles: prev close = close of the last bar before
+  // UTC midnight; day high/low = today's range. Only meaningful while today's
+  // bars exist in the loaded history (a thin intraday history hides them).
+  const dayStats = useMemo(() => {
+    if (chartData.length === 0) return null;
+    if ((TF_INTERVAL_MS[timeframe] ?? 0) > 86_400_000) return null; // no daily stats on 1w
+    // Impure by design: "today" is evaluated when the memo runs. Staleness is
+    // bounded — the first bar of a new UTC day re-runs this memo via chartData.
+    // eslint-disable-next-line react-hooks/purity
+    const todayStartSec = Math.floor(Date.now() / 86_400_000) * 86_400;
+    let lastBeforeToday: CandlestickData<Time> | null = null;
+    let hasToday = false;
+    let high = Number.NEGATIVE_INFINITY;
+    let low = Number.POSITIVE_INFINITY;
+    for (const bar of chartData) {
+      const t = bar.time as number;
+      if (t >= todayStartSec) {
+        hasToday = true;
+        if (bar.high > high) high = bar.high;
+        if (bar.low < low) low = bar.low;
+      } else {
+        lastBeforeToday = bar;
+      }
+    }
+    if (!hasToday || !lastBeforeToday) return null;
+    return {
+      prevClose: lastBeforeToday.close,
+      dayHigh: high,
+      dayLow: low,
+    };
+  }, [chartData, timeframe]);
+  const prevClose = dayStats?.prevClose ?? null;
+  const dayHigh = dayStats?.dayHigh ?? null;
+  const dayLow = dayStats?.dayLow ?? null;
+
+  const scaleMarkersRef = useRef<IPriceLine[]>([]);
+  useEffect(() => {
+    const series = candleSeriesRef.current;
+    if (!series) return;
+    for (const line of scaleMarkersRef.current) {
+      try {
+        series.removePriceLine(line);
+      } catch {
+        /* line's series already removed (type swap) */
+      }
+    }
+    scaleMarkersRef.current = [];
+    if (!chartPrefs.showPrevCloseLine || prevClose == null || dayHigh == null || dayLow == null) {
+      return;
+    }
+    const round = (v: number) => parseFloat(v.toFixed(pipDigits));
+    // Prev close: full-width dotted line; high/low: scale-only labels (no line)
+    // — lightweight-charts has no native scale marks (assumption logged).
+    scaleMarkersRef.current = [
+      series.createPriceLine({
+        price: round(prevClose),
+        color: colors.crosshair,
+        lineWidth: 1,
+        lineStyle: LineStyle.Dotted,
+        axisLabelVisible: true,
+        title: "",
+      }),
+      series.createPriceLine({
+        price: round(dayHigh),
+        color: colors.crosshair,
+        lineWidth: 1,
+        lineVisible: false,
+        axisLabelVisible: true,
+        title: "",
+      }),
+      series.createPriceLine({
+        price: round(dayLow),
+        color: colors.crosshair,
+        lineWidth: 1,
+        lineVisible: false,
+        axisLabelVisible: true,
+        title: "",
+      }),
+    ];
+  }, [prevClose, dayHigh, dayLow, chartPrefs.showPrevCloseLine, colors.crosshair, pipDigits, chartEpoch]);
 
   useEffect(() => {
     volumeSeriesRef.current?.applyOptions({ visible: chartPrefs.showVolume });

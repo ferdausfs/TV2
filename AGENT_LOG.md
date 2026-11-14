@@ -6,7 +6,40 @@
 
 ---
 
-## 2026-11-13 — Session 2 · Feature 2: Chart-type selector (5 types)
+## 2026-11-14 — Session 2 · Feature 3: Price-scale pack (countdown all TFs, prev-close, day H/L, last-price label)
+
+- **Agent/tool:** OpenCode (GLM) · branch `auto/price-scale-pack` → PR → merge
+- **Plan (reviewed first):** four price-scale upgrades. (1) Countdown on ALL timeframes:
+  drop the `>= 86_400_000` early return — daily buckets are UTC-midnight aligned and weekly
+  Monday-00:00 UTC (crypto adapters); formatCountdown already renders H:MM:SS. Fixes the
+  logged "countdown hidden on 1d/1w" bug. (2) Prev-close dotted price line at the previous
+  UTC-day close, derived from the loaded candles (no new API surface); shown only when
+  today's bars exist in the loaded history; skipped on the 1w timeframe. (3) Day high/low
+  as scale-only labels (priceLineVisible:false + axisLabelVisible — lightweight-charts has
+  no native scale marks). (4) Last-price label pref (`showLastPriceLabel`, default OFF —
+  the mid label stacks with the Ask label on 1-pip-spread symbols; bid/ask lines are the
+  terminal's authoritative right-edge prices). Prefs: `showPrevCloseLine` (default ON),
+  `showLastPriceLabel` (default OFF) in BOOL/TEMPLATE keys + Chart Settings rows.
+- **Recorded assumptions:** UTC-aligned day/week buckets (crypto feeds only); prev close
+  = close of the last bar before UTC midnight, hidden when today's bars aren't loaded;
+  last-price label shows the series mid (rounds into the ask label on tight spreads).
+- **What changed:** countdown now runs on every timeframe (1d = UTC midnight bucket,
+  1w = Monday 00:00 UTC; fixes the logged "hidden on 1d/1w" bug). New `dayStats` memo
+  derives prev-close/day-high/day-low from loaded candles; three price lines applied via
+  a chartEpoch-keyed effect — prev close as a full-width dotted line, day high/low as
+  scale-only labels (lineVisible:false). New prefs `showPrevCloseLine` (ON) and
+  `showLastPriceLabel` (OFF — stacks with the Ask label on tight spreads) wired through
+  createPriceSeries (common lastValueVisible), the swap effect, a live applyOptions
+  effect, and two Chart Settings rows.
+- **Touched files:** hooks/useChartPreferences.ts, pages/trading/ChartPanel.tsx,
+  pages/trading/ChartSettingsDialog.tsx, AGENT_LOG.md
+- **Commit:** branch `auto/price-scale-pack` → PR `<fill>`
+- **Results:** typecheck ✅ · lint --max-warnings=0 ✅ · tests **762 passed | 1 skipped** ✅ ·
+  `VITE_ADAPTER=binance` build "✓ built" ✅ · check:size within budget ✅
+- **Pending/notes:** session-aware prev close for FX/metals (trading-hours close) when a
+  non-crypto adapter lands.
+
+## 2026-11-14 — Session 2 · Feature 2: Chart-type selector (5 types)
 
 - **Agent/tool:** OpenCode (GLM) · branch `auto/chart-types` → PR → merge
 - **Plan (reviewed first):** candles-only chart gains a TradingView-style type selector:
@@ -35,7 +68,10 @@
   pages/TradingPage.tsx, pages/trading/useIndicators.ts,
   pages/trading/useChallengeLevels.ts, pages/trading/useSlTpDrag.ts,
   lib/chart-plugins/drawing-tools/manager.ts (setSeries), AGENT_LOG.md
-- **Commit:** branch `auto/chart-types` → PR `<fill>`
+- **Commit:** branch `auto/chart-types` (`fa8c20e`, cherry-picked via git worktree —
+  shared VPS clone hosts a parallel session) → squash-merged `d7ca59f` (PR #13, CI green;
+  E2E failed once on a pre-existing dual-ConnectButton strict-mode flake in the
+  Hyperliquid onboarding spec, rerun green → merged)
 - **Results:** typecheck ✅ · lint --max-warnings=0 ✅ · tests **762 passed | 1 skipped** ✅ ·
   `VITE_ADAPTER=binance` build "✓ built" ✅ · check:size within budget ✅
 - **Pending/notes:** hollow candles + step line + renko/range/kagi/P&F in a later batch.
