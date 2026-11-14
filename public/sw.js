@@ -11,9 +11,11 @@
  *  - Never intercept websockets or non-GET requests; /api/* is network-only
  *    (market data and trading must not be served from cache).
  *
- * Bump CACHE_VERSION whenever the shell file list changes.
+ * Bump CACHE_VERSION whenever the shell file list changes, or whenever a
+ * deploy needs to force every client to rebuild its cache (e.g. stale-asset
+ * breakage on long-lived installs).
  */
-const CACHE_VERSION = "tv2-v1";
+const CACHE_VERSION = "tv2-v2";
 const PRECACHE_URLS = ["./", "./manifest.json", "./icons/icon.svg", "./icons/icon-192x192.png", "./icons/icon-512x512.png"];
 
 self.addEventListener("install", (event) => {
