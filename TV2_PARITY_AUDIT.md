@@ -70,7 +70,7 @@ REST; React context (`use-terminal`) for terminal wiring; chart state lives **ou
 
 | Item | Status | Notes |
 | --- | --- | --- |
-| Catalog | **Partial** | 16/27: SMA EMA WMA HMA RSI MACD BOLL Keltner Donchian STOCH StochRSI ATR VWAP OBV W%R ROC (`lib/indicators.ts`). Missing: Supertrend Ichimoku PSAR ADX CCI MFI Volume+MA Volume Profile Pivots |
+| Catalog | **Partial** | 20/27: SMA EMA WMA HMA RSI MACD BOLL Keltner Donchian STOCH StochRSI ATR VWAP OBV W%R ROC ADX/DMI CCI MFI Volume MA (`lib/indicators.ts`). Missing: Supertrend Ichimoku PSAR Volume Profile Pivots |
 | Computation | **Partial** | sync on main thread — fine for 8, needs a Worker for profile/ichi-class |
 | Settings dialog (Inputs/Style/Visibility) | **Missing** | fixed default params only |
 | Menu: categories / search / favorites | **Missing** | plain list (PluginsDropdown, ChartToolbar.tsx) |
@@ -170,7 +170,7 @@ REST; React context (`use-terminal`) for terminal wiring; chart state lives **ou
 | 12 | PWA service worker: offline shell + update prompt — **done** (hand-rolled sw, no vite-plugin-pwa) | S-M | vite.config, index.html, new sw |
 | 13 | Screener (client, virtualized) — **done** (desktop rail; mobile deferred) | M | new |
 | 14 | Keyboard shortcuts + focus traps pass — **done** (digit TF shortcuts + focus traps) | S | various |
-| 15 | Advanced indicators batch 2 (Supertrend, Ichimoku, PSAR, Pivot Points, Volume Profile in a Worker) | L | lib/indicators.ts + worker |
+| 15 | Advanced indicators batch 2 (ADX/DMI, CCI, MFI, Volume MA done in feature 15; Supertrend, Ichimoku, PSAR, Pivot Points, Volume Profile in a Worker remain) | L | lib/indicators.ts + worker |
 | 16 | Drawing TV-extras batch (pitchfork, fib channel/time-zones, brush, callout, note, anchored VWAP, favorites toolbar) | L | drawing-tools |
 | 17 | Capacitor Android APK | L | new (last) |
 

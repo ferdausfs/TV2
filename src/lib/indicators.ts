@@ -520,6 +520,148 @@ export function roc(candles: CandleData[], period = 9): IndicatorPoint[] {
   return result;
 }
 
+// ── ADX (Wilder) ─────────────────────────────────────────────
+export interface AdxResult {
+  adx: IndicatorPoint[];
+  plusDi: IndicatorPoint[];
+  minusDi: IndicatorPoint[];
+}
+
+/**
+ * Wilder's ADX: DI+/DI− from smoothed +DM/−DM/TR, DX = 100·|DI+−DI−|/(DI++DI−),
+ * ADX = Wilder-smoothed DX. Empty until the first full window (2n bars).
+ */
+export function adx(candles: CandleData[], period = 14): AdxResult {
+  const out: AdxResult = { adx: [], plusDi: [], minusDi: [] };
+  const p = validPeriod(period);
+  if (p === null || candles.length < p * 2) return out;
+
+  // Wilder smoothing = EMA with α = 1/p.
+  const smooth = (seed: number, values: number[]): number[] => {
+    const series: number[] = [seed];
+    for (let i = 1; i < values.length; i++) {
+      series.push(series[i - 1]! - series[i - 1]! / p + values[i]!);
+    }
+    return series;
+  };
+
+  const trs: number[] = [];
+  const plusDms: number[] = [];
+  const minusDms: number[] = [];
+  for (let i = 1; i < candles.length; i++) {
+    const cur = candles[i]!;
+    const prev = candles[i - 1]!;
+    const upMove = cur.high - prev.high;
+    const downMove = prev.low - cur.low;
+    trs.push(Math.max(cur.high - cur.low, Math.abs(cur.high - prev.close), Math.abs(cur.low - prev.close)));
+    plusDms.push(upMove > downMove && upMove > 0 ? upMove : 0);
+    minusDms.push(downMove > upMove && downMove > 0 ? downMove : 0);
+  }
+
+  // Seed with the simple sum of the first window, then Wilder-smooth.
+  const sum = (arr: number[], end: number) => arr.slice(0, end).reduce((a, b) => a + b, 0);
+  const trSmooth = smooth(sum(trs, p), trs.slice(p));
+  const plusSmooth = smooth(sum(plusDms, p), plusDms.slice(p));
+  const minusSmooth = smooth(sum(minusDms, p), minusDms.slice(p));
+
+  const dxs: Array<{ time: number; dx: number }> = [];
+  for (let i = 0; i < trSmooth.length; i++) {
+    const barIdx = i + p; // candle index of this smoothed point
+    const tr = trSmooth[i]!;
+    if (tr <= 0) continue;
+    const plusDi = (plusSmooth[i]! / tr) * 100;
+    const minusDi = (minusSmooth[i]! / tr) * 100;
+    const denom = plusDi + minusDi;
+    const dx = denom === 0 ? 0 : (Math.abs(plusDi - minusDi) / denom) * 100;
+    const time = candles[barIdx]!.time;
+    out.plusDi.push({ time, value: plusDi });
+    out.minusDi.push({ time, value: minusDi });
+    dxs.push({ time, dx });
+  }
+
+  // ADX = Wilder-smoothed DX over p points.
+  if (dxs.length >= p) {
+    let adxVal = dxs.slice(0, p).reduce((a, b) => a + b.dx, 0) / p;
+    out.adx.push({ time: dxs[p - 1]!.time, value: adxVal });
+    for (let i = p; i < dxs.length; i++) {
+      adxVal = (adxVal * (p - 1) + dxs[i]!.dx) / p;
+      out.adx.push({ time: dxs[i]!.time, value: adxVal });
+    }
+  }
+  return out;
+}
+
+// ── Commodity Channel Index ──────────────────────────────────
+// CCI = (TP − SMA(TP,n)) / (0.015 × mean deviation of TP over n).
+export function cci(candles: CandleData[], period = 20): IndicatorPoint[] {
+  const result: IndicatorPoint[] = [];
+  const p = validPeriod(period);
+  if (p === null || candles.length < p) return result;
+
+  const tp = candles.map((c) => (c.high + c.low + c.close) / 3);
+  let sum = 0;
+  for (let i = 0; i < p; i++) sum += tp[i]!;
+  for (let i = p - 1; i < candles.length; i++) {
+    if (i > p - 1) sum += tp[i]! - tp[i - p]!;
+    const sma = sum / p;
+    let meanDev = 0;
+    for (let j = i - p + 1; j <= i; j++) meanDev += Math.abs(tp[j]! - sma);
+    meanDev /= p;
+    const value = meanDev === 0 ? 0 : (tp[i]! - sma) / (0.015 * meanDev);
+    result.push({ time: candles[i]!.time, value });
+  }
+  return result;
+}
+
+// ── Money Flow Index ─────────────────────────────────────────
+// MFI = 100 − 100/(1 + positive flow / negative flow) over n bars, where flow
+// = typical price × volume. Returns [] when the feed has no volume.
+export function mfi(candles: CandleData[], period = 14): IndicatorPoint[] {
+  const result: IndicatorPoint[] = [];
+  const p = validPeriod(period);
+  if (p === null || candles.length < p + 1) return result;
+  if (candles.every((c) => !c.volume)) return result;
+
+  const flows = candles.map((c, i) => {
+    const prev = i > 0 ? candles[i - 1]! : null;
+    const tp = (c.high + c.low + c.close) / 3;
+    const prevTp = prev ? (prev.high + prev.low + prev.close) / 3 : tp;
+    const raw = tp * (c.volume ?? 0);
+    return tp > prevTp ? { pos: raw, neg: 0 } : tp < prevTp ? { pos: 0, neg: raw } : { pos: 0, neg: 0 };
+  });
+
+  for (let i = p; i < candles.length; i++) {
+    let pos = 0;
+    let neg = 0;
+    for (let j = i - p + 1; j <= i; j++) {
+      pos += flows[j]!.pos;
+      neg += flows[j]!.neg;
+    }
+    const value = neg === 0 ? 100 : 100 - 100 / (1 + pos / neg);
+    result.push({ time: candles[i]!.time, value });
+  }
+  return result;
+}
+
+// ── Volume Moving Average ────────────────────────────────────
+// SMA over the volume series (shares the volume histogram's scale). Points
+// where volume is absent are skipped; the series is empty without volume.
+export function volumeMa(candles: CandleData[], period = 20): IndicatorPoint[] {
+  const result: IndicatorPoint[] = [];
+  const p = validPeriod(period);
+  if (p === null || candles.length < p) return result;
+  if (candles.every((c) => !c.volume)) return result;
+
+  let sum = 0;
+  for (let i = 0; i < p; i++) sum += candles[i]!.volume ?? 0;
+  result.push({ time: candles[p - 1]!.time, value: sum / p });
+  for (let i = p; i < candles.length; i++) {
+    sum += (candles[i]!.volume ?? 0) - (candles[i - p]!.volume ?? 0);
+    result.push({ time: candles[i]!.time, value: sum / p });
+  }
+  return result;
+}
+
 // ── Indicator Registry (for UI) ──────────────────────────────
 export type IndicatorType =
   | "SMA"
@@ -537,7 +679,11 @@ export type IndicatorType =
   | "VWAP"
   | "OBV"
   | "WPR"
-  | "ROC";
+  | "ROC"
+  | "ADX"
+  | "CCI"
+  | "MFI"
+  | "VOLMA";
 
 export type IndicatorPane = "overlay" | "below";
 
@@ -704,6 +850,38 @@ export const INDICATOR_REGISTRY: IndicatorConfig[] = [
     defaultParams: { period: 9 },
     paramSpecs: [{ key: "period", label: "Period", min: 1, max: 200, step: 1 }],
     color: "#4db6ac",
+  },
+  {
+    type: "ADX",
+    label: "ADX / DMI",
+    pane: "below",
+    defaultParams: { period: 14 },
+    paramSpecs: [{ key: "period", label: "Period", min: 2, max: 100, step: 1 }],
+    color: "#ce93d8",
+  },
+  {
+    type: "CCI",
+    label: "Commodity Channel Index",
+    pane: "below",
+    defaultParams: { period: 20 },
+    paramSpecs: [{ key: "period", label: "Period", min: 2, max: 200, step: 1 }],
+    color: "#81c784",
+  },
+  {
+    type: "MFI",
+    label: "Money Flow Index",
+    pane: "below",
+    defaultParams: { period: 14 },
+    paramSpecs: [{ key: "period", label: "Period", min: 2, max: 200, step: 1 }],
+    color: "#64b5f6",
+  },
+  {
+    type: "VOLMA",
+    label: "Volume MA",
+    pane: "below",
+    defaultParams: { period: 20 },
+    paramSpecs: [{ key: "period", label: "Period", min: 2, max: 500, step: 1 }],
+    color: "#b0bec5",
   },
 ];
 

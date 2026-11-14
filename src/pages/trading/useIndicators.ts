@@ -28,6 +28,10 @@ import {
   obv,
   williamsR,
   roc,
+  adx,
+  cci,
+  mfi,
+  volumeMa,
 } from "../../lib/indicators.ts";
 import { effectiveColor, seriesKey, type IndicatorInstance } from "../../lib/indicator-instances.ts";
 import { toIndicatorCandles } from "./utils.ts";
@@ -343,6 +347,52 @@ export function useIndicators(
           setLine(
             seriesKey(inst, "ROC"),
             { color, lineWidth: 1, priceScaleId: "roc" },
+            data.map((p) => ({ time: p.time as Time, value: p.value })),
+          );
+          break;
+        }
+        case "ADX": {
+          const data = adx(indCandles, inst.params.period ?? 14);
+          setLine(
+            seriesKey(inst, "ADX"),
+            { color, lineWidth: 2, priceScaleId: "adx" },
+            data.adx.map((p) => ({ time: p.time as Time, value: p.value })),
+          );
+          setLine(
+            seriesKey(inst, "DI-plus"),
+            { color: "#26a69a", lineWidth: 1, priceScaleId: "adx" },
+            data.plusDi.map((p) => ({ time: p.time as Time, value: p.value })),
+          );
+          setLine(
+            seriesKey(inst, "DI-minus"),
+            { color: "#ef5350", lineWidth: 1, priceScaleId: "adx" },
+            data.minusDi.map((p) => ({ time: p.time as Time, value: p.value })),
+          );
+          break;
+        }
+        case "CCI": {
+          const data = cci(indCandles, inst.params.period ?? 20);
+          setLine(
+            seriesKey(inst, "CCI"),
+            { color, lineWidth: 1, priceScaleId: "cci" },
+            data.map((p) => ({ time: p.time as Time, value: p.value })),
+          );
+          break;
+        }
+        case "MFI": {
+          const data = mfi(indCandles, inst.params.period ?? 14);
+          setLine(
+            seriesKey(inst, "MFI"),
+            { color, lineWidth: 1, priceScaleId: "mfi" },
+            data.map((p) => ({ time: p.time as Time, value: p.value })),
+          );
+          break;
+        }
+        case "VOLMA": {
+          const data = volumeMa(indCandles, inst.params.period ?? 20);
+          setLine(
+            seriesKey(inst, "VOLMA"),
+            { color, lineWidth: 1, priceScaleId: "volma" },
             data.map((p) => ({ time: p.time as Time, value: p.value })),
           );
           break;

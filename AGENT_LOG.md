@@ -51,7 +51,8 @@
   minimal surface).
 - **Touched files:** public/sw.js (new), src/main.tsx, src/Root.tsx,
   src/lib/pwa-update.tsx (new), AGENT_LOG.md
-- **Commit:** branch `auto/pwa` → PR `<fill>`
+- **Commit:** branch `auto/pwa` (`47ddfe4`) → squash-merged `e43ab3a`
+  (PR #24, CI + E2E green); live: sw.js 200 + chip string in bundle
 - **Results:** typecheck ✅ · lint --max-warnings=0 ✅ · tests **780 passed | 1 skipped** ✅ ·
   `VITE_ADAPTER=binance` build "✓ built" ✅ · check:size within budget ✅ · dist/sw.js
   emitted ✅
@@ -83,9 +84,42 @@
   pages/trading/ChartSettingsDialog.tsx,
   components/trading-dialogs/{OrderConfirm,OrderModify,PositionModify}Dialog.tsx,
   pages/TradingPage.tsx, AGENT_LOG.md
-- **Commit:** branch `auto/shortcuts-focus` → PR `<fill>`
+- **Commit:** branch `auto/shortcuts-focus` (`d669af1`) → squash-merged `dd5fdfa`
+  (PR #26, CI + E2E green)
 - **Results:** typecheck ✅ · lint --max-warnings=0 ✅ · tests **780 passed | 1 skipped** ✅ ·
   `VITE_ADAPTER=binance` build "✓ built" ✅ · check:size within budget ✅
+
+## 2026-11-14 — Session 2 · Feature 15: Indicator catalog batch 2 (Volume+MA, ADX, CCI, MFI)
+
+- **Agent/tool:** OpenCode (GLM) · branch `auto/indicator-batch2` → PR → merge
+- **Plan (reviewed first):** the remaining high-value catalog items from the audit's
+  batch-1 scope, wired through the feature-6 instance infra: (1) **VOLUME+MA** — the
+  chart already renders a volume histogram when `showVolume` is on; this adds a
+  registry-driven "Volume MA" overlay line (SMA of volume, default 20) drawn on the
+  chart's own volume price scale when volume is visible, and its own sub-pane when
+  not; (2) **ADX(14)** — Wilder's DI+/DI− smoothing, ADX = smoothed DX; renders
+  ADX + DI+/DI− lines on a dedicated `adx` pseudo-scale (0..100-ish); (3) **CCI(20)** —
+  (TP − SMA(TP)) / (0.015 × mean deviation); dedicated `cci` pseudo-scale;
+  (4) **MFI(14)** — typical-price money flow with volume, 0..100 on an `mfi`
+  pseudo-scale. All in `lib/indicators.ts` + registry entries with paramSpecs +
+  `useIndicators` cases + unit tests in the existing hand-verified style.
+- **Recorded assumptions:** ADX uses Wilder smoothing (EMA with α=1/n) exactly as
+  the classic definition; CCI constant 0.015; MFI needs volume — falls back to empty
+  on feeds without volume (demo/binance have it); Volume MA shares the volume
+  histogram's scale when visible (its values are in volume units).
+- **What changed:** `lib/indicators.ts` gains 4 calcs — adx (Wilder smoothing,
+  ADX + DI+/DI−), cci (TP vs SMA with 0.015 mean-deviation constant), mfi (typical-
+  price money flow; empty on volume-less feeds), volumeMa (SMA of the volume series;
+  empty without volume). Registry: 4 entries with paramSpecs; IndicatorType now 20
+  members. useIndicators: ADX renders ADX + DI+ (#26a69a) + DI− (#ef5350) on an `adx`
+  pseudo-scale; CCI/MFI/VOLMA on dedicated `cci`/`mfi`/`volma` pseudo-scales.
+  indicators.test.ts: +10 tests (87 total in file).
+- **Touched files:** lib/indicators.ts, pages/trading/useIndicators.ts,
+  __tests__/indicators.test.ts, AGENT_LOG.md
+- **Commit:** branch `auto/indicator-batch2` → PR `<fill>`
+- **Results:** typecheck ✅ · lint --max-warnings=0 ✅ · tests **790 passed | 1 skipped** ✅
+  (baseline 780 → 790) · `VITE_ADAPTER=binance` build "✓ built" ✅ · check:size within
+  budget ✅
 
 ## 2026-11-14 — Session 2 · Feature 13: Market screener (client-computed, virtualized)
 
@@ -119,7 +153,8 @@
   the tick stream carries no per-symbol volume (logged).
 - **Touched files:** pages/trading/ScreenerPanel.tsx (new),
   pages/trading/ChartToolbar.tsx, pages/TradingPage.tsx, AGENT_LOG.md
-- **Commit:** branch `auto/screener` → PR `<fill>`
+- **Commit:** branch `auto/screener` (`80b5b42`) → squash-merged `32f39f3`
+  (PR #25, CI + E2E green)
 - **Results:** typecheck ✅ · lint --max-warnings=0 ✅ · tests **780 passed | 1 skipped** ✅ ·
   `VITE_ADAPTER=binance` build "✓ built" ✅ · check:size within budget ✅
 
@@ -233,7 +268,8 @@
 - **Touched files:** components/MobileShell.tsx (new), hooks/useChartTouchGestures.ts
   (new), hooks/useChartDrawings.ts, terminal/context.tsx, terminal/use-terminal.ts,
   pages/trading/ChartPanel.tsx, pages/TradingPage.tsx, AGENT_LOG.md
-- **Commit:** branch `auto/mobile-54` → PR `<fill>`
+- **Commit:** branch `auto/mobile-54` (`0572a91`) → squash-merged `cb6435b`
+  (PR #23, CI + E2E green)
 - **Results:** typecheck ✅ · lint --max-warnings=0 ✅ · tests **780 passed | 1 skipped** ✅ ·
   `VITE_ADAPTER=binance` build "✓ built" ✅ · check:size within budget ✅
 - **Pending/notes:** real resizable sub-panes need a pane API — revisit on

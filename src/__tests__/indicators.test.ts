@@ -1,12 +1,15 @@
 import { describe, expect, it } from "vitest";
 import {
+  adx,
   atr,
   bollingerBands,
+  cci,
   donchianChannels,
   ema,
   hma,
   keltnerChannels,
   macd,
+  mfi,
   obv,
   roc,
   rsi,
@@ -14,6 +17,7 @@ import {
   stochastic,
   stochRsi,
   vwap,
+  volumeMa,
   williamsR,
   wma,
   type CandleData,
@@ -371,5 +375,91 @@ describe("roc", () => {
 
   it("returns nothing when history is shorter than the period", () => {
     expect(roc(closes([1, 2]), 2)).toEqual([]);
+  });
+});
+
+// ── Feature 15: indicator batch 2 ────────────────────────────
+
+describe("adx", () => {
+  it("keeps ADX within 0..100 and DI lines non-negative", () => {
+    // Alternating swings exercise both +DM and −DM paths.
+    const data: CandleData[] = [];
+    let price = 100;
+    for (let i = 0; i < 60; i++) {
+      const swing = i % 6 < 3 ? 1.2 : -1.0;
+      const open = price;
+      const close = price + swing;
+      data.push({ time: 1000 + i * 60, open, high: Math.max(open, close) + 0.5, low: Math.min(open, close) - 0.5, close, volume: 10 });
+      price = close;
+    }
+    const r = adx(data, 14);
+    expect(r.adx.length).toBeGreaterThan(0);
+    for (const p of [...r.adx, ...r.plusDi, ...r.minusDi]) {
+      expect(p.value).toBeGreaterThanOrEqual(0);
+      expect(p.value).toBeLessThanOrEqual(100);
+    }
+  });
+
+  it("returns empty for too-short input", () => {
+    const r = adx(closes([1, 2, 3, 4, 5]), 14);
+    expect(r.adx).toEqual([]);
+  });
+});
+
+describe("cci", () => {
+  it("is 0 when every bar has the same typical price", () => {
+    const data = closes([5, 5, 5, 5, 5, 5]);
+    // closes() gives high=close+1, low=close-1 → TP is constant at 5.
+    const pts = cci(data, 4);
+    for (const p of pts) expect(p.value).toBeCloseTo(0, 10);
+  });
+
+  it("is positive when price rises above its mean", () => {
+    const data = closes([10, 10, 10, 10, 12, 14, 16]);
+    const pts = cci(data, 4);
+    expect(pts[pts.length - 1]!.value).toBeGreaterThan(0);
+  });
+
+  it("returns nothing when history is shorter than the period", () => {
+    expect(cci(closes([1, 2]), 4)).toEqual([]);
+  });
+});
+
+describe("mfi", () => {
+  it("reaches 100 when money only flows in", () => {
+    const data = closes([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);
+    const pts = mfi(data, 14);
+    const last = pts[pts.length - 1]!.value;
+    expect(last).toBeCloseTo(100, 6);
+  });
+
+  it("reaches 0 when money only flows out", () => {
+    const data = closes([16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1]);
+    const pts = mfi(data, 14);
+    const last = pts[pts.length - 1]!.value;
+    expect(last).toBeCloseTo(0, 6);
+  });
+
+  it("returns empty when the feed has no volume", () => {
+    const data = closes([1, 2, 3, 4, 5]).map((c) => ({ ...c, volume: 0 }));
+    expect(mfi(data, 14)).toEqual([]);
+  });
+});
+
+describe("volumeMa", () => {
+  it("averages the volume window", () => {
+    const data: CandleData[] = [1, 2, 3, 4].map((v, i) => ({
+      time: 1000 + i * 60,
+      open: 1, high: 1, low: 1, close: 1,
+      volume: v,
+    }));
+    const pts = volumeMa(data, 4);
+    expect(pts).toHaveLength(1);
+    expect(pts[0]!.value).toBeCloseTo(2.5, 10);
+  });
+
+  it("returns empty without volume data", () => {
+    const data = closes([1, 2, 3, 4]).map((c) => ({ ...c, volume: 0 }));
+    expect(volumeMa(data, 2)).toEqual([]);
   });
 });
