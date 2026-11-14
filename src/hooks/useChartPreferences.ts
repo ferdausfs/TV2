@@ -1,4 +1,10 @@
 import { useEffect, useState } from "react";
+import {
+  sanitizeFavorites,
+  sanitizeInstances,
+  type IndicatorInstance,
+} from "../lib/indicator-instances.ts";
+import type { IndicatorType } from "../lib/indicators.ts";
 import type { MagnetMode } from "../pages/trading/constants.ts";
 import { useAuthStore } from "../services/store.tsx";
 import {
@@ -18,6 +24,14 @@ export interface ChartPreferences {
   stayInDrawingMode: boolean;
   /** Plugin IDs that are currently active (persisted across page loads). */
   activePlugins: string[];
+  /**
+   * Active indicator instances (feature 6): id + type + params + visibility.
+   * `activeIndicators` (plain type list, terminal state + templates) is
+   * derived from this at the terminal boundary.
+   */
+  indicatorInstances: IndicatorInstance[];
+  /** Indicator types starred in the toolbar menu (persisted). */
+  indicatorFavorites: IndicatorType[];
   // ── Appearance (Chart Settings dialog) ──
   /** Series type: candles (default) / line / area / baseline / bars. */
   chartType: "candles" | "line" | "area" | "baseline" | "bars";
@@ -77,6 +91,8 @@ const DEFAULT_CHART_PREFS: ChartPreferences = {
   magnetMode: "none",
   stayInDrawingMode: false,
   activePlugins: [],
+  indicatorInstances: [],
+  indicatorFavorites: [],
   chartType: "candles",
   showPrevCloseLine: true,
   showLastPriceLabel: false,
@@ -227,6 +243,26 @@ function toStringArray(input: string | undefined, fallback: string[]): string[] 
   }
 }
 
+function toInstances(input: string | undefined): IndicatorInstance[] {
+  if (input == null) return [];
+  try {
+    const parsed: unknown = JSON.parse(input);
+    return sanitizeInstances(parsed);
+  } catch {
+    return [];
+  }
+}
+
+function toFavorites(input: string | undefined): IndicatorType[] {
+  if (input == null) return [];
+  try {
+    const parsed: unknown = JSON.parse(input);
+    return sanitizeFavorites(parsed);
+  } catch {
+    return [];
+  }
+}
+
 export function getChartPreferencesFromStorage(): ChartPreferences {
   const prefs = readTraderPrefs();
   const result = { ...DEFAULT_CHART_PREFS };
@@ -254,6 +290,8 @@ export function getChartPreferencesFromStorage(): ChartPreferences {
   result.magnetMode =
     toMagnetMode(prefs.magnetMode) ?? (toBool(prefs.drawingMagnet, false) ? "weak" : "none");
   result.activePlugins = toStringArray(prefs.activePlugins, DEFAULT_CHART_PREFS.activePlugins);
+  result.indicatorInstances = toInstances(prefs.indicatorInstances);
+  result.indicatorFavorites = toFavorites(prefs.indicatorFavorites);
   return result;
 }
 

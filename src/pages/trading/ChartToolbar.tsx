@@ -42,7 +42,11 @@ import {
   X,
 } from "lucide-react";
 import { useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import { INDICATOR_REGISTRY, type IndicatorType } from "../../lib/indicators.ts";
+import {
+  INDICATOR_REGISTRY,
+  type IndicatorType,
+} from "../../lib/indicators.ts";
+import { useChartPreferences } from "../../hooks/useChartPreferences.ts";
 import { cn, formatNumber } from "../../lib/utils.ts";
 import { TickContext } from "../../terminal/use-terminal.ts";
 import { isDarkTheme, subscribeTheme, toggleTheme } from "../../lib/theme.ts";
@@ -80,6 +84,8 @@ export interface ChartToolbarProps {
   onChartTypeChange?: (t: "candles" | "line" | "area" | "baseline" | "bars") => void;
   activeIndicators: IndicatorType[];
   onToggleIndicator: (type: IndicatorType) => void;
+  /** Star/unstar a type in the menu (feature 6; persisted). */
+  onToggleFavorite?: (type: IndicatorType) => void;
   showIndicatorMenu: boolean;
   onToggleIndicatorMenu: () => void;
   drawingTool: DrawingTool;
@@ -130,6 +136,7 @@ export function ChartToolbar({
   onChartTypeChange,
   activeIndicators,
   onToggleIndicator,
+  onToggleFavorite,
   showIndicatorMenu,
   onToggleIndicatorMenu,
   drawingTool,
@@ -157,6 +164,9 @@ export function ChartToolbar({
 }: ChartToolbarProps) {
   const [showSymbolSearch, setShowSymbolSearch] = useState(false);
   const [symbolFilter, setSymbolFilter] = useState("");
+  // Indicator favorites come from the persisted prefs (feature 6) — read via
+  // the reactive hook so the star toggles render immediately.
+  const favorites = useChartPreferences().indicatorFavorites;
 
   // Live quotes from the shared quote feed unless the host passes a tick.
   const feed = useContext(TickContext);
@@ -469,25 +479,12 @@ export function ChartToolbar({
           </button>
 
           {showIndicatorMenu && (
-            <div className="absolute top-full left-0 z-50 mt-1 w-64 bg-card border border-border rounded-lg shadow-xl p-2 space-y-0.5">
-              {INDICATOR_REGISTRY.map((ind) => (
-                <button
-                  key={ind.type}
-                  onClick={() => onToggleIndicator(ind.type)}
-                  className={cn(
-                    "w-full flex items-center gap-2 px-2 py-1.5 rounded text-sm hover:bg-secondary text-left",
-                    activeIndicators.includes(ind.type) && "bg-secondary",
-                  )}
-                >
-                  <span
-                    className="w-2 h-2 rounded-full shrink-0"
-                    style={{ backgroundColor: ind.color }}
-                  />
-                  <span className="flex-1">{ind.label}</span>
-                  <span className="text-[10px] text-muted-foreground">{ind.pane}</span>
-                </button>
-              ))}
-            </div>
+            <IndicatorMenu
+              activeIndicators={activeIndicators}
+              onToggleIndicator={onToggleIndicator}
+              favorites={favorites}
+              onToggleFavorite={onToggleFavorite}
+            />
           )}
         </div>
       }
@@ -830,6 +827,106 @@ function DrawingToolsDropdown({
             </>
           )}
         </div>
+      )}
+    </div>
+  );
+}
+
+// ── Indicator menu (feature 6) ────────────────────────────────────────────────
+// Search + favorites, TradingView-style: starred indicators pin to the top,
+// the filter matches label or type substring (case-insensitive).
+function IndicatorMenu({
+  activeIndicators,
+  onToggleIndicator,
+  favorites,
+  onToggleFavorite,
+}: {
+  activeIndicators: IndicatorType[];
+  onToggleIndicator: (type: IndicatorType) => void;
+  favorites: IndicatorType[];
+  onToggleFavorite?: (type: IndicatorType) => void;
+}) {
+  const [filter, setFilter] = useState("");
+  const q = filter.trim().toLowerCase();
+  const match = (ind: { type: string; label: string }) =>
+    q.length === 0 || ind.label.toLowerCase().includes(q) || ind.type.toLowerCase().includes(q);
+
+  const favList = INDICATOR_REGISTRY.filter((i) => favorites.includes(i.type) && match(i));
+  const restList = INDICATOR_REGISTRY.filter((i) => !favorites.includes(i.type) && match(i));
+
+  const row = (ind: (typeof INDICATOR_REGISTRY)[number]) => {
+    const active = activeIndicators.includes(ind.type);
+    const faved = favorites.includes(ind.type);
+    return (
+      <div
+        key={ind.type}
+        className={cn(
+          "w-full flex items-center gap-2 px-2 py-1.5 rounded text-sm hover:bg-secondary text-left",
+          active && "bg-secondary",
+        )}
+      >
+        <button
+          type="button"
+          onClick={() => onToggleIndicator(ind.type)}
+          className="flex flex-1 items-center gap-2 min-w-0 text-left"
+        >
+          <span
+            className="w-2 h-2 rounded-full shrink-0"
+            style={{ backgroundColor: ind.color }}
+          />
+          <span className="flex-1 truncate">{ind.label}</span>
+          <span className="text-[10px] text-muted-foreground shrink-0">{ind.pane}</span>
+        </button>
+        {onToggleFavorite && (
+          <button
+            type="button"
+            aria-label={faved ? `Unstar ${ind.label}` : `Star ${ind.label}`}
+            aria-pressed={faved}
+            onClick={() => onToggleFavorite(ind.type)}
+            className={cn(
+              "p-1 rounded shrink-0 transition",
+              faved ? "text-[#f0b90b]" : "text-muted-foreground/40 hover:text-muted-foreground",
+            )}
+          >
+            <Star className={cn("h-3 w-3", faved && "fill-current")} />
+          </button>
+        )}
+      </div>
+    );
+  };
+
+  return (
+    <div className="absolute top-full left-0 z-50 mt-1 w-64 bg-card border border-border rounded-lg shadow-xl p-2 space-y-0.5">
+      <div className="relative mb-1">
+        <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
+        <input
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+          placeholder="Search indicators…"
+          aria-label="Search indicators"
+          className="w-full bg-secondary rounded-md pl-7 pr-2 py-1.5 text-xs outline-none focus:ring-1 focus:ring-ring"
+        />
+      </div>
+      {favList.length > 0 && (
+        <>
+          <div className="text-[10px] uppercase tracking-wide text-muted-foreground px-2 pt-1 pb-0.5">
+            Favorites
+          </div>
+          {favList.map(row)}
+        </>
+      )}
+      {restList.length > 0 && (
+        <>
+          {favList.length > 0 && (
+            <div className="text-[10px] uppercase tracking-wide text-muted-foreground px-2 pt-1.5 pb-0.5">
+              All
+            </div>
+          )}
+          {restList.map(row)}
+        </>
+      )}
+      {favList.length === 0 && restList.length === 0 && (
+        <div className="px-2 py-3 text-xs text-muted-foreground text-center">No matches</div>
       )}
     </div>
   );

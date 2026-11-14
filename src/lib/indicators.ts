@@ -308,11 +308,21 @@ export type IndicatorType = "SMA" | "EMA" | "RSI" | "MACD" | "BOLL" | "ATR" | "S
 
 export type IndicatorPane = "overlay" | "below";
 
+export interface IndicatorParamSpec {
+  key: string;
+  label: string;
+  min: number;
+  max: number;
+  step: number;
+}
+
 export interface IndicatorConfig {
   type: IndicatorType;
   label: string;
   pane: IndicatorPane;
   defaultParams: Record<string, number>;
+  /** Input contract for auto-generated settings dialogs. */
+  paramSpecs: IndicatorParamSpec[];
   color: string;
 }
 
@@ -322,6 +332,7 @@ export const INDICATOR_REGISTRY: IndicatorConfig[] = [
     label: "Simple Moving Average",
     pane: "overlay",
     defaultParams: { period: 20 },
+    paramSpecs: [{ key: "period", label: "Period", min: 2, max: 500, step: 1 }],
     color: "#26c6da",
   },
   {
@@ -329,6 +340,7 @@ export const INDICATOR_REGISTRY: IndicatorConfig[] = [
     label: "Exponential Moving Average",
     pane: "overlay",
     defaultParams: { period: 20 },
+    paramSpecs: [{ key: "period", label: "Period", min: 2, max: 500, step: 1 }],
     color: "#e377c2",
   },
   {
@@ -336,6 +348,7 @@ export const INDICATOR_REGISTRY: IndicatorConfig[] = [
     label: "Relative Strength Index",
     pane: "below",
     defaultParams: { period: 14 },
+    paramSpecs: [{ key: "period", label: "Period", min: 2, max: 200, step: 1 }],
     color: "#8884d8",
   },
   {
@@ -343,6 +356,11 @@ export const INDICATOR_REGISTRY: IndicatorConfig[] = [
     label: "MACD",
     pane: "below",
     defaultParams: { fast: 12, slow: 26, signal: 9 },
+    paramSpecs: [
+      { key: "fast", label: "Fast length", min: 1, max: 200, step: 1 },
+      { key: "slow", label: "Slow length", min: 1, max: 400, step: 1 },
+      { key: "signal", label: "Signal smoothing", min: 1, max: 100, step: 1 },
+    ],
     color: "#2962FF",
   },
   {
@@ -350,6 +368,10 @@ export const INDICATOR_REGISTRY: IndicatorConfig[] = [
     label: "Bollinger Bands",
     pane: "overlay",
     defaultParams: { period: 20, stdDev: 2 },
+    paramSpecs: [
+      { key: "period", label: "Period", min: 2, max: 500, step: 1 },
+      { key: "stdDev", label: "Std deviation", min: 0.5, max: 6, step: 0.1 },
+    ],
     color: "#26a69a",
   },
   {
@@ -357,6 +379,7 @@ export const INDICATOR_REGISTRY: IndicatorConfig[] = [
     label: "Average True Range",
     pane: "below",
     defaultParams: { period: 14 },
+    paramSpecs: [{ key: "period", label: "Period", min: 2, max: 200, step: 1 }],
     color: "#ff7043",
   },
   {
@@ -364,6 +387,10 @@ export const INDICATOR_REGISTRY: IndicatorConfig[] = [
     label: "Stochastic Oscillator",
     pane: "below",
     defaultParams: { kPeriod: 14, dPeriod: 3 },
+    paramSpecs: [
+      { key: "kPeriod", label: "%K length", min: 1, max: 200, step: 1 },
+      { key: "dPeriod", label: "%D smoothing", min: 1, max: 100, step: 1 },
+    ],
     color: "#ab47bc",
   },
   {
@@ -371,6 +398,13 @@ export const INDICATOR_REGISTRY: IndicatorConfig[] = [
     label: "Volume Weighted Avg Price",
     pane: "overlay",
     defaultParams: {},
+    paramSpecs: [],
     color: "#2962FF",
   },
 ];
+
+/** Default params for a registry type (fresh copy — instances own theirs). */
+export function defaultParamsFor(type: IndicatorType): Record<string, number> {
+  const cfg = INDICATOR_REGISTRY.find((r) => r.type === type);
+  return cfg ? { ...cfg.defaultParams } : {};
+}

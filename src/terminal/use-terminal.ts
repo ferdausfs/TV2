@@ -1,4 +1,5 @@
 import { createContext, useContext } from "react";
+import type { IndicatorInstance } from "../lib/indicator-instances.ts";
 import type { IndicatorType } from "../lib/indicators.ts";
 import type { CreateJournalEntryInput, UpdateJournalEntryInput } from "../services/api/journal.ts";
 import type {
@@ -51,7 +52,13 @@ export interface TerminalContextValue {
   // Chart configuration
   chartPrefs: ReturnType<typeof useChartPreferences>;
   activeIndicators: IndicatorType[];
+  /** Full instance list (feature 6) — rendering + per-indicator UI drive off this. */
+  indicatorInstances: IndicatorInstance[];
+  addIndicator: (type: IndicatorType) => void;
+  removeIndicator: (id: string) => void;
+  updateIndicator: (id: string, patch: Partial<IndicatorInstance>) => void;
   toggleIndicator: (type: IndicatorType) => void;
+  toggleIndicatorFavorite: (type: IndicatorType) => void;
   clearIndicators: () => void;
   activePlugins: string[];
   togglePlugin: (id: string) => void;

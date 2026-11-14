@@ -70,6 +70,8 @@ import { DRAWING_STYLES_EVENT, getStyleDefaults } from "./drawingStyles.ts";
 import { NewsOverlay } from "./NewsOverlay.tsx";
 import { ObjectTreePanel } from "./ObjectTreePanel.tsx";
 import { useChallengeLevels } from "./useChallengeLevels.ts";
+import type { IndicatorInstance } from "../../lib/indicator-instances.ts";
+import { IndicatorLegendRows, IndicatorSettingsDialog } from "./IndicatorSettings.tsx";
 import { useIndicators } from "./useIndicators.ts";
 import { useNewsOverlay } from "./useNewsOverlay.ts";
 import { useSlTpDrag } from "./useSlTpDrag.ts";
@@ -215,6 +217,11 @@ export interface ChartPanelProps {
   timeframe: Timeframe;
   isDark: boolean;
   activeIndicators: IndicatorType[];
+  /** Indicator instances (feature 6) — rendered by useIndicators. */
+  indicatorInstances?: IndicatorInstance[];
+  /** Instance mutations from the legend rows (eye / gear / ✕). */
+  onUpdateIndicatorInstance?: (id: string, patch: Partial<IndicatorInstance>) => void;
+  onRemoveIndicatorInstance?: (id: string) => void;
   drawingTool: DrawingTool;
   drawings: DrawingLine[];
   onAddDrawing: (d: DrawingLine) => void;
@@ -1192,6 +1199,9 @@ export function ChartPanel({
   replayTradeEvents,
   activePlugins = [],
   onTogglePlugin,
+  indicatorInstances = [],
+  onUpdateIndicatorInstance,
+  onRemoveIndicatorInstance,
   accountEquity = 0,
   accountId,
   onQuickOrder,
@@ -1322,6 +1332,8 @@ export function ChartPanel({
     null,
   );
   const [showChartSettings, setShowChartSettings] = useState(false);
+  /** Indicator instance whose settings dialog is open (feature 6). */
+  const [indicatorSettingsId, setIndicatorSettingsId] = useState<string | null>(null);
   // The style toolbar / settings dialog only apply to a single selection.
   const selectedDrawing = useMemo(
     () =>
@@ -1534,7 +1546,14 @@ export function ChartPanel({
     [onAddDrawing, pipDigits, timeframe, selectedSymbol, addAlert],
   );
 
-  useIndicators(chartRef, candleSeriesRef, chartData, activeIndicators, isDark, chartEpoch);
+  useIndicators(
+    chartRef,
+    candleSeriesRef,
+    chartData,
+    indicatorInstances,
+    isDark,
+    chartEpoch,
+  );
 
   // ── Replay trade event markers ─────────────────────────────
   useEffect(() => {
@@ -2429,6 +2448,28 @@ export function ChartPanel({
         showOhlcLegend={chartPrefs.showOhlcLegend}
         showCountdown={chartPrefs.showCountdown}
       />
+
+      {/* Per-indicator legend rows (feature 6): eye / gear / ✕ per instance */}
+      {indicatorInstances.length > 0 && (
+        <IndicatorLegendRows
+          instances={indicatorInstances}
+          onToggleVisible={(id) => {
+            const inst = indicatorInstances.find((i) => i.id === id);
+            if (inst) onUpdateIndicatorInstance?.(id, { visible: !inst.visible });
+          }}
+          onSettings={(id) => setIndicatorSettingsId(id)}
+          onRemove={(id) => onRemoveIndicatorInstance?.(id)}
+        />
+      )}
+
+      {/* Per-indicator settings dialog (feature 6) */}
+      {indicatorSettingsId && (
+        <IndicatorSettingsDialog
+          instance={indicatorInstances.find((i) => i.id === indicatorSettingsId) ?? null}
+          onClose={() => setIndicatorSettingsId(null)}
+          onUpdate={(id, patch) => onUpdateIndicatorInstance?.(id, patch)}
+        />
+      )}
 
       {/* Scale controls — Auto/Log/%, range buttons, go-to-date (feature 4) */}
       <ChartScaleFooter
