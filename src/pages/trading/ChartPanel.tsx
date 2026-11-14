@@ -12,6 +12,7 @@ import {
   type ISeriesPrimitive,
   LineStyle,
   type LogicalRange,
+  PriceScaleMode,
   type SeriesMarker,
   type SeriesType,
   type Time,
@@ -26,7 +27,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { useChartPreferences } from "../../hooks/useChartPreferences.ts";
+import { useChartPreferences, updateChartPreferences } from "../../hooks/useChartPreferences.ts";
 import { usePriceAlertsStore } from "../../hooks/usePriceAlerts.ts";
 import { useTradingStore } from "../../services/store.tsx";
 import { TickContext } from "../../terminal/use-terminal.ts";
@@ -57,6 +58,7 @@ import {
   type Timeframe,
 } from "./constants.ts";
 import { ChartContextMenu } from "./ChartContextMenu.tsx";
+import { ChartScaleFooter } from "./ChartScaleFooter.tsx";
 import { ChartSettingsDialog } from "./ChartSettingsDialog.tsx";
 import {
   DrawingContextMenu,
@@ -1498,6 +1500,8 @@ export function ChartPanel({
     chart.timeScale().resetTimeScale();
     chart.priceScale("right").applyOptions({ autoScale: true });
     chart.timeScale().scrollToRealTime();
+    // Keep the footer's Auto toggle truthful with the chart's actual state.
+    updateChartPreferences({ priceScaleAuto: true });
   }, []);
 
   const handleCopyPrice = useCallback(
@@ -1953,6 +1957,22 @@ export function ChartPanel({
     chartEpoch,
   ]);
 
+  // ── Price-scale mode / auto (feature 4) ──
+  useEffect(() => {
+    const chart = chartRef.current;
+    if (!chart) return;
+    const mode =
+      chartPrefs.priceScaleMode === "log"
+        ? PriceScaleMode.Logarithmic
+        : chartPrefs.priceScaleMode === "percent"
+          ? PriceScaleMode.Percentage
+          : PriceScaleMode.Normal;
+    chart.priceScale("right").applyOptions({
+      mode,
+      autoScale: chartPrefs.priceScaleAuto,
+    });
+  }, [chartPrefs.priceScaleMode, chartPrefs.priceScaleAuto, chartEpoch]);
+
   // ── Last-price label (price-scale pack) ──
   useEffect(() => {
     candleSeriesRef.current?.applyOptions({
@@ -2404,6 +2424,14 @@ export function ChartPanel({
         pipDigits={pipDigits}
         showOhlcLegend={chartPrefs.showOhlcLegend}
         showCountdown={chartPrefs.showCountdown}
+      />
+
+      {/* Scale controls — Auto/Log/%, range buttons, go-to-date (feature 4) */}
+      <ChartScaleFooter
+        chartRef={chartRef}
+        seriesRef={candleSeriesRef}
+        mode={chartPrefs.priceScaleMode}
+        auto={chartPrefs.priceScaleAuto}
       />
 
       {/* Drag-to-edit tooltip */}
