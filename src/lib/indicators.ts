@@ -303,8 +303,241 @@ export function vwap(candles: CandleData[]): IndicatorPoint[] {
   return result;
 }
 
+// ── Weighted Moving Average ──────────────────────────────────
+// Linearly weighted: the newest bar gets weight n, the oldest 1.
+export function wma(candles: CandleData[], period: number): IndicatorPoint[] {
+  const result: IndicatorPoint[] = [];
+  const p = validPeriod(period);
+  if (p === null || candles.length < p) return result;
+  const denom = (p * (p + 1)) / 2;
+
+  for (let i = p - 1; i < candles.length; i++) {
+    let sum = 0;
+    for (let j = 0; j < p; j++) sum += candles[i - j]!.close * (p - j);
+    result.push({ time: candles[i]!.time, value: sum / denom });
+  }
+  return result;
+}
+
+// ── Hull Moving Average ──────────────────────────────────────
+// HMA(n) = WMA(2·WMA(n/2) − WMA(n), √n). Composed from the WMA above on the
+// same candle array (periods rounded down; √n ≥ 1).
+export function hma(candles: CandleData[], period: number): IndicatorPoint[] {
+  const p = validPeriod(period, 2);
+  if (p === null || candles.length < p) return [];
+  const half = Math.max(1, Math.floor(p / 2));
+  const sqrtLen = Math.max(1, Math.floor(Math.sqrt(p)));
+
+  const wmaFull = wma(candles, p);
+  const wmaHalf = wma(candles, half);
+  if (wmaFull.length === 0 || wmaHalf.length === 0) return [];
+
+  // Align the two WMAs on their common TAIL: wmaHalf is the LONGER series
+  // (smaller window → starts earlier), so its index i maps to wmaFull's
+  // index i + offset where offset = wmaHalf.length - wmaFull.length.
+  const offset = wmaHalf.length - wmaFull.length;
+  const diff: IndicatorPoint[] = [];
+  for (let i = 0; i < wmaFull.length; i++) {
+    diff.push({
+      time: wmaFull[i]!.time,
+      value: 2 * wmaHalf[i + offset]!.value - wmaFull[i]!.value,
+    });
+  }
+  // The diff series is evenly spaced in time — run WMA over it by treating
+  // each point as a synthetic candle.
+  const synthetic = diff.map((d) => ({
+    time: d.time,
+    open: d.value,
+    high: d.value,
+    low: d.value,
+    close: d.value,
+  }));
+  return wma(synthetic, sqrtLen);
+}
+
+// ── Keltner Channels ─────────────────────────────────────────
+export interface KeltnerResult {
+  upper: IndicatorPoint[];
+  middle: IndicatorPoint[];
+  lower: IndicatorPoint[];
+}
+
+// Basis = EMA(period), bands = basis ± multiplier·ATR(period).
+export function keltnerChannels(
+  candles: CandleData[],
+  period = 20,
+  multiplier = 2,
+): KeltnerResult {
+  const upper: IndicatorPoint[] = [];
+  const middle: IndicatorPoint[] = [];
+  const lower: IndicatorPoint[] = [];
+
+  const basis = ema(candles, period);
+  const range = atr(candles, period);
+  if (basis.length === 0 || range.length === 0) return { upper, middle, lower };
+
+  // ATR starts one bar later than EMA (it needs a previous close) — align on
+  // the common tail.
+  const offset = basis.length - range.length;
+  for (let i = 0; i < range.length; i++) {
+    const b = basis[i + offset]!.value;
+    const a = range[i]!.value;
+    const t = range[i]!.time;
+    middle.push({ time: t, value: b });
+    upper.push({ time: t, value: b + multiplier * a });
+    lower.push({ time: t, value: b - multiplier * a });
+  }
+  return { upper, middle, lower };
+}
+
+// ── Donchian Channels ────────────────────────────────────────
+export interface DonchianResult {
+  upper: IndicatorPoint[];
+  middle: IndicatorPoint[];
+  lower: IndicatorPoint[];
+}
+
+// Highest-high / lowest-low of the trailing window (inclusive of the current
+// bar); middle = midpoint.
+export function donchianChannels(candles: CandleData[], period = 20): DonchianResult {
+  const upper: IndicatorPoint[] = [];
+  const middle: IndicatorPoint[] = [];
+  const lower: IndicatorPoint[] = [];
+
+  const p = validPeriod(period);
+  if (p === null || candles.length < p) return { upper, middle, lower };
+
+  for (let i = p - 1; i < candles.length; i++) {
+    let highest = -Infinity;
+    let lowest = Infinity;
+    for (let j = i - p + 1; j <= i; j++) {
+      if (candles[j]!.high > highest) highest = candles[j]!.high;
+      if (candles[j]!.low < lowest) lowest = candles[j]!.low;
+    }
+    const t = candles[i]!.time;
+    upper.push({ time: t, value: highest });
+    lower.push({ time: t, value: lowest });
+    middle.push({ time: t, value: (highest + lowest) / 2 });
+  }
+  return { upper, middle, lower };
+}
+
+// ── Stochastic RSI ───────────────────────────────────────────
+// Stoch of the RSI series: %K = (RSI − min(RSI,n)) / (max(RSI,n) − min(RSI,n))
+// over the trailing window; %D = SMA(3) of %K.
+export function stochRsi(
+  candles: CandleData[],
+  rsiPeriod = 14,
+  stochPeriod = 14,
+  dPeriod = 3,
+): StochasticResult {
+  const kLine: IndicatorPoint[] = [];
+  const rsiSeries = rsi(candles, rsiPeriod);
+  const sLen = validPeriod(stochPeriod);
+  const dLen = validPeriod(dPeriod);
+  if (rsiSeries.length === 0 || sLen === null || dLen === null || rsiSeries.length < sLen) {
+    return { k: [], d: [] };
+  }
+
+  for (let i = sLen - 1; i < rsiSeries.length; i++) {
+    let highest = -Infinity;
+    let lowest = Infinity;
+    for (let j = i - sLen + 1; j <= i; j++) {
+      if (rsiSeries[j]!.value > highest) highest = rsiSeries[j]!.value;
+      if (rsiSeries[j]!.value < lowest) lowest = rsiSeries[j]!.value;
+    }
+    const range = highest - lowest;
+    const kVal = range === 0 ? 50 : ((rsiSeries[i]!.value - lowest) / range) * 100;
+    kLine.push({ time: rsiSeries[i]!.time, value: kVal });
+  }
+
+  const dLine: IndicatorPoint[] = [];
+  if (kLine.length >= dLen) {
+    let sum = 0;
+    for (let i = 0; i < dLen; i++) sum += kLine[i]!.value;
+    dLine.push({ time: kLine[dLen - 1]!.time, value: sum / dLen });
+    for (let i = dLen; i < kLine.length; i++) {
+      sum += kLine[i]!.value - kLine[i - dLen]!.value;
+      dLine.push({ time: kLine[i]!.time, value: sum / dLen });
+    }
+  }
+  return { k: kLine, d: dLine };
+}
+
+// ── On-Balance Volume ────────────────────────────────────────
+// Cumulative volume signed by close-to-close direction; starts at the first
+// bar's volume.
+export function obv(candles: CandleData[]): IndicatorPoint[] {
+  const result: IndicatorPoint[] = [];
+  if (candles.length === 0) return result;
+  let running = 0;
+  for (let i = 0; i < candles.length; i++) {
+    if (i > 0) {
+      const prevClose = candles[i - 1]!.close;
+      const close = candles[i]!.close;
+      const vol = Number.isFinite(candles[i]!.volume) ? candles[i]!.volume ?? 0 : 0;
+      if (close > prevClose) running += vol;
+      else if (close < prevClose) running -= vol;
+    }
+    result.push({ time: candles[i]!.time, value: running });
+  }
+  return result;
+}
+
+// ── Williams %R ──────────────────────────────────────────────
+// (HH − C) / (HH − LL) × −100 over the trailing window.
+export function williamsR(candles: CandleData[], period = 14): IndicatorPoint[] {
+  const result: IndicatorPoint[] = [];
+  const p = validPeriod(period);
+  if (p === null || candles.length < p) return result;
+
+  for (let i = p - 1; i < candles.length; i++) {
+    let highest = -Infinity;
+    let lowest = Infinity;
+    for (let j = i - p + 1; j <= i; j++) {
+      if (candles[j]!.high > highest) highest = candles[j]!.high;
+      if (candles[j]!.low < lowest) lowest = candles[j]!.low;
+    }
+    const range = highest - lowest;
+    const value = range === 0 ? -50 : ((highest - candles[i]!.close) / range) * -100;
+    result.push({ time: candles[i]!.time, value });
+  }
+  return result;
+}
+
+// ── Rate of Change ───────────────────────────────────────────
+// 100 × (C / C[n periods ago] − 1).
+export function roc(candles: CandleData[], period = 9): IndicatorPoint[] {
+  const result: IndicatorPoint[] = [];
+  const p = validPeriod(period);
+  if (p === null || candles.length <= p) return result;
+
+  for (let i = p; i < candles.length; i++) {
+    const base = candles[i - p]!.close;
+    const value = base === 0 ? 0 : (candles[i]!.close / base - 1) * 100;
+    result.push({ time: candles[i]!.time, value });
+  }
+  return result;
+}
+
 // ── Indicator Registry (for UI) ──────────────────────────────
-export type IndicatorType = "SMA" | "EMA" | "RSI" | "MACD" | "BOLL" | "ATR" | "STOCH" | "VWAP";
+export type IndicatorType =
+  | "SMA"
+  | "EMA"
+  | "WMA"
+  | "HMA"
+  | "RSI"
+  | "MACD"
+  | "BOLL"
+  | "KELTNER"
+  | "DONCHIAN"
+  | "STOCH"
+  | "STOCHRSI"
+  | "ATR"
+  | "VWAP"
+  | "OBV"
+  | "WPR"
+  | "ROC";
 
 export type IndicatorPane = "overlay" | "below";
 
@@ -344,6 +577,22 @@ export const INDICATOR_REGISTRY: IndicatorConfig[] = [
     color: "#e377c2",
   },
   {
+    type: "WMA",
+    label: "Weighted Moving Average",
+    pane: "overlay",
+    defaultParams: { period: 20 },
+    paramSpecs: [{ key: "period", label: "Period", min: 2, max: 500, step: 1 }],
+    color: "#80cbc4",
+  },
+  {
+    type: "HMA",
+    label: "Hull Moving Average",
+    pane: "overlay",
+    defaultParams: { period: 20 },
+    paramSpecs: [{ key: "period", label: "Period", min: 2, max: 500, step: 1 }],
+    color: "#4dd0e1",
+  },
+  {
     type: "RSI",
     label: "Relative Strength Index",
     pane: "below",
@@ -375,6 +624,25 @@ export const INDICATOR_REGISTRY: IndicatorConfig[] = [
     color: "#26a69a",
   },
   {
+    type: "KELTNER",
+    label: "Keltner Channels",
+    pane: "overlay",
+    defaultParams: { period: 20, multiplier: 2 },
+    paramSpecs: [
+      { key: "period", label: "Period", min: 2, max: 500, step: 1 },
+      { key: "multiplier", label: "ATR multiplier", min: 0.5, max: 6, step: 0.1 },
+    ],
+    color: "#ba68c8",
+  },
+  {
+    type: "DONCHIAN",
+    label: "Donchian Channels",
+    pane: "overlay",
+    defaultParams: { period: 20 },
+    paramSpecs: [{ key: "period", label: "Period", min: 2, max: 500, step: 1 }],
+    color: "#ffb74d",
+  },
+  {
     type: "ATR",
     label: "Average True Range",
     pane: "below",
@@ -394,12 +662,48 @@ export const INDICATOR_REGISTRY: IndicatorConfig[] = [
     color: "#ab47bc",
   },
   {
+    type: "STOCHRSI",
+    label: "Stochastic RSI",
+    pane: "below",
+    defaultParams: { rsiPeriod: 14, stochPeriod: 14, dPeriod: 3 },
+    paramSpecs: [
+      { key: "rsiPeriod", label: "RSI length", min: 2, max: 200, step: 1 },
+      { key: "stochPeriod", label: "Stochastic length", min: 2, max: 200, step: 1 },
+      { key: "dPeriod", label: "%D smoothing", min: 1, max: 100, step: 1 },
+    ],
+    color: "#f06292",
+  },
+  {
     type: "VWAP",
     label: "Volume Weighted Avg Price",
     pane: "overlay",
     defaultParams: {},
     paramSpecs: [],
     color: "#2962FF",
+  },
+  {
+    type: "OBV",
+    label: "On-Balance Volume",
+    pane: "below",
+    defaultParams: {},
+    paramSpecs: [],
+    color: "#a1887f",
+  },
+  {
+    type: "WPR",
+    label: "Williams %R",
+    pane: "below",
+    defaultParams: { period: 14 },
+    paramSpecs: [{ key: "period", label: "Period", min: 2, max: 200, step: 1 }],
+    color: "#9575cd",
+  },
+  {
+    type: "ROC",
+    label: "Rate of Change",
+    pane: "below",
+    defaultParams: { period: 9 },
+    paramSpecs: [{ key: "period", label: "Period", min: 1, max: 200, step: 1 }],
+    color: "#4db6ac",
   },
 ];
 
