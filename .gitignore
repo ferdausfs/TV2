@@ -11,3 +11,6 @@ playwright-report
 test-results
 dist-lib
 *.tgz
+
+# Capacitor (feature 17): the android/ project is generated in CI, never committed.
+android/

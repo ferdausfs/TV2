@@ -1,0 +1,46 @@
+name: Android APK (Capacitor)
+
+# Feature 17: build a sideloadable debug APK of the terminal. Manual only —
+# an APK per push would burn runner minutes for a personal-use artifact.
+# The android/ project is generated in the runner (npx cap add android), so
+# no gradle tree lands in the repo.
+on:
+  workflow_dispatch:
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build the web app (binance adapter, domain-root base)
+        run: VITE_ADAPTER=binance BASE_PATH=/ npm run build
+
+      - name: Add the Android platform and sync the web assets
+        run: |
+          npx cap add android
+          npx cap sync android
+
+      - name: Assemble debug APK
+        working-directory: android
+        run: chmod +x gradlew && ./gradlew assembleDebug --no-daemon
+
+      - name: Upload the APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tv2-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
