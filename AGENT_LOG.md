@@ -2,6 +2,13 @@
 
 > Continuity file. Entries are **prepended** (newest first) and never deleted.
 
+## 2026-11-14 — Session 3 · Feature 21: chart-only mobile (top bar + bottom nav + News removed)
+
+- **Agent/tool:** OpenCode (GLM) · branch `auto/chart-only-mobile` → PR `<fill>`
+- **Results:** typecheck ✅ · lint --max-warnings=0 ✅ · tests **791 passed | 1 skipped** (1 pre-existing
+  flaky in `features.test.ts` session-replay cursor timing — fails on clean main too, unrelated) ✅ ·
+  `VITE_ADAPTER=binance` build "✓ built" ✅ · check:size within budget ✅
+
 ## 2026-11-14 — Session 3 · Feature 20: black TradingView theme (user reference)
 
 - **Agent/tool:** OpenCode (GLM) · branch `auto/tv-black-theme` → PR → merge
