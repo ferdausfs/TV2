@@ -1,5 +1,5 @@
 {
-  "name": "tv2",
+  "name": "@dylanpersonguy/opencharts",
   "version": "0.3.0",
   "description": "Open-source trading terminal: advanced charting, drawing tools and a built-in paper-trading engine, with no backend required.",
   "keywords": [
@@ -16,11 +16,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ferdausfs/TV2.git"
+    "url": "https://github.com/dylanpersonguy/OpenCharts.git"
   },
-  "homepage": "https://github.com/ferdausfs/TV2#readme",
+  "homepage": "https://github.com/dylanpersonguy/OpenCharts#readme",
   "bugs": {
-    "url": "https://github.com/ferdausfs/TV2/issues"
+    "url": "https://github.com/dylanpersonguy/OpenCharts/issues"
   },
   "type": "module",
   "engines": {
@@ -66,6 +66,7 @@
     "builder:claim": "tsx scripts/builder/claim.ts",
     "builder:health": "tsx scripts/builder/health.ts",
     "preview": "vite preview",
+    "cap:sync": "vite build && cap sync android",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src/",
     "test": "vitest run",
@@ -99,6 +100,9 @@
     "zustand": "^5.0.0"
   },
   "devDependencies": {
+    "@capacitor/android": "^8.6.2",
+    "@capacitor/cli": "^8.6.2",
+    "@capacitor/core": "^8.6.2",
     "@eslint/js": "^9.39.5",
     "@playwright/test": "^1.58.2",
     "@testing-library/jest-dom": "^6.9.1",
