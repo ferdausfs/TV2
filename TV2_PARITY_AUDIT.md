@@ -115,7 +115,7 @@ REST; React context (`use-terminal`) for terminal wiring; chart state lives **ou
 | --- | --- | --- |
 | **Tokens (§5.2)** | **Broken vs contract** | app ships Binance palette (#0b0e11/#fcd535) but the contract (DESIGN.TV2.md + master §5.2) demands TV palette #131722/#2962FF/#26a69a/#ef5350. Migration = feature 1 |
 | Desktop layout (§5.3) | **Partial** | top toolbar / left rail / right rail / bottom panel all exist; missing legend live-dot, fullscreen, screenshot |
-| Mobile shell (§5.4) | **Partial** | AccountBar + Sell/Buy ActionBar + bottom-sheet trading + fullscreen search + collapsed BottomPanel — TradingView-app-like (approved); missing: bottom nav, floating Indicators/Draw/Alert row, draw bottom-sheet, long-press crosshair, double-tap auto-fit |
+| Mobile shell (§5.4) | **Mostly** | + bottom nav (Chart/Orders/Alerts/Trade), floating Indicators/Draw/Alert row, draw bottom-sheet, long-press crosshair, double-tap auto-fit (MobileShell.tsx, useChartTouchGestures.ts); mobile watchlist for the Lists tab still pending |
 | Tablet (§5.5) | **Partial** | md: breakpoints handle 768–1023 adequately |
 | Dialogs (§5.6) | **Partial** | present: Symbol, Indicators(plain), Drawing properties (overlay), Chart Settings, Replay HUD, Layout, Context menu; missing: Alert dialog, Indicator Settings (Inputs/Style/Visibility) |
 | States & feedback (§5.7) | **Partial** | buttons/states good; no skeleton shimmer; empty states exist |
@@ -166,7 +166,7 @@ REST; React context (`use-terminal`) for terminal wiring; chart state lives **ou
 | 8 | Watchlist v2: change%, sparkline, drag-reorder, multi-lists, colored flags | M | WatchlistPanel.tsx |
 | 9 | Compare/overlay symbol + real sub-panes (resizable) | L | ChartPanel.tsx, ChartPane.tsx |
 | 10 | Screenshot + fullscreen + JSON export/import | S | ChartPanel.tsx, ChartContextMenu.tsx |
-| 11 | Mobile §5.4 completion: bottom nav, floating action row, draw bottom-sheet, long-press crosshair | L | TradingPage.tsx, new components |
+| 11 | Mobile §5.4 completion: bottom nav, floating action row, draw bottom-sheet, long-press crosshair — **done**; mobile watchlist (Lists tab) deferred | L | TradingPage.tsx, new components |
 | 12 | PWA service worker (vite-plugin-pwa): offline shell + update prompt | S-M | vite.config, index.html, new sw |
 | 13 | Screener (client, virtualized) | M | new |
 | 14 | Keyboard shortcuts + focus traps pass | S | various |

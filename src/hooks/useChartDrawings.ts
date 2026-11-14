@@ -164,5 +164,23 @@ export function useChartDrawings(symbol: string, timeframe: string) {
     undoStackRef.current.push(op);
   }, [replayOp]);
 
-  return { drawings, addDrawing, updateDrawing, removeDrawing, clearDrawings, undo, redo };
+  // Stack depths for UI state (mobile draw sheet buttons). Mirrored into
+  // state on every mutation the stacks participate in — cheap and only
+  // changes on explicit user actions.
+  const [historyDepth, setHistoryDepth] = useState({ undo: 0, redo: 0 });
+  useEffect(() => {
+    setHistoryDepth({ undo: undoStackRef.current.length, redo: redoStackRef.current.length });
+  }, [drawings]);
+
+  return {
+    drawings,
+    addDrawing,
+    updateDrawing,
+    removeDrawing,
+    clearDrawings,
+    undo,
+    redo,
+    canUndo: historyDepth.undo > 0,
+    canRedo: historyDepth.redo > 0,
+  };
 }
